@@ -1,0 +1,36 @@
+'use client';
+
+import React from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { useInView } from 'react-intersection-observer';
+
+export function AboutSection() {
+  const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.05 });
+
+  return (
+    <section className="scroll-mt-24 bg-[#0e2017]" id="about" ref={ref}>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={inView ? { opacity: 1 } : {}}
+        transition={{ duration: 0.6 }}
+        className="relative w-full aspect-[1584/672] border-y border-gold/30 overflow-hidden"
+      >
+        <Image
+          src="/about-vrindavan.webp"
+          alt="The essence of Vrindavan — divine ornaments and sacred scents"
+          fill
+          sizes="100vw"
+          className="object-contain w-full h-full"
+          priority
+        />
+        <Link
+          href="/collections"
+          className="absolute inset-0 z-10 cursor-pointer"
+          aria-label="Discover divine adornments and scents — Browse Collection"
+        />
+      </motion.div>
+    </section>
+  );
+}
