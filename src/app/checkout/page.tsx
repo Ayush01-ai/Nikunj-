@@ -7,10 +7,12 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Minus, Plus, Trash2, Tag, ShieldCheck, Truck, Banknote, Smartphone, CreditCard, Building2 } from 'lucide-react';
 import { useCartStore } from '@/frontend/store/cartStore';
+import { getVariantPricing } from '@/cms/lib/pricing';
 import { useAuthStore } from '@/frontend/store/authStore';
 import { Navbar } from '@/frontend/components/layout/Navbar';
 import { Footer } from '@/frontend/components/layout/Footer';
 import { SacredIcon } from '@/frontend/components/ui/SacredIcon';
+import { BackButton } from '@/frontend/components/ui/BackButton';
 import type { CartItem } from '@/types';
 import toast from 'react-hot-toast';
 
@@ -49,7 +51,7 @@ interface Address {
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, updateQuantity, updateItemOptions, removeItem, clearCart, subtotal } = useCartStore();
-  const { user, token } = useAuthStore();
+  const { user } = useAuthStore();
 
   const [step, setStep] = useState<Step>('Cart');
   const [couponInput, setCouponInput] = useState('');
@@ -111,7 +113,6 @@ export default function CheckoutPage() {
       };
 
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
 
       const res = await fetch('/api/orders', {
         method: 'POST',
@@ -143,7 +144,7 @@ export default function CheckoutPage() {
           currency: pay.data.currency,
           order_id: pay.data.razorpayOrderId,
           name: 'Nikunj Sakhi',
-          description: 'Divine God Ornaments',
+          description: 'Serve with Devotion',
           prefill: { name: address.fullName, contact: `+91${address.phone}` },
           theme: { color: '#C9922A' },
           modal: {
@@ -184,7 +185,7 @@ export default function CheckoutPage() {
     return (
       <>
         <Navbar settings={null} />
-        <div className="min-h-screen bg-cream flex items-center justify-center pt-20">
+        <div className="min-h-screen bg-cream flex items-center justify-center pt-8">
           <div className="text-center">
             <p className="font-crimson italic text-[var(--text-mid)] mb-4">Your cart is empty</p>
             <Link href="/collections" className="btn-gold">Shop Now</Link>
@@ -198,8 +199,14 @@ export default function CheckoutPage() {
   return (
     <>
       <Navbar settings={null} />
-      <div className="min-h-screen bg-cream pt-20">
+      <div className="min-h-screen bg-cream">
       <div className="max-w-6xl mx-auto px-4 py-8">
+        <BackButton
+          fallbackHref="/collections"
+          label={step === 'Cart' ? 'Back' : `Back to ${STEPS[STEPS.indexOf(step) - 1]}`}
+          onBack={step === 'Cart' ? undefined : () => setStep(STEPS[STEPS.indexOf(step) - 1])}
+          className="mb-6"
+        />
         {/* Step indicator */}
         <div className="flex items-center justify-center gap-2 mb-10">
           {STEPS.map((s, i) => (
@@ -267,13 +274,19 @@ export default function CheckoutPage() {
                                   className="divine-input !py-2 !px-3 text-sm min-h-[40px] min-w-[140px]"
                                 >
                                   {!item.selectedSize && <option value="">Choose…</option>}
-                                  {item.options.map((o) => (
-                                    <option key={o.label} value={o.label} disabled={o.stock === 0}>
-                                      {o.label}
-                                      {o.priceModifier ? ` (${o.priceModifier > 0 ? '+' : '−'}₹${Math.abs(o.priceModifier)})` : ''}
-                                      {o.stock === 0 ? ' — out of stock' : ''}
-                                    </option>
-                                  ))}
+                                  {item.options.map((o) => {
+                                    const opt = getVariantPricing(
+                                      { price: item.basePrice ?? item.price, originalPrice: item.baseOriginalPrice, stock: item.productStock ?? item.stock, sizes: item.options, colors: item.colors },
+                                      o.label,
+                                      item.selectedColor,
+                                    );
+                                    return (
+                                      <option key={o.label} value={o.label} disabled={opt.stock <= 0}>
+                                        {o.label} — ₹{opt.price.toLocaleString('en-IN')}
+                                        {opt.stock <= 0 ? ' (out of stock)' : ''}
+                                      </option>
+                                    );
+                                  })}
                                 </select>
                               </label>
                             ) : (
@@ -306,7 +319,7 @@ export default function CheckoutPage() {
 
                           <div className="flex items-center gap-3 mt-3">
                             <div className="flex items-center border border-[var(--border)]" role="group" aria-label={`Quantity of ${item.name}`}>
-                              <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="w-10 h-10 flex items-center justify-center hover:bg-gold/10" aria-label={`Decrease quantity of ${item.name}`}>
+                              <button onClick={() => updateQuantity(item.id, item.quantity - 1)} disabled={item.quantity <= 1} className="w-10 h-10 flex items-center justify-center hover:bg-gold/10 disabled:opacity-40 disabled:cursor-not-allowed" aria-label={`Decrease quantity of ${item.name}`}>
                                 <Minus size={12} aria-hidden="true" />
                               </button>
                               <span className="px-3 font-cinzel text-sm" aria-live="polite">{item.quantity}</span>
@@ -510,7 +523,7 @@ export default function CheckoutPage() {
 
           {/* Order Summary Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white border border-[var(--border)] p-6 sticky top-24">
+            <div className="bg-white border border-[var(--border)] p-6 sticky top-20 md:top-24">
               <h3 className="font-cinzel text-sm font-semibold text-deep mb-4">Order Summary</h3>
               <div className="space-y-2 text-sm font-lato text-[var(--text-mid)] divide-y divide-[var(--border)]">
                 <div className="pb-2 space-y-1">

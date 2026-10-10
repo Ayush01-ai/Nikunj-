@@ -40,7 +40,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     await connectDB();
     const { id } = await params;
     const body = await req.json();
-    const validStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'];
+    const validStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'return_requested', 'return_approved', 'returned', 'refunded'];
 
     const updates: Record<string, unknown> = {};
 

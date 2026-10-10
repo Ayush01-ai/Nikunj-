@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useClient, type DocumentActionComponent } from 'sanity';
-import { STOCK_PRODUCTS_QUERY, buildStockPatches, stockLookupIds } from '../lib/orderStock';
-import { orderStatusMessage } from '../lib/orderMessages';
+import { addRestockPatches, historyEntry } from '../lib/orderOps';
+import { deliveryPartnerMessage, isReturnStatus, orderStatusMessage, type ShipmentInput } from '../lib/orderMessages';
 import { siteOrigin } from './productActions';
 
 interface OrderDoc {
@@ -22,13 +22,6 @@ const NEXT_STEP: Record<string, { status: string; label: string }> = {
   processing: { status: 'shipped', label: 'Mark as Shipped' },
   shipped: { status: 'delivered', label: 'Mark as Delivered' },
 };
-
-const historyEntry = (status: string, note?: string) => ({
-  _key: `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
-  status,
-  at: new Date().toISOString(),
-  ...(note && { note }),
-});
 
 export const AdvanceOrderStatusAction: DocumentActionComponent = (props) => {
   const client = useClient({ apiVersion: '2024-01-01' });
@@ -77,7 +70,7 @@ export const CancelOrderAction: DocumentActionComponent = (props) => {
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const doc = props.published as OrderDoc | null;
-  if (!doc || doc.status === 'cancelled' || doc.status === 'delivered') return null;
+  if (!doc || doc.status === 'cancelled' || doc.status === 'delivered' || isReturnStatus(doc.status)) return null;
 
   const paid = doc.paymentStatus === 'paid';
   const cancel = async () => {
@@ -90,13 +83,7 @@ export const CancelOrderAction: DocumentActionComponent = (props) => {
           .set({ status: 'cancelled', stockAdjusted: false, ...(paid && { paymentStatus: 'refund_due' }) })
           .append('statusHistory', [historyEntry('cancelled', paid ? 'Refund due' : undefined)]),
       );
-      if (doc.stockAdjusted && doc.items?.length) {
-        const lines = doc.items
-          .filter((i): i is typeof i & { productId: string } => Boolean(i.productId))
-          .map((i) => ({ productId: i.productId, option: i.option, quantity: i.quantity ?? 1 }));
-        const products = await client.fetch(STOCK_PRODUCTS_QUERY, { ids: stockLookupIds(lines) });
-        for (const patch of buildStockPatches(products, lines, 1)) tx.patch(patch.id, (p) => p.inc(patch.inc));
-      }
+      if (doc.stockAdjusted && doc.items?.length) await addRestockPatches(client, tx, doc.items);
       await tx.commit();
     } finally {
       setBusy(false);
@@ -120,6 +107,51 @@ export const CancelOrderAction: DocumentActionComponent = (props) => {
         props.onComplete();
       },
     },
+  };
+};
+
+export const SendToDeliveryPartnerAction: DocumentActionComponent = (props) => {
+  const client = useClient({ apiVersion: '2024-01-01' });
+  const [busy, setBusy] = useState(false);
+  const doc = props.published as (OrderDoc & ShipmentInput) | null;
+  if (!doc || !['confirmed', 'processing'].includes(doc.status ?? '')) return null;
+
+  const send = async () => {
+    // Open the tab synchronously so the popup blocker allows it, then point it at WhatsApp.
+    const tab = window.open('', '_blank');
+    if (tab) tab.opener = null;
+    setBusy(true);
+    try {
+      const settings = await client
+        .fetch<{ deliveryPartnerName?: string; deliveryPartnerWhatsApp?: string } | null>(
+          `*[_id == "settings.admin"][0]{deliveryPartnerName, deliveryPartnerWhatsApp}`,
+        )
+        .catch(() => null);
+      const partnerPhone = settings?.deliveryPartnerWhatsApp?.replace(/\D/g, '').slice(-10);
+      const text = encodeURIComponent(deliveryPartnerMessage(doc));
+      const url = partnerPhone ? `https://wa.me/91${partnerPhone}?text=${text}` : `https://wa.me/?text=${text}`;
+      if (tab) tab.location.href = url;
+      else window.location.href = url;
+
+      const note = `Sent to delivery partner${settings?.deliveryPartnerName ? ` (${settings.deliveryPartnerName})` : ''}`;
+      let patch = client
+        .patch(props.id)
+        .setIfMissing({ statusHistory: [], tracking: {} })
+        .set({ 'tracking.handedOverAt': new Date().toISOString() });
+      if (!doc.tracking?.courier && settings?.deliveryPartnerName) patch = patch.set({ 'tracking.courier': settings.deliveryPartnerName });
+      if (doc.status === 'confirmed') patch = patch.set({ status: 'processing' });
+      await patch.append('statusHistory', [historyEntry(doc.status === 'confirmed' ? 'processing' : doc.status!, note)]).commit();
+    } finally {
+      setBusy(false);
+      props.onComplete();
+    }
+  };
+
+  return {
+    label: busy ? 'Sending…' : 'Send to Delivery Partner',
+    title: 'Opens WhatsApp with the pickup details (address, items, COD amount) and marks the order as Packing',
+    disabled: busy,
+    onHandle: () => void send(),
   };
 };
 

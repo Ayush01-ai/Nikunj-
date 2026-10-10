@@ -7,7 +7,8 @@ import sanitizeHtml from 'sanitize-html';
 import { client } from '@/cms/lib/client';
 import { COUPON_BY_CODE_QUERY, SITE_SETTINGS_QUERY } from '@/cms/lib/queries';
 import { getSanityOrderStatuses, pushConfirmedOrderToSanity } from '@/backend/lib/sanityOrders';
-import type { Coupon, SiteSettings } from '@/types';
+import { getVariantPricing } from '@/cms/lib/pricing';
+import type { Coupon, ProductSize, SiteSettings } from '@/types';
 
 const MAX_LINE_ITEMS = 50;
 const MAX_QTY_PER_ITEM = 99;
@@ -26,7 +27,8 @@ interface VerifiedProduct {
   name: string;
   price: number;
   stock: number;
-  sizes?: { label: string; priceModifier?: number; stock?: number }[];
+  sizes?: { label: string; priceModifier?: number; price?: number; mrp?: number; stock?: number }[];
+  colors?: { label: string; price?: number; mrp?: number }[];
 }
 
 const clean = (v: unknown, max: number) =>
@@ -100,9 +102,15 @@ export async function POST(req: NextRequest) {
 
     // ── Server-side verification & price calculation ────────────────────
     const productIds = (items as IncomingItem[]).map((item) => item.productId);
-    // Price must match what the storefront displays (sale price when set).
+    // Price must match what the storefront displays (shared pricing rules).
     const dbProducts = await client.fetch<VerifiedProduct[]>(
-      `*[_type == "product" && isActive == true && _id in $productIds]{_id, name, "price": coalesce(salePrice, price), "stock": coalesce(stockQuantity, stock, 0), sizes[]{label, priceModifier, stock}}`,
+      `*[_type == "product" && isActive == true && _id in $productIds]{
+        _id, name,
+        "price": select(defined(salePrice) && salePrice > 0 && salePrice < price => salePrice, price),
+        "stock": coalesce(stockQuantity, stock, 0),
+        "sizes": sizes[defined(label)]{label, "priceModifier": coalesce(priceModifier, 0), price, mrp, stock},
+        "colors": colors[defined(label)]{label, price, mrp}
+      }`,
       { productIds }
     );
 
@@ -119,15 +127,7 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // Check stock limit
-      if (dbProduct.stock < item.quantity) {
-        return NextResponse.json(
-          { success: false, error: `Insufficient stock for "${dbProduct.name}".` },
-          { status: 400 }
-        );
-      }
-
-      // Use verified price from CMS, including variant adjustment
+      // Use verified price from CMS, including variant price / adjustment
       const variants = dbProduct.sizes ?? [];
       const variant = item.selectedSize ? variants.find((s) => s.label === item.selectedSize) : undefined;
       if (variants.length > 0 && !variant) {
@@ -136,13 +136,20 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       }
-      if (variant?.stock !== undefined && variant.stock !== null && variant.stock < item.quantity) {
+      const colours = dbProduct.colors ?? [];
+      const colour = item.selectedColor ? colours.find((c) => c.label === item.selectedColor) : undefined;
+      const pricing = getVariantPricing(
+        { price: dbProduct.price, stock: dbProduct.stock, sizes: variants as ProductSize[], colors: colours },
+        variant?.label,
+        colour?.label,
+      );
+      if (pricing.stock < item.quantity) {
         return NextResponse.json(
-          { success: false, error: `Insufficient stock for "${dbProduct.name}" (${variant.label}).` },
+          { success: false, error: `Insufficient stock for "${dbProduct.name}"${variant ? ` (${variant.label})` : ''}.` },
           { status: 400 }
         );
       }
-      const verifiedPrice = dbProduct.price + (variant?.priceModifier ?? 0);
+      const verifiedPrice = pricing.price;
       calculatedSubtotal += verifiedPrice * item.quantity;
 
       verifiedItems.push({

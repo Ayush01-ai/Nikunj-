@@ -5,7 +5,11 @@ import { schema } from './src/cms/schemas';
 import { deskStructure } from './src/cms/deskStructure';
 import { ApproveReviewAction, RejectReviewAction } from './src/cms/actions/reviewActions';
 import { ViewProductOnSiteAction } from './src/cms/actions/productActions';
-import { AdvanceOrderStatusAction, CancelOrderAction, WhatsAppOrderUpdateAction } from './src/cms/actions/orderActions';
+import { AdvanceOrderStatusAction, CancelOrderAction, SendToDeliveryPartnerAction, WhatsAppOrderUpdateAction } from './src/cms/actions/orderActions';
+import { PackageIcon } from '@sanity/icons/Package';
+import { UploadIcon } from '@sanity/icons/Upload';
+import { OrdersDashboard } from './src/cms/tools/OrdersDashboard';
+import { BulkProductImport } from './src/cms/tools/BulkProductImport';
 
 const SINGLETON_TYPES = new Set(['siteSettings', 'adminSettings', 'order']);
 
@@ -30,12 +34,19 @@ export default defineConfig({
     visionTool(),
   ],
 
+  tools: (prev) => [
+    ...prev.slice(0, 1),
+    { name: 'orders', title: 'Orders Dashboard', icon: PackageIcon, component: OrdersDashboard },
+    { name: 'bulk-import', title: 'Bulk Import', icon: UploadIcon, component: BulkProductImport },
+    ...prev.slice(1),
+  ],
+
   document: {
     actions: (prev, context) => {
       if (context.schemaType === 'testimonial') return [ApproveReviewAction, RejectReviewAction, ...prev];
       if (context.schemaType === 'product') return [...prev, ViewProductOnSiteAction];
       // Orders change only through these buttons so the status history stays complete.
-      if (context.schemaType === 'order') return [AdvanceOrderStatusAction, WhatsAppOrderUpdateAction, CancelOrderAction];
+      if (context.schemaType === 'order') return [AdvanceOrderStatusAction, SendToDeliveryPartnerAction, WhatsAppOrderUpdateAction, CancelOrderAction];
       if (context.schemaType === 'adminSettings') return prev.filter((a) => a.action !== 'delete' && a.action !== 'duplicate');
       return prev;
     },

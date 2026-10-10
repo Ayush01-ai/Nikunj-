@@ -13,8 +13,10 @@ import {
   DEITIES_QUERY,
   FRAGRANCES_QUERY,
   SITE_SETTINGS_QUERY,
+  toSearchPattern,
 } from '@/cms/lib/queries';
 import { Navbar } from '@/frontend/components/layout/Navbar';
+import { BackButton } from '@/frontend/components/ui/BackButton';
 import { Footer } from '@/frontend/components/layout/Footer';
 import { AnnouncementBar } from '@/frontend/components/home/AnnouncementBar';
 import { ProductCard } from '@/frontend/components/products/ProductCard';
@@ -22,6 +24,7 @@ import { ProductFilters } from '@/frontend/components/products/ProductFilters';
 import { CartSidebar } from '@/frontend/components/cart/CartSidebar';
 import { WhatsAppFloat } from '@/frontend/components/ui/WhatsAppFloat';
 import { SacredIcon } from '@/frontend/components/ui/SacredIcon';
+import { ProductTypeIcon, iconForTypeName } from '@/frontend/components/ui/ProductTypeIcon';
 import type { Product, Category, Deity, ProductType, Fragrance, SiteSettings } from '@/types';
 
 export interface CatalogSearchParams {
@@ -83,7 +86,7 @@ export async function generateCatalogMetadata(categorySlug?: string, typeSlug?: 
     };
   }
   return {
-    title: 'Shop All',
+    title: 'Shop Products',
     description: 'Browse all handcrafted divine god ornaments, deity shringar and pooja essentials.',
     alternates: { canonical: '/collections' },
   };
@@ -102,7 +105,7 @@ export async function CatalogPage({ categorySlug, typeSlug, searchParams }: Cata
     productType: typeSlug ?? '',
     deity: searchParams.deity || '',
     fragrance: searchParams.fragrance || '',
-    search: searchParams.search || '',
+    search: toSearchPattern(searchParams.search || ''),
     minPrice: parseInt(searchParams.minPrice || '0', 10) || 0,
     maxPrice: parseInt(searchParams.maxPrice || '0', 10) || 0,
     featuredOnly: searchParams.featuredOnly === 'true',
@@ -128,8 +131,15 @@ export async function CatalogPage({ categorySlug, typeSlug, searchParams }: Cata
   const showFragrance = facets.size === 0 || facets.has('fragrance');
 
   const basePath = ['/collections', categorySlug, typeSlug].filter(Boolean).join('/');
-  const title = type?.name ?? category?.name ?? 'All Collections';
-  const typeTiles = category ? types.filter((t) => (t.productCount ?? 0) > 0) : [];
+  const searchTerm = (searchParams.search || '').trim();
+  const title = type?.name ?? category?.name ?? (searchTerm ? `Results for “${searchTerm}”` : 'All Collections');
+  // Root shop shows every type that has products; a category page shows its own types.
+  const typeTiles = types.filter((t) => (t.productCount ?? 0) > 0);
+  const allHref = categorySlug ? `/collections/${categorySlug}` : '/collections';
+  const typeHref = (t: ProductType) => {
+    const cat = categorySlug ?? t.category?.slug?.current;
+    return cat ? `/collections/${cat}/${t.slug.current}` : '/collections';
+  };
 
   const breadcrumbs = [
     { name: 'Home', href: '/' },
@@ -174,7 +184,9 @@ export async function CatalogPage({ categorySlug, typeSlug, searchParams }: Cata
       <main className="min-h-screen bg-cream">
         {/* Breadcrumb */}
         <div className="bg-white border-b border-[var(--border)] px-4 sm:px-6 lg:px-8 py-3">
-          <nav aria-label="Breadcrumb" className="max-w-7xl mx-auto flex flex-wrap items-center gap-2 font-cinzel text-[10px] tracking-widest uppercase">
+          <div className="max-w-7xl mx-auto flex items-center gap-4">
+          <BackButton fallbackHref={breadcrumbs.length > 1 ? breadcrumbs[breadcrumbs.length - 2].href : '/'} />
+          <nav aria-label="Breadcrumb" className="min-w-0 flex flex-wrap items-center gap-2 font-cinzel text-[10px] tracking-widest uppercase">
             {breadcrumbs.map((b, i) => {
               const isLast = i === breadcrumbs.length - 1;
               return (
@@ -189,6 +201,7 @@ export async function CatalogPage({ categorySlug, typeSlug, searchParams }: Cata
               );
             })}
           </nav>
+          </div>
         </div>
 
         {/* Page Header */}
@@ -214,43 +227,57 @@ export async function CatalogPage({ categorySlug, typeSlug, searchParams }: Cata
           </div>
         </div>
 
-        {/* Type tiles */}
+        {/* Product-type tiles: "All" first, then each type that has products */}
         {typeTiles.length > 0 && (
           <div className="bg-white border-b border-[var(--border)]">
-            <ul className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex gap-4 overflow-x-auto list-none">
-              {typeTiles.map((t) => {
-                const active = t.slug.current === typeSlug;
-                return (
-                  <li key={t._id} className="flex-shrink-0">
-                    <Link
-                      href={active ? `/collections/${categorySlug}` : `/collections/${categorySlug}/${t.slug.current}`}
-                      aria-current={active ? 'page' : undefined}
-                      className="group flex flex-col items-center gap-2 w-20 text-center"
+            <ul
+              aria-label="Shop by product type"
+              className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex gap-3 sm:gap-5 overflow-x-auto list-none scrollbar-hide"
+            >
+              {[
+                { key: 'all', name: category ? `All ${category.name}` : 'All Products', href: allHref, active: !typeSlug, image: undefined, icon: 'all' as const, count: undefined as number | undefined },
+                ...typeTiles.map((t) => ({
+                  key: t._id,
+                  name: t.name,
+                  href: t.slug.current === typeSlug ? allHref : typeHref(t),
+                  active: t.slug.current === typeSlug,
+                  image: t.image,
+                  icon: iconForTypeName(t.name, t.icon),
+                  count: t.productCount,
+                })),
+              ].map((tile) => (
+                <li key={tile.key} className="flex-shrink-0">
+                  <Link
+                    href={tile.href}
+                    aria-current={tile.active ? 'page' : undefined}
+                    className="group flex flex-col items-center gap-2 w-[76px] sm:w-20 text-center"
+                  >
+                    <span
+                      className={`relative w-16 h-16 rounded-full overflow-hidden flex items-center justify-center border-2 transition-all duration-300 group-hover:-translate-y-0.5 ${
+                        tile.active
+                          ? 'border-gold bg-gold/15 shadow-gold-sm'
+                          : 'border-[var(--border)] bg-cream group-hover:border-gold/60'
+                      }`}
                     >
-                      <span
-                        className={`relative w-16 h-16 rounded-full overflow-hidden flex items-center justify-center border-2 transition-colors ${
-                          active ? 'border-gold bg-gold/15' : 'border-transparent bg-gold/10 group-hover:border-gold/60'
-                        }`}
-                      >
-                        {t.image?.asset ? (
-                          <Image
-                            src={urlFor(t.image).width(128).height(128).quality(80).url()}
-                            alt=""
-                            fill
-                            sizes="64px"
-                            className="object-cover"
-                          />
-                        ) : (
-                          <SacredIcon name="lotus" size={26} className="text-gold" />
-                        )}
-                      </span>
-                      <span className={`font-cinzel text-[10px] tracking-wider leading-tight ${active ? 'text-gold-dark font-semibold' : 'text-[var(--text-mid)] group-hover:text-gold'}`}>
-                        {t.name}
-                      </span>
-                    </Link>
-                  </li>
-                );
-              })}
+                      {tile.image?.asset ? (
+                        <Image
+                          src={urlFor(tile.image).width(128).height(128).quality(80).url()}
+                          alt=""
+                          fill
+                          sizes="64px"
+                          className="object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                      ) : (
+                        <ProductTypeIcon name={tile.icon} size={30} className="group-hover:scale-110 transition-transform duration-300" />
+                      )}
+                    </span>
+                    <span className={`font-cinzel text-[10px] tracking-wider leading-tight ${tile.active ? 'text-gold-dark font-semibold' : 'text-[var(--text-mid)] group-hover:text-gold'}`}>
+                      {tile.name}
+                      {tile.count ? <span className="block text-[9px] text-[var(--text-light,#9a8a78)] font-lato tracking-normal">{tile.count} {tile.count === 1 ? 'item' : 'items'}</span> : null}
+                    </span>
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
         )}

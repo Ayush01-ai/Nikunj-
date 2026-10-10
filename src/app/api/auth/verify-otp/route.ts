@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/backend/lib/mongodb';
 import { Otp } from '@/backend/models/Otp';
-import { User } from '@/backend/models/User';
-import { signToken, isValidPhone, sanitizePhone, safeEqual } from '@/backend/lib/auth';
-import { getAdminSettings } from '@/backend/lib/sanityOrders';
+import { User, ensureUserIndexes } from '@/backend/models/User';
+import { isValidPhone, sanitizePhone, safeEqual } from '@/backend/lib/auth';
+import { sessionResponse, syncAdminRole } from '@/backend/lib/session';
 
 const MAX_ATTEMPTS = 5;
 
@@ -58,47 +58,17 @@ export async function POST(req: NextRequest) {
     // OTP verified — clean up
     await Otp.deleteMany({ phone });
 
-    // Upsert user
+    await ensureUserIndexes();
     let user = await User.findOne({ phone });
     if (!user) {
-      user = await User.create({ phone, role: 'user' });
+      user = await User.create({ phone, role: 'user', authProviders: ['phone'] });
+    } else if (!user.authProviders?.includes('phone')) {
+      user.authProviders = Array.from(new Set([...(user.authProviders ?? []), 'phone' as const]));
+      await user.save();
     }
 
-    // Admin numbers are managed in Sanity → Admin Access. An empty list leaves existing roles untouched.
-    const { adminPhones } = await getAdminSettings();
-    if (adminPhones && adminPhones.length > 0) {
-      const role = adminPhones.includes(phone) ? 'admin' : 'user';
-      if (user.role !== role) {
-        user.role = role;
-        await user.save();
-      }
-    }
-
-    const token = signToken({ userId: user._id.toString(), phone: user.phone, role: user.role });
-
-    const response = NextResponse.json({
-      success: true,
-      message: 'Login successful',
-      user: {
-        _id: user._id.toString(),
-        phone: user.phone,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
-      token,
-    });
-
-    // Set HttpOnly cookie
-    response.cookies.set('ns_token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60,
-      path: '/',
-    });
-
-    return response;
+    await syncAdminRole(user);
+    return sessionResponse(user);
   } catch (error) {
     console.error('[verify-otp]', error);
     return NextResponse.json({ success: false, error: 'Verification failed. Try again.' }, { status: 500 });

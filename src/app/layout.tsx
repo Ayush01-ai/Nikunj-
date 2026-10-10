@@ -34,7 +34,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://nikunjsakhi.com'),
     title: {
-      default: settings?.seoTitle || 'Nikunj Sakhi – Divine God Ornaments',
+      default: settings?.seoTitle || 'Nikunj Sakhi – Serve with Devotion',
       template: '%s | Nikunj Sakhi',
     },
     description:
@@ -53,9 +53,9 @@ export async function generateMetadata(): Promise<Metadata> {
       type: 'website',
       locale: 'en_IN',
       siteName: 'Nikunj Sakhi',
-      title: settings?.seoTitle || 'Nikunj Sakhi – Divine God Ornaments',
+      title: settings?.seoTitle || 'Nikunj Sakhi – Serve with Devotion',
       description: settings?.seoDescription || '',
-      images: [{ url: ogImage, width: 1200, height: 630, alt: 'Nikunj Sakhi – Divine God Ornaments' }],
+      images: [{ url: ogImage, width: 1200, height: 630, alt: 'Nikunj Sakhi – Serve with Devotion' }],
     },
     twitter: {
       card: 'summary_large_image',
@@ -87,7 +87,7 @@ export const viewport: Viewport = {
   themeColor: '#C9922A',
 };
 
-import { cinzel, cinzelDecorative, crimsonText, lato, montserrat, greatVibes } from '@/app/fonts';
+import { cinzel, cinzelDecorative, crimsonText, lato, montserrat, greatVibes, yatraOne } from '@/app/fonts';
 
 export default async function RootLayout({
   children,
@@ -100,7 +100,8 @@ export default async function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${cinzel.variable} ${cinzelDecorative.variable} ${crimsonText.variable} ${lato.variable} ${montserrat.variable} ${greatVibes.variable}`}
+      data-scroll-behavior="smooth"
+      className={`${cinzel.variable} ${cinzelDecorative.variable} ${crimsonText.variable} ${lato.variable} ${montserrat.variable} ${greatVibes.variable} ${yatraOne.variable}`}
     >
       <body className="font-lato antialiased bg-cream text-deep selection:bg-gold selection:text-white">
         <Providers siteSettings={settings} menu={menu}>{children}</Providers>

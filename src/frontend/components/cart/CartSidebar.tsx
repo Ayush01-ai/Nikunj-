@@ -173,22 +173,29 @@ export function CartSidebar() {
                     </p>
                     <p className="font-cinzel text-sm font-bold text-gold-dark">
                       ₹{(item.price * item.quantity).toLocaleString('en-IN')}
+                      {item.originalPrice && item.originalPrice > item.price && (
+                        <span className="ml-2 text-xs font-normal text-gray-400 line-through">
+                          ₹{(item.originalPrice * item.quantity).toLocaleString('en-IN')}
+                        </span>
+                      )}
                     </p>
 
                     {/* Qty controls */}
                     <div className="flex items-center gap-2 mt-2">
                       <button
                         onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        disabled={item.quantity <= 1}
                         aria-label={`Decrease quantity of ${item.name}`}
-                        className="w-9 h-9 border border-[var(--border)] flex items-center justify-center hover:bg-gold-dark hover:border-gold-dark hover:text-white transition-all"
+                        className="w-9 h-9 disabled:opacity-40 disabled:pointer-events-none border border-[var(--border)] flex items-center justify-center hover:bg-gold-dark hover:border-gold-dark hover:text-white transition-all"
                       >
                         <Minus size={11} aria-hidden="true" />
                       </button>
                       <span className="font-cinzel text-xs w-6 text-center" aria-live="polite">{item.quantity}</span>
                       <button
                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        disabled={typeof item.stock === 'number' && item.stock > 0 && item.quantity >= item.stock}
                         aria-label={`Increase quantity of ${item.name}`}
-                        className="w-9 h-9 border border-[var(--border)] flex items-center justify-center hover:bg-gold-dark hover:border-gold-dark hover:text-white transition-all"
+                        className="w-9 h-9 disabled:opacity-40 disabled:pointer-events-none border border-[var(--border)] flex items-center justify-center hover:bg-gold-dark hover:border-gold-dark hover:text-white transition-all"
                       >
                         <Plus size={11} aria-hidden="true" />
                       </button>

@@ -109,7 +109,7 @@ export function FeedbackForm({ reviews = [], showReviews = true, showForm = true
           className={`grid grid-cols-1 gap-10 items-start ${twoColumns ? 'lg:grid-cols-2' : 'max-w-xl mx-auto'}`}
         >
           {showReviews && (
-          <div id="reviews" className="scroll-mt-28">
+          <div id="reviews" className="scroll-mt-16 md:scroll-mt-20">
             <h3 className="font-cinzel text-sm tracking-[0.2em] uppercase text-gold-dark font-semibold mb-5 pb-3 border-b border-gold/20">
               Visible Feedback
             </h3>
@@ -169,7 +169,7 @@ export function FeedbackForm({ reviews = [], showReviews = true, showForm = true
           )}
 
           {showForm && (
-          <div id="feedback" className="scroll-mt-28">
+          <div id="feedback" className="scroll-mt-16 md:scroll-mt-20">
           <h3 className="font-cinzel text-sm tracking-[0.2em] uppercase text-gold-dark font-semibold mb-5 pb-3 border-b border-gold/20">
             Share Your Feedback
           </h3>

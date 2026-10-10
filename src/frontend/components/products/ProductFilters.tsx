@@ -80,16 +80,16 @@ function FiltersContent({
 }: FiltersContentProps) {
   const visibleTypes = withProducts(productTypes, activeProductType);
   return (
-    <div className="space-y-7">
+    <div className="space-y-5">
       {/* Categories */}
-      <div>
-        <p className="font-cinzel text-[10px] tracking-[0.3em] uppercase text-[var(--text-mid)] mb-3">Categories</p>
-        <ul className="space-y-1">
+      <section className="overflow-hidden rounded-sm border border-gold/30 bg-white shadow-sm">
+        <h3 className="heading-highlight px-4 py-2.5 text-[11px] tracking-[0.25em]"><span aria-hidden="true" className="heading-star inline-block">✦</span>Categories</h3>
+        <ul className="space-y-0.5 p-2">
           <li>
             <button
               onClick={() => onNavigate('/collections')}
               className={`font-crimson text-sm w-full text-left px-2 py-1 transition-colors ${
-                !activeCategory ? 'text-gold font-semibold' : 'text-[var(--text-mid)] hover:text-gold'
+                !activeCategory ? 'border-l-2 border-gold bg-gold/10 text-gold-dark font-semibold' : 'border-l-2 border-transparent text-[var(--text-mid)] hover:bg-cream hover:text-gold'
               }`}
             >
               All Products
@@ -100,7 +100,7 @@ function FiltersContent({
               <button
                 onClick={() => onNavigate(`/collections/${cat.slug.current}`)}
                 className={`font-crimson text-sm w-full text-left px-2 py-1 transition-colors ${
-                  activeCategory === cat.slug.current ? 'text-gold font-semibold' : 'text-[var(--text-mid)] hover:text-gold'
+                  activeCategory === cat.slug.current ? 'border-l-2 border-gold bg-gold/10 text-gold-dark font-semibold' : 'border-l-2 border-transparent text-[var(--text-mid)] hover:bg-cream hover:text-gold'
                 }`}
               >
                 {cat.name}{countLabel(cat.productCount)}
@@ -108,19 +108,19 @@ function FiltersContent({
             </li>
           ))}
         </ul>
-      </div>
+      </section>
 
       {/* Product Type */}
       {visibleTypes.length > 0 && (
-        <div>
-          <p className="font-cinzel text-[10px] tracking-[0.3em] uppercase text-[var(--text-mid)] mb-3">Product Type</p>
-          <ul className="space-y-1">
+        <section className="overflow-hidden rounded-sm border border-gold/30 bg-white shadow-sm">
+          <h3 className="heading-highlight px-4 py-2.5 text-[11px] tracking-[0.25em]"><span aria-hidden="true" className="heading-star inline-block">✦</span>Product Type</h3>
+          <ul className="space-y-0.5 p-2">
             {activeCategory && (
               <li>
                 <button
                   onClick={() => onNavigate(`/collections/${activeCategory}`)}
                   className={`font-crimson text-sm w-full text-left px-2 py-1 transition-colors ${
-                    !activeProductType ? 'text-gold font-semibold' : 'text-[var(--text-mid)] hover:text-gold'
+                    !activeProductType ? 'border-l-2 border-gold bg-gold/10 text-gold-dark font-semibold' : 'border-l-2 border-transparent text-[var(--text-mid)] hover:bg-cream hover:text-gold'
                   }`}
                 >
                   All Types
@@ -135,7 +135,7 @@ function FiltersContent({
                   <button
                     onClick={() => onNavigate(`/collections/${categorySlug}/${item.slug.current}`)}
                     className={`font-crimson text-sm w-full text-left px-2 py-1 transition-colors ${
-                      activeProductType === item.slug.current ? 'text-gold font-semibold' : 'text-[var(--text-mid)] hover:text-gold'
+                      activeProductType === item.slug.current ? 'border-l-2 border-gold bg-gold/10 text-gold-dark font-semibold' : 'border-l-2 border-transparent text-[var(--text-mid)] hover:bg-cream hover:text-gold'
                     }`}
                   >
                     {item.name}{countLabel(item.productCount)}
@@ -144,19 +144,19 @@ function FiltersContent({
               );
             })}
           </ul>
-        </div>
+        </section>
       )}
 
       {/* Deity */}
       {showDeity && deities.length > 0 && (
-      <div>
-        <p className="font-cinzel text-[10px] tracking-[0.3em] uppercase text-[var(--text-mid)] mb-3">Deity</p>
-        <ul className="space-y-1">
+      <section className="overflow-hidden rounded-sm border border-gold/30 bg-white shadow-sm">
+        <h3 className="heading-highlight px-4 py-2.5 text-[11px] tracking-[0.25em]"><span aria-hidden="true" className="heading-star inline-block">✦</span>Deity</h3>
+        <ul className="space-y-0.5 p-2">
           <li>
             <button
               onClick={() => onPush({ deity: '' })}
               className={`font-crimson text-sm w-full text-left px-2 py-1 transition-colors ${
-                !activeDeity ? 'text-gold font-semibold' : 'text-[var(--text-mid)] hover:text-gold'
+                !activeDeity ? 'border-l-2 border-gold bg-gold/10 text-gold-dark font-semibold' : 'border-l-2 border-transparent text-[var(--text-mid)] hover:bg-cream hover:text-gold'
               }`}
             >
               All Deities
@@ -167,7 +167,7 @@ function FiltersContent({
               <button
                 onClick={() => onPush({ deity: item.slug.current })}
                 className={`font-crimson text-sm w-full text-left px-2 py-1 transition-colors ${
-                  activeDeity === item.slug.current ? 'text-gold font-semibold' : 'text-[var(--text-mid)] hover:text-gold'
+                  activeDeity === item.slug.current ? 'border-l-2 border-gold bg-gold/10 text-gold-dark font-semibold' : 'border-l-2 border-transparent text-[var(--text-mid)] hover:bg-cream hover:text-gold'
                 }`}
               >
                 {item.name}
@@ -175,19 +175,19 @@ function FiltersContent({
             </li>
           ))}
         </ul>
-      </div>
+      </section>
       )}
 
       {/* Fragrance */}
       {showFragrance && fragrances.length > 0 && (
-      <div>
-        <p className="font-cinzel text-[10px] tracking-[0.3em] uppercase text-[var(--text-mid)] mb-3">Fragrance</p>
-        <ul className="space-y-1">
+      <section className="overflow-hidden rounded-sm border border-gold/30 bg-white shadow-sm">
+        <h3 className="heading-highlight px-4 py-2.5 text-[11px] tracking-[0.25em]"><span aria-hidden="true" className="heading-star inline-block">✦</span>Fragrance</h3>
+        <ul className="space-y-0.5 p-2">
           <li>
             <button
               onClick={() => onPush({ fragrance: '' })}
               className={`font-crimson text-sm w-full text-left px-2 py-1 transition-colors ${
-                !activeFragrance ? 'text-gold font-semibold' : 'text-[var(--text-mid)] hover:text-gold'
+                !activeFragrance ? 'border-l-2 border-gold bg-gold/10 text-gold-dark font-semibold' : 'border-l-2 border-transparent text-[var(--text-mid)] hover:bg-cream hover:text-gold'
               }`}
             >
               All Fragrances
@@ -198,7 +198,7 @@ function FiltersContent({
               <button
                 onClick={() => onPush({ fragrance: item.slug.current })}
                 className={`font-crimson text-sm w-full text-left px-2 py-1 transition-colors ${
-                  activeFragrance === item.slug.current ? 'text-gold font-semibold' : 'text-[var(--text-mid)] hover:text-gold'
+                  activeFragrance === item.slug.current ? 'border-l-2 border-gold bg-gold/10 text-gold-dark font-semibold' : 'border-l-2 border-transparent text-[var(--text-mid)] hover:bg-cream hover:text-gold'
                 }`}
               >
                 {item.name}
@@ -206,18 +206,18 @@ function FiltersContent({
             </li>
           ))}
         </ul>
-      </div>
+      </section>
       )}
 
       {/* Collections flags */}
-      <div>
-        <p className="font-cinzel text-[10px] tracking-[0.3em] uppercase text-[var(--text-mid)] mb-3">Highlights</p>
-        <ul className="space-y-1">
+      <section className="overflow-hidden rounded-sm border border-gold/30 bg-white shadow-sm">
+        <h3 className="heading-highlight px-4 py-2.5 text-[11px] tracking-[0.25em]"><span aria-hidden="true" className="heading-star inline-block">✦</span>Highlights</h3>
+        <ul className="space-y-0.5 p-2">
           <li>
             <button
               onClick={() => onPush({ featuredOnly: featuredOnly ? '' : 'true' })}
               className={`font-crimson text-sm w-full text-left px-2 py-1 transition-colors ${
-                featuredOnly ? 'text-gold font-semibold' : 'text-[var(--text-mid)] hover:text-gold'
+                featuredOnly ? 'border-l-2 border-gold bg-gold/10 text-gold-dark font-semibold' : 'border-l-2 border-transparent text-[var(--text-mid)] hover:bg-cream hover:text-gold'
               }`}
             >
               Featured Product
@@ -227,7 +227,7 @@ function FiltersContent({
             <button
               onClick={() => onPush({ bestsellerOnly: bestsellerOnly ? '' : 'true' })}
               className={`font-crimson text-sm w-full text-left px-2 py-1 transition-colors ${
-                bestsellerOnly ? 'text-gold font-semibold' : 'text-[var(--text-mid)] hover:text-gold'
+                bestsellerOnly ? 'border-l-2 border-gold bg-gold/10 text-gold-dark font-semibold' : 'border-l-2 border-transparent text-[var(--text-mid)] hover:bg-cream hover:text-gold'
               }`}
             >
               Best Seller
@@ -237,19 +237,19 @@ function FiltersContent({
             <button
               onClick={() => onPush({ newArrivalOnly: newArrivalOnly ? '' : 'true' })}
               className={`font-crimson text-sm w-full text-left px-2 py-1 transition-colors ${
-                newArrivalOnly ? 'text-gold font-semibold' : 'text-[var(--text-mid)] hover:text-gold'
+                newArrivalOnly ? 'border-l-2 border-gold bg-gold/10 text-gold-dark font-semibold' : 'border-l-2 border-transparent text-[var(--text-mid)] hover:bg-cream hover:text-gold'
               }`}
             >
               New Arrival
             </button>
           </li>
         </ul>
-      </div>
+      </section>
 
       {/* Price range */}
-      <div>
-        <p className="font-cinzel text-[10px] tracking-[0.3em] uppercase text-[var(--text-mid)] mb-3">Price Range</p>
-        <ul className="space-y-1">
+      <section className="overflow-hidden rounded-sm border border-gold/30 bg-white shadow-sm">
+        <h3 className="heading-highlight px-4 py-2.5 text-[11px] tracking-[0.25em]"><span aria-hidden="true" className="heading-star inline-block">✦</span>Price Range</h3>
+        <ul className="space-y-0.5 p-2">
           {PRICE_RANGES.map((range) => {
             const isActive = range.min === Number(currentMin || 0) && range.max === Number(currentMax || 0);
             return (
@@ -257,7 +257,7 @@ function FiltersContent({
                 <button
                   onClick={() => onPush({ minPrice: range.min ? String(range.min) : '', maxPrice: range.max ? String(range.max) : '' })}
                   className={`font-crimson text-sm w-full text-left px-2 py-1 transition-colors ${
-                    isActive ? 'text-gold font-semibold' : 'text-[var(--text-mid)] hover:text-gold'
+                    isActive ? 'border-l-2 border-gold bg-gold/10 text-gold-dark font-semibold' : 'border-l-2 border-transparent text-[var(--text-mid)] hover:bg-cream hover:text-gold'
                   }`}
                 >
                   {range.label}
@@ -266,18 +266,18 @@ function FiltersContent({
             );
           })}
         </ul>
-      </div>
+      </section>
 
       {/* Sort */}
-      <div>
-        <p className="font-cinzel text-[10px] tracking-[0.3em] uppercase text-[var(--text-mid)] mb-3">Sort By</p>
-        <ul className="space-y-1">
+      <section className="overflow-hidden rounded-sm border border-gold/30 bg-white shadow-sm">
+        <h3 className="heading-highlight px-4 py-2.5 text-[11px] tracking-[0.25em]"><span aria-hidden="true" className="heading-star inline-block">✦</span>Sort By</h3>
+        <ul className="space-y-0.5 p-2">
           {SORT_OPTIONS.map((opt) => (
             <li key={opt.value}>
               <button
                 onClick={() => onPush({ sort: opt.value })}
                 className={`font-crimson text-sm w-full text-left px-2 py-1 transition-colors ${
-                  currentSort === opt.value ? 'text-gold font-semibold' : 'text-[var(--text-mid)] hover:text-gold'
+                  currentSort === opt.value ? 'border-l-2 border-gold bg-gold/10 text-gold-dark font-semibold' : 'border-l-2 border-transparent text-[var(--text-mid)] hover:bg-cream hover:text-gold'
                 }`}
               >
                 {opt.label}
@@ -285,7 +285,7 @@ function FiltersContent({
             </li>
           ))}
         </ul>
-      </div>
+      </section>
     </div>
   );
 }

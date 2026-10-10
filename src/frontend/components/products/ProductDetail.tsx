@@ -1,16 +1,19 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, Zap, Heart, Share2, ChevronLeft, ChevronRight, ZoomIn, Minus, Plus, Check, Truck, Shield, RotateCcw } from 'lucide-react';
+import { ShoppingBag, Zap, Heart, Share2, ChevronLeft, ChevronRight, ZoomIn, Check, Truck, Shield, RotateCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 import { urlFor } from '@/cms/lib/image';
 import { useCartStore } from '@/frontend/store/cartStore';
-import { useWishlistStore } from '@/frontend/store/wishlistStore';
+import { useWishlistStore, useWishlistHydrated } from '@/frontend/store/wishlistStore';
 import { Button } from '@/frontend/components/ui/button';
 import { SacredPlaceholder } from '@/frontend/components/ui/SacredIcon';
-import { toCartItem } from '@/frontend/lib/product';
+import { colourAtImage, colourImageIndex, productGallery, toCartItem } from '@/frontend/lib/product';
+import { defaultVariant, getVariantPricing } from '@/cms/lib/pricing';
+import { ColorSelector, PriceBlock, QuantitySelector, VariantSelector } from '@/frontend/components/products/ProductOptions';
 import type { Product, SiteSettings } from '@/types';
 
 interface ProductDetailProps {
@@ -19,30 +22,59 @@ interface ProductDetailProps {
 }
 
 export function ProductDetail({ product, settings }: ProductDetailProps) {
-  const [currentImg, setCurrentImg] = useState(0);
-  const [selectedSize, setSelectedSize] = useState<string>(
-    (product.sizes?.find((s) => s.stock !== 0) ?? product.sizes?.[0])?.label || '',
-  );
+  const router = useRouter();
+  const images = useMemo(() => productGallery(product), [product]);
+  const [selectedSize, setSelectedSize] = useState<string>(defaultVariant(product)?.label || '');
   const [selectedColor, setSelectedColor] = useState<string>(product.colors?.[0]?.label || '');
+  const [currentImg, setCurrentImgRaw] = useState(() => Math.max(0, colourImageIndex(images, product, product.colors?.[0]?.label)));
   const [quantity, setQuantity] = useState(1);
   const [zoomed, setZoomed] = useState(false);
 
   const { addItem, openCart } = useCartStore();
   const { toggleWishlist, isWishlisted } = useWishlistStore();
-  const wished = isWishlisted(product._id);
+  const wishlistReady = useWishlistHydrated();
+  const wished = wishlistReady && isWishlisted(product._id);
 
-  const images = product.images || [];
-  const currentPriceModifier = product.sizes?.find((s) => s.label === selectedSize)?.priceModifier || 0;
-  const currentPrice = product.price + currentPriceModifier;
-  const discount = product.originalPrice
-    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
-    : 0;
+  const pricing = getVariantPricing(product, selectedSize || undefined, selectedColor || undefined);
 
-  const handleAddToCart = useCallback(() => {
+  // Browsing to a colour's photo selects that colour (and its price).
+  const setCurrentImg = (next: number | ((p: number) => number)) => {
+    const index = typeof next === 'function' ? next(currentImg) : next;
+    setCurrentImgRaw(index);
+    const colour = colourAtImage(images, product, index);
+    if (colour) setSelectedColor(colour);
+  };
+
+  const selectColour = (label: string) => {
+    setSelectedColor(label);
+    const index = colourImageIndex(images, product, label);
+    if (index >= 0) setCurrentImgRaw(index);
+    setQuantity((q) => Math.max(1, Math.min(q, getVariantPricing(product, selectedSize || undefined, label).stock || 1)));
+  };
+  const { discount } = pricing;
+  const outOfStock = pricing.stock <= 0;
+
+  const selectSize = (label: string) => {
+    setSelectedSize(label);
+    setQuantity((q) => Math.max(1, Math.min(q, getVariantPricing(product, label, selectedColor || undefined).stock || 1)));
+  };
+
+  const addToCart = useCallback(() => {
+    if (outOfStock) return false;
     addItem(toCartItem(product, { size: selectedSize, color: selectedColor, quantity }));
+    return true;
+  }, [product, selectedSize, selectedColor, quantity, addItem, outOfStock]);
+
+  const handleAddToCart = () => {
+    if (!addToCart()) return;
     toast.success(`${product.name} added to cart 🙏`);
     openCart();
-  }, [product, selectedSize, selectedColor, quantity, addItem, openCart]);
+  };
+
+  const handleBuyNow = () => {
+    if (!addToCart()) return;
+    router.push('/checkout');
+  };
 
   const handleShare = () => {
     if (navigator.share) {
@@ -165,25 +197,11 @@ export function ProductDetail({ product, settings }: ProductDetailProps) {
           </h1>
 
           {/* Price */}
-          <div className="flex items-center gap-4 mb-5">
-            <span className="font-cinzel text-2xl sm:text-3xl font-bold text-gold-dark">
-              ₹{currentPrice.toLocaleString('en-IN')}
-            </span>
-            {product.originalPrice && (
-              <>
-                <span className="text-lg text-gray-400 line-through font-lato">
-                  ₹{product.originalPrice.toLocaleString('en-IN')}
-                </span>
-                <span className="bg-green-100 text-green-700 font-cinzel text-xs px-2 py-0.5">
-                  {discount}% OFF
-                </span>
-              </>
-            )}
-          </div>
+          <PriceBlock price={pricing.price} mrp={pricing.mrp} discount={discount} quantity={quantity} />
 
           {/* Stock */}
-          <p className={`text-xs font-cinzel tracking-wider mb-5 ${product.stock > 0 ? 'text-green-600' : 'text-red-500'}`}>
-            {product.stock > 10 ? '✓ In Stock' : product.stock > 0 ? `⚠ Only ${product.stock} left` : '✗ Out of Stock'}
+          <p className={`text-xs font-cinzel tracking-wider mb-5 ${outOfStock ? 'text-red-500' : 'text-green-600'}`}>
+            {pricing.stock > 10 ? '✓ In Stock' : pricing.stock > 0 ? `⚠ Only ${pricing.stock} left` : '✗ Out of Stock'}
           </p>
 
           {/* Short desc */}
@@ -193,101 +211,25 @@ export function ProductDetail({ product, settings }: ProductDetailProps) {
             </p>
           )}
 
-          {/* Size */}
-          {product.sizes && product.sizes.length > 0 && (
-            <div className="mb-5">
-              <p className="font-cinzel text-[10px] tracking-widest uppercase text-[var(--text-mid)] mb-3">
-                Select Size
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {product.sizes.map((size) => (
-                  <button
-                    key={size.label}
-                    onClick={() => setSelectedSize(size.label)}
-                    disabled={size.stock === 0}
-                    className={`
-                      px-4 py-2 border font-cinzel text-[10px] tracking-wider uppercase transition-all
-                      ${selectedSize === size.label
-                        ? 'bg-gold border-gold text-white'
-                        : 'border-[var(--border)] text-[var(--text-mid)] hover:border-gold'
-                      }
-                      ${size.stock === 0 ? 'opacity-40 cursor-not-allowed line-through' : ''}
-                    `}
-                  >
-                    {size.label}
-                    {size.priceModifier !== 0 && (
-                      <span className="ml-1 text-[9px]">
-                        ({size.priceModifier > 0 ? '+' : ''}₹{size.priceModifier})
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Color */}
-          {product.colors && product.colors.length > 0 && (
-            <div className="mb-5">
-              <p className="font-cinzel text-[10px] tracking-widest uppercase text-[var(--text-mid)] mb-3">
-                Color: <span className="text-gold">{selectedColor}</span>
-              </p>
-              <div className="flex gap-2">
-                {product.colors.map((color) => (
-                  <button
-                    key={color.label}
-                    onClick={() => setSelectedColor(color.label)}
-                    title={color.label}
-                    className={`w-9 h-9 rounded-full border-2 transition-all ${
-                      selectedColor === color.label ? 'border-gold scale-110 ring-2 ring-gold/30' : 'border-gray-200'
-                    }`}
-                    style={{ background: color.hex }}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
+          <VariantSelector product={product} value={selectedSize} onChange={selectSize} />
+          <ColorSelector colors={product.colors} value={selectedColor} onChange={selectColour} />
 
           {/* Quantity */}
           <div className="mb-6">
-            <p className="font-cinzel text-[10px] tracking-widest uppercase text-[var(--text-mid)] mb-3">
-              Quantity
-            </p>
-            <div className="flex items-center gap-3 w-fit">
-              <button
-                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                className="w-10 h-10 border border-[var(--border)] flex items-center justify-center hover:bg-gold hover:border-gold hover:text-white transition-all"
-              >
-                <Minus size={14} />
-              </button>
-              <span className="font-cinzel text-sm w-10 text-center">{quantity}</span>
-              <button
-                onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))}
-                className="w-10 h-10 border border-[var(--border)] flex items-center justify-center hover:bg-gold hover:border-gold hover:text-white transition-all"
-              >
-                <Plus size={14} />
-              </button>
-            </div>
+            <QuantitySelector value={quantity} max={pricing.stock} onChange={setQuantity} />
           </div>
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row gap-3 mb-6">
             <button
               onClick={handleAddToCart}
-              disabled={product.stock === 0}
+              disabled={outOfStock}
               className="flex-1 btn-outline-gold disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <ShoppingBag size={14} /> Add to Cart
             </button>
-            <Button
-              onClick={() => {
-                handleAddToCart();
-                window.location.href = '/checkout';
-              }}
-              disabled={product.stock === 0}
-              className="flex-1"
-            >
-              <Zap size={14} /> Buy Now
+            <Button onClick={handleBuyNow} disabled={outOfStock} className="flex-1">
+              <Zap size={14} /> {outOfStock ? 'Out of Stock' : 'Buy Now'}
             </Button>
           </div>
 
@@ -335,7 +277,7 @@ export function ProductDetail({ product, settings }: ProductDetailProps) {
           {/* WhatsApp Order */}
           {settings?.whatsappNumber && (
             <a
-              href={`https://wa.me/${settings.whatsappNumber}?text=${encodeURIComponent(`Namaste! 🙏 I want to order: ${product.name}\nPrice: ₹${currentPrice}\n${process.env.NEXT_PUBLIC_SITE_URL || 'https://nikunjsakhi.com'}/products/${product.slug.current}`)}`}
+              href={`https://wa.me/${settings.whatsappNumber.replace(/\D/g, '')}?text=${encodeURIComponent(`Namaste! 🙏 I want to order: ${product.name}${selectedSize ? `\nVariant: ${selectedSize}` : ''}${selectedColor ? `\nColour: ${selectedColor}` : ''}\nQty: ${quantity}\nPrice: ₹${(pricing.price * quantity).toLocaleString('en-IN')}\n${process.env.NEXT_PUBLIC_SITE_URL || 'https://nikunjsakhi.com'}/products/${product.slug.current}`)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-5 flex items-center justify-center gap-3 bg-[#25D366] text-white font-cinzel text-[10px] tracking-widest uppercase py-3 hover:bg-[#1da955] transition-colors"

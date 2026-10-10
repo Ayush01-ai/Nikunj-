@@ -59,6 +59,12 @@ const policies: Record<string, { title: string; content: string[] }> = {
   },
 };
 
+export const revalidate = 300;
+
+export function generateStaticParams() {
+  return Object.keys(policies).map((slug) => ({ slug }));
+}
+
 export async function generateMetadata({ params }: PolicyPageProps): Promise<Metadata> {
   const { slug } = await params;
   const policy = policies[slug];
@@ -90,7 +96,7 @@ export default async function PolicyPage({ params }: PolicyPageProps) {
               <div className="space-y-5">
                 {policy.content.map((para, i) => (
                   <p key={i} className="font-crimson text-base text-[var(--text-mid)] leading-relaxed">
-                    {para}
+                    {para.replace('Rs.999', `Rs.${settings?.freeDeliveryThreshold || 999}`)}
                   </p>
                 ))}
               </div>

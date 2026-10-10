@@ -48,7 +48,7 @@ async function ConfirmationContent({ orderId }: { orderId: string }) {
   const awaitingPayment = order?.paymentMethod !== 'cod' && order?.paymentStatus !== 'paid';
 
   return (
-    <div className="min-h-screen bg-cream flex items-center justify-center px-4 pt-24 pb-12">
+    <div className="min-h-screen bg-cream flex items-center justify-center px-4 pt-10 pb-12">
       <div className="max-w-lg w-full text-center">
         {/* Success icon */}
         <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">

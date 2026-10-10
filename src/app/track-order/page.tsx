@@ -9,9 +9,10 @@ import { Navbar } from '@/frontend/components/layout/Navbar';
 import { Footer } from '@/frontend/components/layout/Footer';
 import { useAuthStore } from '@/frontend/store/authStore';
 import { useSiteSettings } from '@/frontend/providers/Providers';
-import { ORDER_STATUS_LABEL, ORDER_STEPS } from '@/cms/lib/orderMessages';
+import { ORDER_STATUS_LABEL, ORDER_STEPS, isReturnStatus } from '@/cms/lib/orderMessages';
+import { OrderRequestPanel, type RequestableOrder } from '@/frontend/components/orders/OrderRequestPanel';
 
-interface TrackedOrder {
+interface TrackedOrder extends RequestableOrder {
   orderId: string;
   status: string;
   placedAt: string;
@@ -33,13 +34,15 @@ const formatDate = (iso?: string) =>
 
 function TrackOrderContent() {
   const params = useSearchParams();
-  const { token, user } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   const { settings } = useSiteSettings();
   const [orderId, setOrderId] = useState(params.get('id')?.toUpperCase() ?? '');
   const [phone, setPhone] = useState('');
   const [order, setOrder] = useState<TrackedOrder | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  // Phone that unlocked the current order; re-used to authorise cancel / return requests.
+  const [verifiedPhone, setVerifiedPhone] = useState('');
 
   const lookup = useCallback(
     async (id: string, mobile: string) => {
@@ -48,7 +51,7 @@ function TrackOrderContent() {
       try {
         const res = await fetch('/api/track-order', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...(token && { Authorization: `Bearer ${token}` }) },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ orderId: id, phone: mobile }),
         });
         const json = await res.json();
@@ -58,20 +61,21 @@ function TrackOrderContent() {
           return;
         }
         setOrder(json.data);
+        setVerifiedPhone(mobile);
       } catch {
         setError('Network error. Please try again.');
       } finally {
         setLoading(false);
       }
     },
-    [token],
+    [],
   );
 
   // Signed-in customers arriving from "My Orders" don't need to type anything.
   useEffect(() => {
     const id = params.get('id');
-    if (id && token) void lookup(id.toUpperCase(), user?.phone ?? '');
-  }, [params, token, user?.phone, lookup]);
+    if (id && isAuthenticated) void lookup(id.toUpperCase(), user?.phone ?? '');
+  }, [params, isAuthenticated, user?.phone, lookup]);
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,7 +87,7 @@ function TrackOrderContent() {
   const whatsapp = settings?.whatsappNumber?.replace(/\D/g, '');
 
   return (
-    <main className="min-h-screen bg-cream pt-24 pb-16 px-4">
+    <main className="min-h-screen bg-cream pt-10 pb-16 px-4">
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-8">
           <p className="font-cinzel text-[10px] tracking-[0.4em] uppercase text-gold-dark mb-2">Order Status</p>
@@ -108,7 +112,7 @@ function TrackOrderContent() {
           </label>
           <label className="flex flex-col gap-1.5">
             <span className="font-cinzel text-[10px] tracking-widest uppercase text-[var(--text-mid)]">
-              Mobile Number {token && <span className="normal-case tracking-normal">(optional when signed in)</span>}
+              Mobile Number {isAuthenticated && <span className="normal-case tracking-normal">(optional when signed in)</span>}
             </span>
             <input
               value={phone}
@@ -155,6 +159,11 @@ function TrackOrderContent() {
                 </p>
               ) : order.status === 'pending' ? (
                 <p className="mt-6 font-lato text-sm text-[var(--text-mid)]">We are waiting for your payment to be confirmed.</p>
+              ) : isReturnStatus(order.status) ? (
+                <p className="mt-6 flex items-center gap-2 text-amber-800 font-lato text-sm">
+                  <Package size={18} aria-hidden="true" /> {ORDER_STATUS_LABEL[order.status]}.
+                  {order.status === 'refunded' ? ' The amount has been refunded to your original payment method.' : ' We will keep you updated on WhatsApp.'}
+                </p>
               ) : (
                 <ol className="mt-8 grid grid-cols-4" aria-label="Order progress">
                   {ORDER_STEPS.map((step, i) => {
@@ -274,6 +283,7 @@ function TrackOrderContent() {
                 </a>
               </p>
             )}
+            <OrderRequestPanel order={order} phone={verifiedPhone} onSubmitted={() => void lookup(order.orderId, verifiedPhone)} />
           </section>
         )}
 

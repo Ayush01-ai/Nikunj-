@@ -651,3 +651,86 @@ alter table orders enable row level security;
 | Number fields coming back as strings | The repository converts to `Number` explicitly; covered by tests |
 
 **Files touched:** about 9 routes and pages, plus 4 new files (Supabase client, 3 repositories), 1 SQL migration, 1 data-migration script, and setup files. **No frontend components change.**
+
+---
+
+## 13. Phase 9: Storefront Polish, Order Fulfilment & Multi-Method Login
+
+Implemented 2026-10. Full change log, root causes and file list: [changes doc.md](./changes%20doc.md).
+
+### 13.1 Requirements
+
+| # | Requirement | Acceptance |
+|---|---|---|
+| 1 | Hero title "Bhakti Ka Bhaav" uses the logo colours | Teal-to-gold gradient text matches the logo |
+| 2 | Search covers all products and suggests while typing | Typing 2+ letters shows product suggestions (image, name, price) from the full catalogue; Enter opens all results |
+| 3 | Product page image visible | `/products/[slug]` shows the main image and thumbnails, same as Quick View |
+| 4 | Quantity selector everywhere; price follows quantity | Product page, Quick View and cart have -/+ capped by stock; the shown total = unit price x qty |
+| 5 | Accurate sale % | One `discountPercent` (rounded down so it never overstates, 0 if no saving) is used by every component and the order API |
+| 6 | Orders managed in Sanity, sent to a delivery partner, customer confirmed on WhatsApp | See 13.2 |
+| 7 | Size/variant price selection works | Selecting a size updates the price, MRP, % and stock; sold-out sizes are disabled |
+| 8 | New logo + "Serve with Devotion" everywhere | Header, footer, login, favicon, PWA icons, OG image, SEO titles |
+| 9 | "View All Products" is the first panel of "Browse by Deity & Category" | First card links to `/collections`, followed by all categories |
+| 10 | Trust badges on one line, animated, 2D icons | 4 badges on one row on mobile and desktop; honours reduced-motion |
+| 11 | No "Scroll" indicator | Removed from the hero |
+| 12 | Buttons navigate correctly; new pages open at the top | Client-side `Link`s; scroll reset on route change; policy pages pre-rendered; global loading state |
+| 13 | Shop page product-type tiles with Sanity images | Tiles (All + each type) with the Sanity *Tile Image* or a fallback icon; clicking shows that type's products |
+| 14 | Email, Google and phone-OTP login; forgot password; account dashboard | See 13.3 |
+
+### 13.2 Order fulfilment workflow (Sanity)
+
+1. A confirmed order (COD placed, or online payment verified) is written to Sanity as an `order` document, and stock is decremented atomically.
+2. The customer automatically receives an **"Order confirmed" WhatsApp message** (WhatsApp Cloud API; an approved template is recommended).
+3. Studio **Orders** lists: New - to pack / Packing / Shipped / Delivered / Cancelled / Refund due / All.
+4. Order actions:
+   - **Mark as Packing/Shipped/Delivered**: shipping without an AWB asks for confirmation first.
+   - **Send to Delivery Partner**:
+     - Opens WhatsApp to the partner number from *Admin Access*, pre-filled with the customer, address, items and COD amount (or Prepaid).
+     - Stamps `tracking.handedOverAt` and moves Confirmed to Packing.
+   - **Send WhatsApp update** (manual).
+   - **Cancel** (restocks; paid orders become Refund due).
+5. Each status change triggers the Sanity webhook `/api/webhooks/order-status` (secret header), which WhatsApps the customer the new status, with courier/AWB/link when shipped.
+6. Customers see live status in My Account and Track Order.
+
+New fields: `adminSettings.deliveryPartnerName`, `adminSettings.deliveryPartnerWhatsApp`, `order.tracking.handedOverAt`.
+
+### 13.3 Authentication
+
+| Method | Flow |
+|---|---|
+| Phone | OTP (MSG91), with resend |
+| Email | Register / sign in with a password (bcrypt, 8+ characters, letter + number). Forgot password emails a 30-minute one-time link (hashed token, generic response) |
+| Google | OAuth 2.0 with a `state` check; links to an existing account with the same email |
+
+- One user can have several providers (`authProviders`). Sessions use the httpOnly `ns_token` JWT cookie (7 days). Auth endpoints are rate-limited.
+- **Account dashboard:** order count, in-progress count, wishlist and cart stats; Orders (step tracker plus Track), Wishlist, Cart and Profile tabs.
+
+### 13.4 New environment variables
+
+`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `RESEND_API_KEY` (+ `EMAIL_FROM`), `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_ORDER_TEMPLATE`, `WHATSAPP_TEMPLATE_LANG`, `SANITY_WEBHOOK_SECRET`. Every feature degrades gracefully when its variables are missing.
+
+### 13.5 Owner actions after deploy
+
+1. Set Site Settings -> Tagline to "Serve with Devotion".
+2. Fill in Admin Access -> Delivery Partner name and WhatsApp number.
+3. Upload Product Type tile images.
+4. Set the Variant Price on "Radha Krishna Haar set" size 0-5.
+5. Create the Sanity order-status webhook, and add the Google OAuth redirect URI `{SITE_URL}/api/auth/google/callback`.
+6. Run `npm run sanity:deploy`.
+
+## 14. Phase 10: UI and CMS Refinements (Round 3)
+
+### 14.1 Requirements
+1. The login greeting reads "Namaste" in an Anglo-Hindi display font (Yatra One).
+2. The footer uses the transparent logo with no halo. The header logo is enlarged and hangs below the nav bar; it shrinks on scroll.
+3. Product colour variants carry their own image and an optional price/MRP. The gallery, price, cart, checkout and server order total follow the selected colour. Precedence: colour, then size variant, then base price.
+4. Wishlist items are purchasable through Quick View (choose options) or direct Add to Cart / Buy Now.
+5. Shop filter groups are shown as boxed sections with bold, highlighted headings.
+6. "Shop All" is renamed to "Shop Products" site-wide.
+7. A 3-column product information block (Product Details / Care Instructions / Return Policy) appears below the purchase panel.
+8. Sanity: `product.colors[]` = {image, label (required, unique), price, mrp (> price), hex}. New `product.returnPolicy` (text). `careInstructions` now has a description.
+
+### 14.2 Owner actions
+1. Run `npm run sanity:deploy`.
+2. For coloured products, add a photo and (optionally) a price to each colour row.
+3. Optionally fill in Care Instructions and Return Policy per product. Defaults are shown when they are empty.

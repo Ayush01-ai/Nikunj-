@@ -1,6 +1,8 @@
 import { writeClient } from '@/cms/lib/client';
 import { STOCK_PRODUCTS_QUERY, buildStockPatches, stockLookupIds } from '@/cms/lib/orderStock';
 import type { IOrder } from '@/backend/models/Order';
+import { sendOrderWhatsApp } from '@/backend/lib/whatsapp';
+import type { CancelRequestInfo } from '@/cms/lib/orderRequests';
 
 /** Private ID path: documents with a dot in the ID are not readable through the public dataset API. */
 export const sanityOrderId = (orderId: string) => `orders.${orderId}`;
@@ -21,6 +23,8 @@ export interface SanityOrder {
   paymentStatus?: string;
   tracking?: { courier?: string; trackingNumber?: string; trackingUrl?: string };
   statusHistory?: { status: string; at: string; note?: string }[];
+  cancelRequest?: CancelRequestInfo | null;
+  returnInfo?: { reasonCategory?: string; reason?: string; requestedAt?: string; rejectedReason?: string; rejectedAt?: string; photoCount?: number } | null;
 }
 
 const ORDER_PROJECTION = `{
@@ -28,7 +32,9 @@ const ORDER_PROJECTION = `{
   shippingAddress{city, state, pincode},
   items[]{productName, image, option, colour, price, quantity},
   subtotal, deliveryCharge, discount, total, paymentMethod, paymentStatus,
-  tracking, statusHistory[]{status, at, note}
+  tracking, statusHistory[]{status, at, note},
+  cancelRequest{state, reasonCategory, details, requestedAt, decidedAt, decisionNote},
+  returnInfo{reasonCategory, reason, requestedAt, rejectedReason, rejectedAt, "photoCount": count(photos)}
 }`;
 
 const hasToken = () => Boolean(process.env.SANITY_API_TOKEN);
@@ -110,6 +116,22 @@ export async function pushConfirmedOrderToSanity(order: IOrder, note: string): P
     });
     for (const patch of stockPatches) tx.patch(patch.id, (p) => p.inc(patch.inc));
     await tx.commit({ autoGenerateArrayKeys: true });
+    // Fresh order only (a duplicate create returns 409 below), so the customer is messaged once.
+    await sendOrderWhatsApp({
+      orderNumber: order.orderId,
+      status: 'confirmed',
+      customerName: addr.fullName,
+      phone: addr.phone,
+      total: order.total,
+      paymentStatus: order.paymentStatus,
+      items: order.items.map((i) => ({
+        productName: i.name,
+        option: i.selectedSize,
+        colour: i.selectedColor,
+        price: i.price,
+        quantity: i.quantity,
+      })),
+    });
     return true;
   } catch (error) {
     const status = (error as { statusCode?: number }).statusCode;
@@ -119,10 +141,10 @@ export async function pushConfirmedOrderToSanity(order: IOrder, note: string): P
   }
 }
 
-export async function getAdminSettings(): Promise<{ ownerWhatsApp?: string; adminPhones?: string[] }> {
+export async function getAdminSettings(): Promise<{ ownerWhatsApp?: string; adminPhones?: string[]; returnWindowDays?: number }> {
   if (!hasToken()) return {};
   try {
-    return (await writeClient.fetch(`*[_id == "settings.admin"][0]{ownerWhatsApp, adminPhones}`)) ?? {};
+    return (await writeClient.fetch(`*[_id == "settings.admin"][0]{ownerWhatsApp, adminPhones, returnWindowDays}`)) ?? {};
   } catch {
     return {};
   }

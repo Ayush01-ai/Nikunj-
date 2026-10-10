@@ -30,7 +30,7 @@ export default async function NotFound() {
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <Link href="/collections" className="btn-gold">
-              Shop All
+              Shop Products
             </Link>
             <Link href="/" className="btn-outline-gold">
               Return Home

@@ -135,6 +135,8 @@ export const deskStructure = (S: StructureBuilder) =>
               ordersByStatus(S, 'ordersShipped', '🚚 Shipped', 'status == "shipped"'),
               ordersByStatus(S, 'ordersDelivered', '✅ Delivered', 'status == "delivered"'),
               ordersByStatus(S, 'ordersCancelled', '❌ Cancelled', 'status == "cancelled"'),
+              ordersByStatus(S, 'ordersReturns', '🔁 Returns in progress', 'status in ["return_requested", "return_approved", "returned"]'),
+              ordersByStatus(S, 'ordersRefunded', '💸 Refunded', 'status == "refunded" || paymentStatus == "refunded"'),
               ordersByStatus(S, 'ordersRefundDue', '💸 Refund due', 'paymentStatus == "refund_due"'),
               S.divider(),
               ordersByStatus(S, 'ordersAll', 'All Orders', 'true'),

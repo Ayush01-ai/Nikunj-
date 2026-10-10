@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import type { CartItem } from '@/types';
 import { cartItemId } from '@/frontend/lib/product';
+import { getVariantPricing } from '@/cms/lib/pricing';
 
 interface CartState {
   items: CartItem[];
@@ -28,11 +29,12 @@ export const useCartStore = create<CartState>()(
 
       addItem: (item) => {
         set((state) => {
+          const max = Math.max(1, item.stock || 1);
           const existing = state.items.find((i) => i.id === item.id);
           if (existing) {
-            existing.quantity = Math.min(existing.quantity + item.quantity, existing.stock);
+            existing.quantity = Math.min(existing.quantity + item.quantity, Math.max(1, existing.stock || 1));
           } else {
-            state.items.push(item);
+            state.items.push({ ...item, quantity: Math.max(1, Math.min(item.quantity, max)) });
           }
         });
       },
@@ -46,12 +48,11 @@ export const useCartStore = create<CartState>()(
       updateQuantity: (id, quantity) => {
         set((state) => {
           const item = state.items.find((i) => i.id === id);
-          if (item) {
-            if (quantity <= 0) {
-              state.items = state.items.filter((i) => i.id !== id);
-            } else {
-              item.quantity = Math.min(quantity, item.stock);
-            }
+          if (!item || !Number.isFinite(quantity)) return;
+          if (quantity <= 0) {
+            state.items = state.items.filter((i) => i.id !== id);
+          } else {
+            item.quantity = Math.min(Math.floor(quantity), Math.max(1, item.stock || 1));
           }
         });
       },
@@ -68,15 +69,22 @@ export const useCartStore = create<CartState>()(
           const size = 'size' in changes ? changes.size : item.selectedSize;
           const color = 'color' in changes ? changes.color : item.selectedColor;
           const variant = item.options?.find((o) => o.label === size);
-          const previousModifier = item.options?.find((o) => o.label === item.selectedSize)?.priceModifier ?? 0;
-          const basePrice = item.basePrice ?? item.price - previousModifier;
           const productStock = item.productStock ?? item.stock;
+          const previous = item.options?.find((o) => o.label === item.selectedSize);
+          const basePrice =
+            item.basePrice ?? (previous && !previous.price ? item.price - (previous.priceModifier ?? 0) : item.price);
+          const pricing = getVariantPricing(
+            { price: basePrice, originalPrice: item.baseOriginalPrice, stock: productStock, sizes: item.options, colors: item.colors },
+            variant?.label,
+            color || undefined,
+          );
           const newId = cartItemId(item.productId, variant?.label, color);
-          const stock = variant?.stock ?? productStock;
+          const stock = pricing.stock;
+          const colourImage = item.colors?.find((c) => c.label === color)?.image?.asset?.url;
 
           const duplicate = state.items.find((i, idx) => idx !== index && i.id === newId);
           if (duplicate) {
-            duplicate.quantity = Math.min(duplicate.quantity + item.quantity, duplicate.stock);
+            duplicate.quantity = Math.min(duplicate.quantity + item.quantity, Math.max(1, duplicate.stock || 1));
             state.items.splice(index, 1);
             return;
           }
@@ -86,9 +94,11 @@ export const useCartStore = create<CartState>()(
             selectedColor: color || undefined,
             basePrice,
             productStock,
-            price: basePrice + (variant?.priceModifier ?? 0),
+            price: pricing.price,
+            originalPrice: pricing.mrp,
             stock,
-            quantity: Math.max(1, Math.min(item.quantity, stock)),
+            ...(colourImage ? { image: colourImage } : {}),
+            quantity: Math.max(1, Math.min(item.quantity, stock || 1)),
           });
         });
       },

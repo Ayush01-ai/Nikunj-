@@ -24,7 +24,7 @@ export function signToken(payload: { userId: string; phone: string; role: string
 }
 
 export function verifyToken(token: string): jwt.JwtPayload & { userId: string; phone: string; role: string } {
-  return jwt.verify(token, JWT_SECRET) as jwt.JwtPayload & {
+  return jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] }) as jwt.JwtPayload & {
     userId: string;
     phone: string;
     role: string;

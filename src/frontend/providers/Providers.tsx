@@ -1,7 +1,9 @@
 'use client';
 
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
+import { ScrollReset } from '@/frontend/providers/ScrollReset';
+import { useWishlistStore } from '@/frontend/store/wishlistStore';
 import type { NavMenuCategory, SiteSettings } from '@/types';
 
 // ─── Site Settings Context ────────────────────────────────────────────────
@@ -26,8 +28,13 @@ export function Providers({
   siteSettings: SiteSettings | null;
   menu?: NavMenuCategory[];
 }) {
+  useEffect(() => {
+    void useWishlistStore.persist.rehydrate();
+  }, []);
+
   return (
     <SiteSettingsContext.Provider value={{ settings: siteSettings, menu }}>
+      <ScrollReset />
       {children}
       <Toaster
         position="top-right"

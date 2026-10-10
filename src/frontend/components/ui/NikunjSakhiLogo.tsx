@@ -8,19 +8,19 @@ interface NikunjSakhiLogoProps {
 }
 
 export function NikunjSakhiLogo({ className = 'w-48', variant = 'light' }: NikunjSakhiLogoProps) {
-  return (
+  const sizing = /(^|\s)(\w+:)?h-/.test(className) ? `${className} w-auto` : `${className} h-auto`;
+
+  const image = (
     <Image
-      src="/nikunj-sakhi-logo.png"
-      alt="Nikunj Sakhi – Divine God Ornaments"
-      width={800}
-      height={420}
-      priority
-      className={`${className} h-auto object-contain`}
-      style={{
-        filter: variant === 'dark'
-          ? 'drop-shadow(0 4px 24px rgba(201,146,42,0.5)) brightness(1.1)'
-          : 'drop-shadow(0 4px 32px rgba(201,146,42,0.35)) drop-shadow(0 2px 8px rgba(26,10,0,0.08))',
-      }}
+      // Dark surfaces get a tone-lifted copy of the artwork so the teal lettering and tagline stay legible.
+      src={variant === 'dark' ? '/nikunj-sakhi-logo-v3-dark.webp' : '/nikunj-sakhi-logo-v3.webp'}
+      alt="Nikunj Sakhi - Serve with Devotion"
+      width={774}
+      height={522}
+      priority={variant === 'light'}
+      className={`${sizing} object-contain`}
     />
   );
+
+  return image;
 }

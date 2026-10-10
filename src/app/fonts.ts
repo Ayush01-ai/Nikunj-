@@ -1,4 +1,4 @@
-import { Cinzel, Cinzel_Decorative, Crimson_Text, Lato, Montserrat, Great_Vibes } from 'next/font/google';
+import { Cinzel, Cinzel_Decorative, Crimson_Text, Lato, Montserrat, Great_Vibes, Yatra_One } from 'next/font/google';
 
 export const cinzel = Cinzel({
   subsets: ['latin'],
@@ -40,5 +40,13 @@ export const greatVibes = Great_Vibes({
   subsets: ['latin'],
   weight: ['400'],
   variable: '--font-great-vibes',
+  display: 'swap',
+});
+
+// Devanagari-styled display face for the Anglo-Hindi "Namaste" greeting.
+export const yatraOne = Yatra_One({
+  subsets: ['latin', 'devanagari'],
+  weight: ['400'],
+  variable: '--font-yatra',
   display: 'swap',
 });

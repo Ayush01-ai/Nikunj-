@@ -7,6 +7,10 @@ export const ORDER_STATUS_LIST = [
   { title: '🚚 Shipped', value: 'shipped' },
   { title: '✅ Delivered', value: 'delivered' },
   { title: '❌ Cancelled', value: 'cancelled' },
+  { title: '🔁 Return requested', value: 'return_requested' },
+  { title: '↩️ Return approved — awaiting pickup', value: 'return_approved' },
+  { title: '📥 Returned — item received', value: 'returned' },
+  { title: '💸 Refunded', value: 'refunded' },
 ];
 
 const statusTitle = (value?: string) => ORDER_STATUS_LIST.find((s) => s.value === value)?.title ?? value ?? '';
@@ -49,7 +53,12 @@ export const order = defineType({
       group: 'manage',
       description: 'Fill this in before marking the order as Shipped. It is shown to the customer.',
       fields: [
-        defineField({ name: 'courier', title: 'Courier Name', type: 'string', description: 'e.g. India Post, Delhivery, DTDC' }),
+        defineField({
+          name: 'courier',
+          title: 'Courier Name',
+          type: 'string',
+          description: 'e.g. Delhivery, Shiprocket, India Post, DTDC, Blue Dart, local rider',
+        }),
         defineField({ name: 'trackingNumber', title: 'Tracking / AWB Number', type: 'string' }),
         defineField({
           name: 'trackingUrl',
@@ -57,6 +66,76 @@ export const order = defineType({
           type: 'url',
           validation: (R) => R.uri({ scheme: ['https'] }),
         }),
+        defineField({
+          name: 'handedOverAt',
+          title: 'Sent to Delivery Partner At',
+          type: 'datetime',
+          description: 'Filled automatically by the "Send to Delivery Partner" button.',
+        }),
+      ],
+    }),
+    defineField({
+      name: 'returnInfo',
+      title: 'Return / Refund',
+      type: 'object',
+      group: 'manage',
+      description: 'Managed from the Orders Dashboard. Returns are accepted within the return window (Admin Settings) after delivery.',
+      hidden: ({ document }) =>
+        !document?.returnInfo && !['return_requested', 'return_approved', 'returned', 'refunded'].includes(String(document?.status ?? '')),
+      fields: [
+        defineField({ name: 'reasonCategory', title: 'Reason (chosen by customer)', type: 'string', readOnly: true }),
+        defineField({ name: 'reason', title: 'Return Reason / Details', type: 'text', rows: 2 }),
+        defineField({
+          name: 'photos',
+          title: 'Customer Photos (defect proof)',
+          type: 'array',
+          readOnly: true,
+          of: [defineArrayMember({ type: 'image' })],
+          options: { layout: 'grid' },
+        }),
+        defineField({
+          name: 'requestedBy',
+          title: 'Requested By',
+          type: 'string',
+          readOnly: true,
+          options: { list: [{ title: 'Customer (website)', value: 'customer' }, { title: 'Admin', value: 'admin' }] },
+        }),
+        defineField({ name: 'requestedAt', title: 'Requested At', type: 'datetime' }),
+        defineField({ name: 'rejectedReason', title: 'Rejection Note (shown to customer)', type: 'text', rows: 2 }),
+        defineField({ name: 'rejectedAt', title: 'Rejected At', type: 'datetime' }),
+        defineField({ name: 'approvedAt', title: 'Approved At', type: 'datetime' }),
+        defineField({ name: 'receivedAt', title: 'Item Received At', type: 'datetime' }),
+        defineField({ name: 'refundAmount', title: 'Refund Amount (INR)', type: 'number', validation: (R) => R.min(0) }),
+        defineField({ name: 'refundedAt', title: 'Refunded At', type: 'datetime' }),
+        defineField({ name: 'withinWindow', title: 'Requested within return window', type: 'boolean', readOnly: true }),
+      ],
+    }),
+    defineField({
+      name: 'cancelRequest',
+      title: 'Cancellation Request (from customer)',
+      type: 'object',
+      group: 'manage',
+      readOnly: true,
+      description: 'Raised by the customer on the Track Order page. Approve or reject it from the Orders Dashboard.',
+      hidden: ({ value }) => !value,
+      fields: [
+        defineField({
+          name: 'state',
+          title: 'Decision',
+          type: 'string',
+          options: {
+            list: [
+              { title: '⏳ Awaiting review', value: 'pending' },
+              { title: '✅ Approved — order cancelled', value: 'approved' },
+              { title: '🚫 Rejected', value: 'rejected' },
+            ],
+          },
+        }),
+        defineField({ name: 'reasonCategory', title: 'Reason', type: 'string' }),
+        defineField({ name: 'details', title: 'Customer Comments', type: 'text', rows: 2 }),
+        defineField({ name: 'requestedAt', title: 'Requested At', type: 'datetime' }),
+        defineField({ name: 'decidedAt', title: 'Decided At', type: 'datetime' }),
+        defineField({ name: 'decisionNote', title: 'Note to Customer', type: 'text', rows: 2 }),
       ],
     }),
     defineField({

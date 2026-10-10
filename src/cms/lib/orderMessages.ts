@@ -19,8 +19,21 @@ export const ORDER_STATUS_LABEL: Record<string, string> = {
   shipped: 'Shipped',
   delivered: 'Delivered',
   cancelled: 'Cancelled',
+  return_requested: 'Return requested',
+  return_approved: 'Return approved — pickup scheduled',
+  returned: 'Return received',
   refunded: 'Refunded',
 };
+
+export const RETURN_STATUSES = ['return_requested', 'return_approved', 'returned', 'refunded'] as const;
+export const isReturnStatus = (s?: string) => (RETURN_STATUSES as readonly string[]).includes(s ?? '');
+
+/** Whole days since the order was delivered (from status history), or null if never delivered. */
+export function daysSinceDelivered(history: { status?: string; at?: string }[] = []) {
+  const at = [...history].reverse().find((h) => h.status === 'delivered')?.at;
+  if (!at) return null;
+  return Math.floor((Date.now() - new Date(at).getTime()) / 86_400_000);
+}
 
 export const trackOrderUrl = (origin: string, orderNumber?: string) =>
   `${origin}/track-order${orderNumber ? `?id=${encodeURIComponent(orderNumber)}` : ''}`;
@@ -53,9 +66,34 @@ export function orderStatusMessage(order: OrderMessageInput, origin: string) {
       return `Namaste ${name} 🙏\nYour order *${id}* has been delivered. We hope Thakur Ji loves it!\nPlease share your feedback: ${origin}/#feedback`;
     case 'cancelled':
       return `Namaste ${name} 🙏\nYour order *${id}* has been cancelled.${order.paymentStatus === 'refund_due' || order.paymentStatus === 'refunded' ? ' Your refund is being processed to the original payment method.' : ''}\nPlease reply here if you have any questions.`;
-    default:
+          case 'return_requested':
+            return `Namaste ${name} 🙏\nWe have received your return request for order *${id}*. We will review it and get back to you shortly.`;
+          case 'return_approved':
+            return `Namaste ${name} 🙏\nYour return for order *${id}* is approved. Our delivery partner will pick up the item soon — please keep it packed with all tags.`;
+          case 'returned':
+            return `Namaste ${name} 🙏\nWe have received the returned item for order *${id}*. Your refund will be processed shortly.`;
+          case 'refunded':
+            return `Namaste ${name} 🙏\nThe refund for order *${id}* has been processed to your original payment method. It may take 5–7 working days to reflect.`;
+          default:
       return `Namaste ${name} 🙏\nUpdate on your order *${id}*: ${ORDER_STATUS_LABEL[order.status ?? ''] ?? order.status}.\nTrack: ${track}`;
   }
+}
+
+export interface ShipmentInput extends OrderMessageInput {
+  phone?: string;
+  paymentMethod?: string;
+  shippingAddress?: { line1?: string; line2?: string; landmark?: string; city?: string; state?: string; pincode?: string };
+}
+
+/** Pickup / shipment request the owner forwards to the delivery partner. */
+export function deliveryPartnerMessage(order: ShipmentInput) {
+  const a = order.shippingAddress ?? {};
+  const address = [a.line1, a.line2, a.landmark && `Near ${a.landmark}`, [a.city, a.state].filter(Boolean).join(', '), a.pincode]
+    .filter(Boolean)
+    .join('\n');
+  const cod = order.paymentMethod === 'cod' && order.paymentStatus !== 'paid';
+  const pieces = (order.items ?? []).reduce((n, i) => n + (i.quantity ?? 1), 0);
+  return `📦 *Pickup request — Nikunj Sakhi*\nOrder: *${order.orderNumber ?? ''}*\n\n*Deliver to*\n${order.customerName ?? ''}\n📞 ${order.phone ?? ''}\n${address}\n\n*Contents* (${pieces} pc)\n${itemLines(order.items)}\n\n${cod ? `💰 *COD — collect ${inr(order.total)}*` : '✅ Prepaid — do not collect cash'}\n\nPlease share the AWB / tracking number after pickup.`;
 }
 
 /** WhatsApp text a customer sends to the shop right after placing an order. */

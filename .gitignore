@@ -59,11 +59,10 @@ backups/
 .playwright-mcp/
 
 # AI agent tooling (not part of the website)
-.agent/
-.agents/
-.gsd/
-.gemini/
-adapters/
+_ai-tooling/
+
+# Lighthouse reports (npm run audit)
+audit/
 
 # Local env variants
 .env*.local

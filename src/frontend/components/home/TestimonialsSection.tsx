@@ -17,7 +17,7 @@ export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) 
   // Keep the #testimonials anchor so the "Reviews" nav link always has a target.
   if (!testimonials || testimonials.length === 0) {
     return (
-      <section id="testimonials" className="py-16 px-4 sm:px-6 lg:px-8 bg-cream scroll-mt-24 text-center">
+      <section id="testimonials" className="py-16 px-4 sm:px-6 lg:px-8 bg-cream scroll-mt-16 md:scroll-mt-20 text-center">
         <span className="font-cinzel text-[10px] tracking-[0.4em] uppercase text-gold block mb-3">
           What Our Devotees Say
         </span>
@@ -33,7 +33,7 @@ export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) 
   }
 
   return (
-    <section className="py-20 px-4 sm:px-6 lg:px-8 bg-cream scroll-mt-24" id="testimonials" ref={ref}>
+    <section className="py-20 px-4 sm:px-6 lg:px-8 bg-cream scroll-mt-16 md:scroll-mt-20" id="testimonials" ref={ref}>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">

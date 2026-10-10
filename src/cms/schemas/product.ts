@@ -215,7 +215,8 @@ export const product = defineType({
       title: 'Variants',
       type: 'array',
       group: 'basic',
-      description: 'Options the customer picks from. Price adjustment is added to the product price (use negative for cheaper).',
+      description:
+        'Options the customer picks from (size / volume). Set "Variant Price" to the exact selling price of that option, or leave it empty and use "Price Adjustment" (added to the product price).',
       components: {
         field: facetField(['size', 'volume'], {
           size: 'Deity Sizes (e.g. Laddu Gopal 0, 1, 2 / 6 inch)',
@@ -227,7 +228,32 @@ export const product = defineType({
           type: 'object',
           fields: [
             defineField({ name: 'label', title: 'Option', type: 'string', validation: (rule) => rule.required().max(50) }),
-            defineField({ name: 'priceModifier', title: 'Price Adjustment (INR)', type: 'number', initialValue: 0 }),
+            defineField({
+              name: 'price',
+              title: 'Variant Price (INR)',
+              type: 'number',
+              description: 'Final selling price for this option. Leave empty to use product price + adjustment.',
+              validation: (rule) => rule.min(1),
+            }),
+            defineField({
+              name: 'mrp',
+              title: 'Variant MRP (INR)',
+              type: 'number',
+              description: 'Optional regular price for this option — shown struck-through with the sale %.',
+              validation: (rule) =>
+                rule.custom((mrp: number | undefined, ctx) => {
+                  const price = (ctx.parent as { price?: number } | undefined)?.price;
+                  if (mrp === undefined || price === undefined) return true;
+                  return mrp > price ? true : 'MRP must be higher than the Variant Price.';
+                }),
+            }),
+            defineField({
+              name: 'priceModifier',
+              title: 'Price Adjustment (INR)',
+              type: 'number',
+              initialValue: 0,
+              description: 'Used only when Variant Price is empty. Added to the product price (negative = cheaper).',
+            }),
             defineField({
               name: 'stock',
               title: 'Stock',
@@ -237,10 +263,12 @@ export const product = defineType({
             }),
           ],
           preview: {
-            select: { title: 'label', modifier: 'priceModifier', stock: 'stock' },
-            prepare: ({ title, modifier, stock }) => ({
+            select: { title: 'label', modifier: 'priceModifier', price: 'price', stock: 'stock' },
+            prepare: ({ title, modifier, price, stock }) => ({
               title,
-              subtitle: `${modifier ? `${modifier > 0 ? '+' : ''}₹${modifier}` : 'Same price'}${stock !== undefined ? ` · ${stock} in stock` : ''}`,
+              subtitle: `${
+                price ? `₹${price}` : modifier ? `${modifier > 0 ? '+' : ''}₹${modifier}` : 'Same price'
+              }${stock !== undefined ? ` · ${stock} in stock` : ''}`,
             }),
           },
         }),
@@ -338,20 +366,65 @@ export const product = defineType({
     }),
     defineField({
       name: 'colors',
-      title: 'Colours',
+      title: 'Colour Variants (image + price)',
       type: 'array',
-      group: 'details',
-      components: { field: facetField(['colour']) },
+      group: ['media', 'details'],
+      description:
+        'Add one entry per colour: upload the photo of that colour, name the colour and (optionally) its price. The product page switches to this photo and price when the customer picks the colour.',
       of: [
         defineArrayMember({
           type: 'object',
           fields: [
-            defineField({ name: 'label', title: 'Colour Name', type: 'string', validation: (rule) => rule.required() }),
-            defineField({ name: 'hex', title: 'Colour Hex Code', type: 'string', description: 'Optional, for example #C62828.' }),
+            defineField({
+              name: 'image',
+              title: 'Colour Image',
+              type: 'image',
+              options: { hotspot: true },
+              fields: [defineField({ name: 'alt', title: 'Alt Text', type: 'string' })],
+            }),
+            defineField({
+              name: 'label',
+              title: 'Which colour is this image?',
+              type: 'string',
+              description: 'Colour name shown to customers, e.g. Red, Peacock Green, Gold.',
+              validation: (rule) => rule.required().max(50),
+            }),
+            defineField({
+              name: 'price',
+              title: 'Price for this colour (INR)',
+              type: 'number',
+              description: 'Leave empty to use the product / variant price.',
+              validation: (rule) => rule.min(1),
+            }),
+            defineField({
+              name: 'mrp',
+              title: 'MRP for this colour (INR)',
+              type: 'number',
+              description: 'Optional regular price, shown struck-through with the sale %.',
+              validation: (rule) =>
+                rule.custom((mrp: number | undefined, ctx) => {
+                  const price = (ctx.parent as { price?: number } | undefined)?.price;
+                  if (mrp === undefined || price === undefined) return true;
+                  return mrp > price ? true : 'MRP must be higher than the colour price.';
+                }),
+            }),
+            defineField({ name: 'hex', title: 'Swatch Hex Code', type: 'string', description: 'Optional, for example #C62828.' }),
           ],
-          preview: { select: { title: 'label' } },
+          preview: {
+            select: { title: 'label', media: 'image', price: 'price' },
+            prepare: ({ title, media, price }) => ({
+              title: title || 'Unnamed colour',
+              subtitle: price ? `₹${price}` : 'Uses product / variant price',
+              media,
+            }),
+          },
         }),
       ],
+      validation: (rule) =>
+        rule.custom((items: { label?: string }[] | undefined) => {
+          const labels = (items ?? []).map((i) => i.label?.trim().toLowerCase()).filter(Boolean);
+          return new Set(labels).size === labels.length ? true : 'Each colour must be unique.';
+        }),
     }),
     defineField({
       name: 'careInstructions',
@@ -359,6 +432,15 @@ export const product = defineType({
       type: 'text',
       rows: 3,
       group: 'details',
+      description: 'Shown in the "Care Instructions" column on the product page.',
+    }),
+    defineField({
+      name: 'returnPolicy',
+      title: 'Return Policy (this product)',
+      type: 'text',
+      rows: 3,
+      group: 'details',
+      description: 'Optional. Shown in the "Return Policy" column. Leave empty to show the standard 7-day return policy.',
     }),
     defineField({
       name: 'specifications',

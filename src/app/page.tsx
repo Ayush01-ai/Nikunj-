@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import { client } from '@/cms/lib/client';
 import {
   HERO_SLIDES_QUERY,
-  FEATURED_CATEGORIES_QUERY,
+  CATEGORIES_QUERY,
   FEATURED_PRODUCTS_QUERY,
   HOME_PRODUCTS_QUERY,
   BESTSELLERS_QUERY,
@@ -38,7 +38,7 @@ async function getHomeData() {
   const [heroSlides, categories, allProducts, featuredProducts, bestsellers, newArrivals, testimonials, settings] =
     await Promise.all([
       safeClientFetch<HeroSlide[]>(HERO_SLIDES_QUERY, []),
-      safeClientFetch<Category[]>(FEATURED_CATEGORIES_QUERY, []),
+      safeClientFetch<Category[]>(CATEGORIES_QUERY, []),
       safeClientFetch<Product[]>(HOME_PRODUCTS_QUERY, []),
       safeClientFetch<Product[]>(FEATURED_PRODUCTS_QUERY, []),
       safeClientFetch<Product[]>(BESTSELLERS_QUERY, []),
