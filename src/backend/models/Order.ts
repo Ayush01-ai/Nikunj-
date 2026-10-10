@@ -30,8 +30,15 @@ export interface IOrder extends Document {
   couponCode?: string;
   paymentMethod: 'upi' | 'card' | 'netbanking' | 'cod' | 'whatsapp';
   paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
+  /** Gateway-agnostic field — which online gateway (if any) is handling this order's payment. Unset for COD. */
+  paymentGateway?: 'razorpay' | 'cashfree';
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
+  /** Cashfree order id, returned by PGCreateOrder and echoed back on webhooks/verify. */
+  cashfreeOrderId?: string;
+  /** The payment_session_id used by the Cashfree Checkout JS SDK to open the hosted payment UI. */
+  cashfreePaymentSessionId?: string;
+  cashfreePaymentId?: string;
   status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'return_requested' | 'return_approved' | 'returned' | 'refunded';
   notes?: string;
   createdAt: Date;
@@ -83,6 +90,10 @@ const OrderSchema = new Schema<IOrder>(
     },
     razorpayOrderId:  { type: String },
     razorpayPaymentId: { type: String },
+    paymentGateway: { type: String, enum: ['razorpay', 'cashfree'] },
+    cashfreeOrderId: { type: String },
+    cashfreePaymentSessionId: { type: String },
+    cashfreePaymentId: { type: String },
     status: {
       type: String,
       enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'return_requested', 'return_approved', 'returned', 'refunded'],

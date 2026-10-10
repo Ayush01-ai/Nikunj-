@@ -22,6 +22,10 @@ type Step = typeof STEPS[number];
 const FREE_DELIVERY_THRESHOLD = 999;
 const DELIVERY_CHARGE = 99;
 const RAZORPAY_SRC = 'https://checkout.razorpay.com/v1/checkout.js';
+const CASHFREE_SRC = 'https://sdk.cashfree.com/js/v3/cashfree.js';
+// Feature flag — Cashfree is only offered as a gateway choice once this is explicitly set.
+// Existing Razorpay checkout is completely unaffected when it's unset (the default).
+const CASHFREE_ENABLED = process.env.NEXT_PUBLIC_CASHFREE_ENABLED === 'true';
 
 type RazorpayCtor = new (opts: Record<string, unknown>) => { open: () => void };
 
@@ -33,6 +37,24 @@ function loadRazorpay(): Promise<RazorpayCtor> {
     script.src = RAZORPAY_SRC;
     script.async = true;
     script.onload = () => (w.Razorpay ? resolve(w.Razorpay) : reject(new Error('Payment gateway failed to load')));
+    script.onerror = () => reject(new Error('Payment gateway failed to load. Check your connection.'));
+    document.body.appendChild(script);
+  });
+}
+
+type CashfreeCheckoutResult = { error?: { message?: string }; paymentDetails?: { paymentMessage?: string } };
+type CashfreeFactory = (opts: { mode: 'sandbox' | 'production' }) => {
+  checkout: (opts: { paymentSessionId: string; redirectTarget: '_modal' }) => Promise<CashfreeCheckoutResult>;
+};
+
+function loadCashfreeSDK(): Promise<CashfreeFactory> {
+  return new Promise((resolve, reject) => {
+    const w = window as unknown as { Cashfree?: CashfreeFactory };
+    if (w.Cashfree) return resolve(w.Cashfree);
+    const script = document.createElement('script');
+    script.src = CASHFREE_SRC;
+    script.async = true;
+    script.onload = () => (w.Cashfree ? resolve(w.Cashfree) : reject(new Error('Payment gateway failed to load')));
     script.onerror = () => reject(new Error('Payment gateway failed to load. Check your connection.'));
     document.body.appendChild(script);
   });
@@ -63,6 +85,9 @@ export default function CheckoutPage() {
     line1: '', city: '', state: '', pincode: '',
   });
   const [paymentMethod, setPaymentMethod] = useState<'cod' | 'upi' | 'card' | 'netbanking'>('cod');
+  // Only reachable when CASHFREE_ENABLED — otherwise every online payment uses Razorpay exactly
+  // as before.
+  const [gateway, setGateway] = useState<'razorpay' | 'cashfree'>('razorpay');
   const [placing, setPlacing] = useState(false);
 
   const sub = subtotal();
@@ -126,6 +151,47 @@ export default function CheckoutPage() {
         clearCart();
         router.push(`/confirmation?orderId=${encodeURIComponent(json.orderId)}`);
         setPlacing(false);
+      } else if (CASHFREE_ENABLED && gateway === 'cashfree') {
+        const [Cashfree, payRes] = await Promise.all([
+          loadCashfreeSDK(),
+          fetch('/api/payment/cashfree/create', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ orderId: json.orderId }),
+          }),
+        ]);
+        const pay = await payRes.json();
+        if (!payRes.ok || !pay.data) throw new Error(pay.error || 'Could not start payment');
+
+        const cashfree = Cashfree({ mode: pay.data.environment === 'production' ? 'production' : 'sandbox' });
+        try {
+          const result = await cashfree.checkout({
+            paymentSessionId: pay.data.paymentSessionId,
+            redirectTarget: '_modal',
+          });
+          if (result?.error) {
+            toast.error('Payment cancelled. Your order is saved as pending.');
+            setPlacing(false);
+            return;
+          }
+          // The modal closed without a reported error — confirm server-side (never trust the
+          // client's view of payment status).
+          const verifyRes = await fetch('/api/payment/cashfree/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId: json.orderId }),
+          });
+          const verify = await verifyRes.json();
+          if (!verifyRes.ok) throw new Error(verify.error || 'Payment verification failed');
+          clearCart();
+          router.push(`/confirmation?orderId=${encodeURIComponent(json.orderId)}`);
+        } catch (err: unknown) {
+          toast.error(
+            `${err instanceof Error ? err.message : 'Payment verification failed'}. Contact support with order ${json.orderId}.`,
+          );
+        } finally {
+          setPlacing(false);
+        }
       } else {
         const [Razorpay, payRes] = await Promise.all([
           loadRazorpay(),
@@ -505,9 +571,37 @@ export default function CheckoutPage() {
                     })}
                   </div>
 
+                  {/* Gateway selector — only rendered when Cashfree is explicitly enabled.
+                      Razorpay remains the default and only option otherwise. */}
+                  {CASHFREE_ENABLED && paymentMethod !== 'cod' && (
+                    <div className="bg-white border border-[var(--border)] p-6 mt-4 space-y-3">
+                      <h3 className="font-cinzel text-xs font-semibold text-deep tracking-wider">Checkout Gateway</h3>
+                      {([
+                        { id: 'razorpay', label: 'Razorpay' },
+                        { id: 'cashfree', label: 'Cashfree' },
+                      ] as const).map((g) => (
+                        <label key={g.id} className={`flex items-center gap-3 p-3 border cursor-pointer transition-colors ${
+                          gateway === g.id ? 'border-gold bg-gold/5' : 'border-[var(--border)] hover:border-gold/50'
+                        }`}>
+                          <input
+                            type="radio"
+                            name="gateway"
+                            value={g.id}
+                            checked={gateway === g.id}
+                            onChange={() => setGateway(g.id)}
+                            className="accent-gold"
+                          />
+                          <span className="font-cinzel text-xs tracking-wider text-deep">{g.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+
                   <div className="flex items-center gap-3 mt-4 p-3 bg-green-50 border border-green-200">
                     <ShieldCheck size={16} className="text-green-600" />
-                    <span className="font-lato text-xs text-green-700">100% Secure Payments by Razorpay</span>
+                    <span className="font-lato text-xs text-green-700">
+                      100% Secure Payments by {CASHFREE_ENABLED && paymentMethod !== 'cod' && gateway === 'cashfree' ? 'Cashfree' : 'Razorpay'}
+                    </span>
                   </div>
 
                   <div className="flex gap-3 mt-5">

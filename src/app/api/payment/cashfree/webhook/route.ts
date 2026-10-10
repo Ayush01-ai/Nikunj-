@@ -1,0 +1,131 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { verifyCashfreeWebhookSignature } from '@/backend/lib/cashfree';
+import { isCashfreeConfigured } from '@/backend/lib/cashfreeConfig';
+import { connectDB } from '@/backend/lib/mongodb';
+import { Order } from '@/backend/models/Order';
+import { pushConfirmedOrderToSanity } from '@/backend/lib/sanityOrders';
+
+interface CashfreeWebhookPayload {
+  type?: string;
+  data?: {
+    order?: { order_id?: string; order_amount?: number; order_currency?: string };
+    payment?: {
+      cf_payment_id?: string;
+      payment_status?: string;
+      payment_amount?: number;
+      payment_currency?: string;
+    };
+  };
+}
+
+/**
+ * Cashfree server-to-server webhook. Mirrors /api/payment/webhook (Razorpay) in its
+ * idempotency/amount-matching rules — only the signature scheme and payload shape differ.
+ *
+ * Configure this exact URL in the Cashfree Dashboard → Developers → Webhooks, subscribed to
+ * "PAYMENT_SUCCESS_WEBHOOK", "PAYMENT_FAILED_WEBHOOK" and "PAYMENT_USER_DROPPED_WEBHOOK".
+ */
+export async function POST(req: NextRequest) {
+  try {
+    if (!isCashfreeConfigured()) {
+      console.error('[payment/cashfree/webhook] Cashfree is not configured');
+      return NextResponse.json({ success: false, error: 'Webhook not configured.' }, { status: 500 });
+    }
+
+    // The signature is computed over timestamp + exact raw body, so it must be read as text.
+    const rawBody = await req.text();
+    const signature = req.headers.get('x-webhook-signature');
+    const timestamp = req.headers.get('x-webhook-timestamp');
+
+    if (!signature || !timestamp) {
+      return NextResponse.json({ success: false, error: 'Missing signature headers.' }, { status: 400 });
+    }
+
+    let verified;
+    try {
+      verified = verifyCashfreeWebhookSignature(signature, rawBody, timestamp);
+    } catch (err) {
+      console.warn('[payment/cashfree/webhook] Invalid webhook signature', err);
+      return NextResponse.json({ success: false, error: 'Invalid signature.' }, { status: 400 });
+    }
+
+    const event = verified.object as CashfreeWebhookPayload;
+    const eventType = event.type;
+
+    await connectDB();
+
+    // A dropped/failed payment only flips a still-pending order to failed — it never
+    // touches an order that's already paid, and never syncs to Sanity.
+    if (eventType === 'PAYMENT_FAILED_WEBHOOK' || eventType === 'PAYMENT_USER_DROPPED_WEBHOOK') {
+      const failedOrderId = event.data?.order?.order_id;
+      if (!failedOrderId) {
+        return NextResponse.json({ success: false, error: 'Malformed webhook payload.' }, { status: 400 });
+      }
+      await Order.findOneAndUpdate(
+        { cashfreeOrderId: failedOrderId, paymentStatus: 'pending' },
+        { paymentStatus: 'failed' },
+      );
+      return NextResponse.json({ success: true });
+    }
+
+    // Acknowledge (200) any event we don't act on so Cashfree stops retrying it.
+    if (eventType !== 'PAYMENT_SUCCESS_WEBHOOK') {
+      return NextResponse.json({ success: true, ignored: eventType });
+    }
+
+    const cashfreeOrderId = event.data?.order?.order_id;
+    const payment = event.data?.payment;
+    const cashfreePaymentId = payment?.cf_payment_id;
+
+    if (!cashfreeOrderId || !cashfreePaymentId || payment?.payment_status !== 'SUCCESS') {
+      return NextResponse.json({ success: false, error: 'Malformed webhook payload.' }, { status: 400 });
+    }
+
+    const candidate = await Order.findOne({ cashfreeOrderId });
+    if (!candidate) {
+      return NextResponse.json({ success: true, ignored: 'order_not_found' });
+    }
+
+    if (candidate.paymentStatus === 'paid') {
+      // Idempotent: repeated webhook deliveries (or a race with /api/payment/cashfree/verify)
+      // are no-ops.
+      return NextResponse.json({ success: true });
+    }
+
+    const amountMatches =
+      typeof payment.payment_amount === 'number' && Math.abs(payment.payment_amount - candidate.total) < 0.01;
+    const currencyMatches = !payment.payment_currency || payment.payment_currency === 'INR';
+
+    if (!amountMatches || !currencyMatches) {
+      console.error('[payment/cashfree/webhook] Amount/currency mismatch for order', candidate.orderId, {
+        expectedAmount: candidate.total,
+        receivedAmount: payment.payment_amount,
+        receivedCurrency: payment.payment_currency,
+      });
+      return NextResponse.json({ success: true, ignored: 'amount_mismatch' });
+    }
+
+    // Idempotent: the paymentStatus guard ensures repeated webhook deliveries (or a race
+    // with /api/payment/cashfree/verify) never re-confirm or double-sync an already-paid order.
+    const order = await Order.findOneAndUpdate(
+      { _id: candidate._id, paymentStatus: { $ne: 'paid' } },
+      {
+        paymentStatus: 'paid',
+        status: 'confirmed',
+        paymentGateway: 'cashfree',
+        cashfreeOrderId,
+        cashfreePaymentId,
+      },
+      { new: true },
+    );
+
+    if (order) {
+      await pushConfirmedOrderToSanity(order, 'Payment confirmed via Cashfree webhook');
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('[payment/cashfree/webhook]', error);
+    return NextResponse.json({ success: false, error: 'Webhook processing error.' }, { status: 500 });
+  }
+}
