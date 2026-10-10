@@ -67,3 +67,70 @@ export async function sendOrderWhatsApp(order: OrderMessageInput & { phone?: str
     return false;
   }
 }
+
+/**
+ * Sends a one-time login code via an approved Meta "authentication" category template,
+ * using the exact request shape documented by Meta for authentication templates with a
+ * copy-code button:
+ * https://developers.facebook.com/documentation/business-messaging/whatsapp/templates/authentication-templates
+ *
+ * The OTP code must be created in Meta Business Manager as a template with `category:
+ * "authentication"` first (see docs/PROVIDER-SETUP-GUIDE.md) — this function only sends
+ * against an already-approved template name; it does not create templates.
+ *
+ * Env:
+ *  - WHATSAPP_OTP_TEMPLATE — required; name of the approved authentication template.
+ *  - WHATSAPP_OTP_TEMPLATE_LANG — template language/locale code (default "en_US").
+ *  - WHATSAPP_OTP_BUTTON — set to "false" if the approved template has no copy-code
+ *    button (zero-tap/no-button templates); defaults to including the button component.
+ */
+export async function sendWhatsAppOtp(phone: string, otp: string): Promise<boolean> {
+  if (!isWhatsAppConfigured()) return false;
+  const template = process.env.WHATSAPP_OTP_TEMPLATE;
+  if (!template) {
+    console.error('[whatsapp] WHATSAPP_OTP_TEMPLATE is not configured');
+    return false;
+  }
+  const to = toE164India(phone);
+  if (!to) return false;
+
+  const includeButton = process.env.WHATSAPP_OTP_BUTTON !== 'false';
+  const components: Record<string, unknown>[] = [
+    { type: 'body', parameters: [{ type: 'text', text: otp }] },
+  ];
+  if (includeButton) {
+    components.push({
+      type: 'button',
+      sub_type: 'url',
+      index: '0',
+      parameters: [{ type: 'text', text: otp }],
+    });
+  }
+
+  try {
+    const res = await fetch(`${GRAPH_URL}/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to,
+        type: 'template',
+        template: {
+          name: template,
+          language: { code: process.env.WHATSAPP_OTP_TEMPLATE_LANG || 'en_US' },
+          components,
+        },
+      }),
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) {
+      console.error('[whatsapp-otp] send failed', res.status, (await res.text()).slice(0, 300));
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error('[whatsapp-otp] send error', error instanceof Error ? error.message : error);
+    return false;
+  }
+}

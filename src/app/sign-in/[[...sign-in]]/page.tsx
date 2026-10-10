@@ -13,7 +13,19 @@ export default function ClerkSignInPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-cream py-16">
-      <SignIn path="/sign-in" signUpUrl="/sign-up" fallbackRedirectUrl="/account" />
+      <SignIn
+        path="/sign-in"
+        signUpUrl="/sign-up"
+        fallbackRedirectUrl="/account"
+        appearance={{
+          variables: {
+            colorPrimary: '#C9922A',
+            colorBackground: '#FFF8EE',
+            colorForeground: '#2C1A00',
+            borderRadius: '0px',
+          },
+        }}
+      />
     </div>
   );
 }

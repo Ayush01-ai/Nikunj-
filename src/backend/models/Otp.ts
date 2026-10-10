@@ -5,6 +5,10 @@ export interface IOtp extends Document {
   otp: string;
   expiresAt: Date;
   attempts: number;
+  /** Delivery channel. Defaults to 'sms' (MSG91) for full backward compatibility with
+   *  existing records/queries; 'whatsapp' is used by the new WhatsApp OTP login flow so
+   *  the two never collide for the same phone number. */
+  channel: 'sms' | 'whatsapp';
   createdAt: Date;
 }
 
@@ -14,6 +18,7 @@ const OtpSchema = new Schema<IOtp>(
     otp:       { type: String, required: true },
     expiresAt: { type: Date, required: true },
     attempts:  { type: Number, default: 0 },
+    channel:   { type: String, enum: ['sms', 'whatsapp'], default: 'sms' },
   },
   { timestamps: true },
 );

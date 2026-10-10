@@ -11,7 +11,7 @@ export interface IUser extends Document {
   clerkUserId?: string;
   avatar?: string;
   emailVerified?: boolean;
-  authProviders: ('phone' | 'email' | 'google' | 'clerk')[];
+  authProviders: ('phone' | 'email' | 'google' | 'clerk' | 'whatsapp')[];
   /** sha256 of the emailed reset token; never selected by default */
   resetTokenHash?: string;
   resetTokenExpires?: Date;
@@ -55,7 +55,7 @@ const UserSchema = new Schema<IUser>(
     clerkUserId:       { type: String },
     avatar:            { type: String },
     emailVerified:     { type: Boolean, default: false },
-    authProviders:     [{ type: String, enum: ['phone', 'email', 'google', 'clerk'] }],
+    authProviders:     [{ type: String, enum: ['phone', 'email', 'google', 'clerk', 'whatsapp'] }],
     resetTokenHash:    { type: String, select: false },
     resetTokenExpires: { type: Date, select: false },
     role:     { type: String, enum: ['user', 'admin'], default: 'user' },
