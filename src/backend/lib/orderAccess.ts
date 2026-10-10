@@ -1,7 +1,8 @@
 import type { NextRequest } from 'next/server';
 import { connectDB } from '@/backend/lib/mongodb';
 import { Order } from '@/backend/models/Order';
-import { isValidPhone, requireAuth, sanitizePhone } from '@/backend/lib/auth';
+import { isValidPhone, sanitizePhone } from '@/backend/lib/auth';
+import { requireAuthHybrid } from '@/backend/lib/clerk';
 
 export const ORDER_ID_PATTERN = /^NS-[A-Z0-9_-]{8}$/;
 export const ORDER_NOT_FOUND = 'We could not find an order with those details. Please check the order ID and phone number.';
@@ -20,7 +21,7 @@ export async function verifyOrderAccess(req: NextRequest, rawOrderId: unknown, r
 
   let viewer: { userId: string } | null = null;
   try {
-    viewer = requireAuth(req);
+    viewer = await requireAuthHybrid(req);
   } catch {
     // Guests verify with phone number instead.
   }

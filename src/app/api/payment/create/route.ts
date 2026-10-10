@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createRazorpayOrder } from '@/backend/lib/razorpay';
-import { requireAuth } from '@/backend/lib/auth';
+import { requireAuthHybrid } from '@/backend/lib/clerk';
 import { connectDB } from '@/backend/lib/mongodb';
 import { Order } from '@/backend/models/Order';
 
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     // Auth optional — allow guest checkout with phone verification
     let userId: string | undefined;
     try {
-      const payload = requireAuth(req);
+      const payload = await requireAuthHybrid(req);
       userId = payload.userId;
     } catch {
       // Guest checkout allowed

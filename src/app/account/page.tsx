@@ -11,6 +11,7 @@ import {
 import { useAuthStore } from '@/frontend/store/authStore';
 import { useWishlistStore } from '@/frontend/store/wishlistStore';
 import { useCartStore } from '@/frontend/store/cartStore';
+import { ClerkSignOutBridge } from '@/frontend/components/auth/ClerkSignOutBridge';
 import { Navbar } from '@/frontend/components/layout/Navbar';
 import { Footer } from '@/frontend/components/layout/Footer';
 import { SacredPlaceholder } from '@/frontend/components/ui/SacredIcon';
@@ -22,6 +23,10 @@ import { lowestPricing, formatINR } from '@/cms/lib/pricing';
 import type { Order, Product } from '@/types';
 import { ORDER_STATUS_LABEL, ORDER_STEPS, isReturnStatus } from '@/cms/lib/orderMessages';
 import toast from 'react-hot-toast';
+
+// Same build-time pattern used elsewhere (e.g. login/whatsapp/page.tsx) — only render the
+// Clerk sign-out bridge when a <ClerkProvider> ancestor is guaranteed to exist.
+const CLERK_ENABLED = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
 type Tab = 'orders' | 'wishlist' | 'cart' | 'profile';
 
@@ -72,7 +77,7 @@ function StatCard({
 
 export default function AccountPage() {
   const router = useRouter();
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { user, isAuthenticated, authChecked, logout } = useAuthStore();
   const wishlistIds = useWishlistStore((s) => s.ids);
   const toggleWishlist = useWishlistStore((s) => s.toggleWishlist);
   const cartItems = useCartStore((s) => s.items);
@@ -84,10 +89,14 @@ export default function AccountPage() {
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [wishlist, setWishlist] = useState<Product[]>([]);
   const [loadingWishlist, setLoadingWishlist] = useState(false);
+  const [clerkSignOutTrigger, setClerkSignOutTrigger] = useState(0);
 
   useEffect(() => {
-    if (!isAuthenticated) router.replace('/login?next=/account');
-  }, [isAuthenticated, router]);
+    // Wait for the app-wide `/api/auth/me` bootstrap check (AuthBootstrap) to finish —
+    // a Clerk-only session isn't in the persisted store yet on first load, so redirecting
+    // immediately on `!isAuthenticated` would incorrectly bounce a signed-in Clerk user.
+    if (authChecked && !isAuthenticated) router.replace('/login?next=/account');
+  }, [authChecked, isAuthenticated, router]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -124,12 +133,19 @@ export default function AccountPage() {
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' }).catch(() => undefined);
+    // Also end any active Clerk session (no-op if the user never signed in via Clerk) —
+    // otherwise the next page load's AuthBootstrap check would silently sign them back in.
+    if (CLERK_ENABLED) setClerkSignOutTrigger((n) => n + 1);
     logout();
     toast.success('Logged out');
     router.push('/');
   };
 
-  if (!user) return null;
+  if (!user) {
+    // Keep the bridge mounted even after logout clears `user`, so a pending Clerk
+    // sign-out trigger still fires instead of being unmounted away.
+    return CLERK_ENABLED ? <ClerkSignOutBridge trigger={clerkSignOutTrigger} /> : null;
+  }
 
   const cartCount = cartItems.reduce((n, i) => n + i.quantity, 0);
   const contact = user.email || (user.phone ? `+91 ${user.phone}` : '');

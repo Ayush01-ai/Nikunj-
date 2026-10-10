@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/backend/lib/mongodb';
 import { Order } from '@/backend/models/Order';
-import { requireAdmin, requireAuth, AuthError } from '@/backend/lib/auth';
+import { AuthError } from '@/backend/lib/auth';
+import { requireAdminHybrid, requireAuthHybrid } from '@/backend/lib/clerk';
 
 // ─── GET single order ─────────────────────────────────────────────────────
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const auth = requireAuth(req);
+    const auth = await requireAuthHybrid(req);
     await connectDB();
     const { id } = await params;
     
@@ -36,7 +37,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 // ─── PATCH update order status ────────────────────────────────────────────
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    requireAdmin(req);
+    await requireAdminHybrid(req);
     await connectDB();
     const { id } = await params;
     const body = await req.json();

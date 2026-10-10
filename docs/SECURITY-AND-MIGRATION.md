@@ -60,7 +60,27 @@ code without a reviewed reason.
 - **Risk**: none to existing sessions. Clerk is entirely additive; the existing
   `ns_token` JWT cookie auth path (`requireAuth`/`requireAdmin`, login/register/OTP
   routes) is completely untouched and keeps working whether or not Clerk is configured.
-- **Residual risk once adopted further**: if/when more routes are migrated to
+- **Phase 2 update — hybrid resolver rolled out further**: `requireAuthHybrid`/
+  `requireAdminHybrid` are now also used by `/api/orders` (POST + GET), `/api/orders/[id]`
+  (GET + PATCH), `/api/payment/create`, `/api/payment/cashfree/create`, and
+  `verifyOrderAccess()` (used by track-order/guest order lookup) — not just
+  `/api/auth/me`. The fail-closed-to-legacy behavior described below was preserved at
+  every new call site: each still catches Clerk resolution errors and falls back to the
+  legacy JWT check rather than failing open, exactly as the original `/api/auth/me`
+  canary route did.
+- **Phase 2 fix — client-side session visibility and logout correctness**: a new
+  `AuthBootstrap` component now calls `/api/auth/me` once per app load so a Clerk-only
+  session (no legacy `ns_token`) is reflected in the UI (`/account`, nav, etc.), which
+  previously only happened immediately after the legacy login page's own fetch. This
+  surfaced a related gap: the existing logout handler only cleared the `ns_token` cookie,
+  so a still-active Clerk session would have been silently restored by the new bootstrap
+  check on the next page load. Fixed by having logout also call Clerk's own
+  `useClerk().signOut()` (via a small `ClerkSignOutBridge` component), so logout now
+  terminates both session mechanisms. **Not yet runtime-verified against a live Clerk
+  project** (no sandbox credentials available in this environment) — this should be
+  spot-checked once Clerk keys are configured: log in via Clerk, log out, reload, and
+  confirm the user is not silently signed back in.
+- **Residual risk once adopted further**: if/when any additional routes are migrated to
   `requireAuthHybrid`, a Clerk outage or misconfiguration must not silently grant or deny
   access incorrectly. The current implementation catches Clerk errors and falls back to
   the legacy JWT check rather than failing open — this behavior should be preserved in

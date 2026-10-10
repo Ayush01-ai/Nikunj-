@@ -4,7 +4,9 @@
 **Baseline commit (pre-existing work, rollback point):** `71b3e5e`
 **`main` branch:** untouched by this work.
 
-This report covers only the commits made in this session, in order:
+This report covers two phases of commits on this branch.
+
+### Phase 1 (original Clerk/WhatsApp/Cashfree scaffolding)
 
 | Commit | Summary |
 |---|---|
@@ -16,15 +18,38 @@ This report covers only the commits made in this session, in order:
 | `b24e0ca` | `.env.local.example` documentation for all new variables |
 | `c73f359` | Vitest test runner + mocked tests for the above |
 
-All new behavior is **opt-in and additive**. With no new environment variables set, the
-app behaves exactly as before: legacy JWT-cookie auth, phone/SMS OTP, and Razorpay-only
-checkout are unchanged and untouched by this branch.
+### Phase 2 (this session — completing the Clerk integration)
+
+Phase 1 left a single canary route (`/api/auth/me`) on the hybrid Clerk+legacy resolver
+and had no client-side mechanism to recognize a Clerk-only session outside the login
+page. Phase 2 closes both gaps and rolls the hybrid resolver out to every route that
+needs to recognize an authenticated customer, without changing behavior for existing
+legacy-JWT sessions (the hybrid resolver is a strict superset — see `clerk.ts`).
+
+| File | Change |
+|---|---|
+| [src/frontend/providers/AuthBootstrap.tsx](/C:/Nikunj/src/frontend/providers/AuthBootstrap.tsx) *(new)* | Client component mounted once at the app root (via `Providers.tsx`). On first load, if the persisted Zustand store isn't already authenticated, it calls `/api/auth/me` (which resolves either a Clerk session or the legacy `ns_token` cookie) and populates the store on success. Marks a new `authChecked` flag regardless of outcome. |
+| [src/frontend/store/authStore.ts](/C:/Nikunj/src/frontend/store/authStore.ts) | Added `authChecked` (not persisted) + `setAuthChecked()`, so gated pages can distinguish "not yet checked" from "checked and not authenticated". |
+| [src/app/account/page.tsx](/C:/Nikunj/src/app/account/page.tsx) | Redirect-to-login effect now waits for `authChecked` before redirecting (previously redirected immediately on `!isAuthenticated`, which would have bounced a legitimately Clerk-signed-in user before `AuthBootstrap` finished its check). Logout now also triggers a real Clerk `signOut()` (see next row) so a Clerk session can't silently resurrect itself via `AuthBootstrap` on the next page load. |
+| [src/frontend/components/auth/ClerkSignOutBridge.tsx](/C:/Nikunj/src/frontend/components/auth/ClerkSignOutBridge.tsx) *(new)* | Tiny client component that calls Clerk's own documented `useClerk().signOut()`. Only ever rendered when `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` is set (same build-time gating pattern already used in `login/whatsapp/page.tsx`), so `useClerk()` is never called without a `<ClerkProvider>` ancestor. |
+| [src/app/api/orders/route.ts](/C:/Nikunj/src/app/api/orders/route.ts) (POST + GET) | `requireAuth` → `await requireAuthHybrid`. Guest-checkout fallback behavior on POST is unchanged. |
+| [src/app/api/orders/[id]/route.ts](</C:/Nikunj/src/app/api/orders/[id]/route.ts>) (GET + PATCH) | `requireAuth`/`requireAdmin` → `await requireAuthHybrid`/`await requireAdminHybrid`. Owner/guest-owner/admin access logic is unchanged — only the identity resolution changed. |
+| [src/app/api/payment/create/route.ts](/C:/Nikunj/src/app/api/payment/create/route.ts) | `requireAuth` → `await requireAuthHybrid` in the optional-auth/guest-checkout block. Razorpay order creation, amount derivation, and the rest of the route are untouched. |
+| [src/app/api/payment/cashfree/create/route.ts](/C:/Nikunj/src/app/api/payment/cashfree/create/route.ts) | Same swap as above; Cashfree order creation logic untouched. |
+| [src/backend/lib/orderAccess.ts](/C:/Nikunj/src/backend/lib/orderAccess.ts) | `verifyOrderAccess()` (used by track-order and the guest order-lookup API) now resolves the viewer via `requireAuthHybrid`, so a Clerk-signed-in customer's own orders resolve by ownership instead of requiring them to re-enter their phone number. |
+
+**Status: Implemented and verified in code (type-check, production build, and full test
+suite all pass — see "Build & test results" below); not live-tested against a real Clerk
+project (no sandbox/dashboard credentials were available in this environment, and the
+task explicitly disallows sending real OTPs/emails/payments).**
 
 ---
 
 ## 1. Clerk Authentication (email + Google + session bridge)
 
-**Status: Implemented and verified in code (build/type-check clean); not live-tested against a real Clerk project.**
+**Status: Implemented and verified in code (build/type-check clean, hybrid resolver now
+used by every route that needs to recognize an authenticated customer — see Phase 2
+table above); not live-tested against a real Clerk project.**
 
 | File | What it does |
 |---|---|
@@ -33,9 +58,15 @@ checkout are unchanged and untouched by this branch.
 | [src/backend/lib/clerk.ts](/C:/Nikunj/src/backend/lib/clerk.ts) | `requireAuthHybrid()` / `requireAdminHybrid()` — tries a real Clerk session first, otherwise transparently falls back to the existing `requireAuth`/legacy JWT cookie. Links a Clerk identity to an existing Mongo `User` **only** by an already-verified email or phone match; otherwise creates a new, non-privileged (`role: 'user'`) record. Role is always re-read from Mongo and re-synced via the existing `syncAdminRole()` admin allow-list — Clerk metadata is never trusted for authorization. |
 | [src/frontend/providers/ClerkAppProvider.tsx](/C:/Nikunj/src/frontend/providers/ClerkAppProvider.tsx), [src/app/layout.tsx](/C:/Nikunj/src/app/layout.tsx) | Wraps the app in `<ClerkProvider>` only when configured (conditional, no-op otherwise). |
 | [src/app/sign-in/[[...sign-in]]/page.tsx](</C:/Nikunj/src/app/sign-in/[[...sign-in]]/page.tsx>), [src/app/sign-up/[[...sign-up]]/page.tsx](</C:/Nikunj/src/app/sign-up/[[...sign-up]]/page.tsx>) | Clerk's hosted `<SignIn>`/`<SignUp>` components, which natively provide email verification and "Continue with Google" once a Google OAuth connection is enabled in the Clerk Dashboard (no app code change needed for Google — it is dashboard configuration). |
-| [src/app/api/auth/me/route.ts](/C:/Nikunj/src/app/api/auth/me/route.ts) | The one existing protected route migrated to `requireAuthHybrid` in this phase, as a canary. All other existing `requireAuth`/`requireAdmin` routes are **untouched** and keep working exactly as before. |
+| [src/app/api/auth/me/route.ts](/C:/Nikunj/src/app/api/auth/me/route.ts) | Uses `requireAuthHybrid`. Called proactively by `AuthBootstrap` on every app load now, not just from the login page. |
+| [src/frontend/providers/AuthBootstrap.tsx](/C:/Nikunj/src/frontend/providers/AuthBootstrap.tsx) | Client-side session hydration — see Phase 2 table above. This is what makes a Clerk-only sign-in (e.g. via the hosted `/sign-in` page, with no prior legacy login) visible to `/account`, `Navbar`, etc. |
+| `src/app/api/orders/route.ts`, `src/app/api/orders/[id]/route.ts`, `src/app/api/payment/create/route.ts`, `src/app/api/payment/cashfree/create/route.ts`, `src/backend/lib/orderAccess.ts` | All migrated to the hybrid resolver this phase — a Clerk-only session can now place orders, view its own order history, pay via Razorpay or Cashfree, and use track-order by ownership, exactly like a legacy-JWT session. |
 
-**Not done / deliberately deferred:** migrating the remaining ~14 existing `requireAuth`/`requireAdmin` routes to the hybrid resolver. This was intentionally limited to one canary route per the plan's risk-minimization instruction — rolling the hybrid resolver out further is a mechanical, low-risk follow-up once `/api/auth/me` is confirmed working against a real Clerk project.
+**Not done / deliberately deferred:** no other routes needed migration — every
+existing `requireAuth`/`requireAdmin` call site in the app was either already covered
+above or does not perform an authenticated action (login/register/OTP/forgot-password
+routes authenticate *to establish* a session, not to check one; payment verify/webhook
+routes are intentionally unauthenticated and instead verify the gateway's own signature).
 
 ---
 
@@ -108,9 +139,9 @@ All tests use mocks only — no real network calls, database connections, OTPs, 
 
 | Command | Result |
 |---|---|
-| `npm run type-check` | ✅ Pass, zero errors |
-| `npm run build` | ✅ Pass — all new routes (`/api/auth/whatsapp/*`, `/api/payment/cashfree/*`, `/sign-in`, `/sign-up`, `/login/whatsapp`) compiled and registered correctly. Only pre-existing warning: `middleware.ts` → `proxy.ts` deprecation notice (Next.js 16, non-blocking, not introduced by this work). |
-| `npm run lint` | ❌ Pre-existing failure, **unrelated to this work**: `next lint` errors with `Invalid project directory provided, no such directory: C:\Nikunj\lint`. Confirmed via `git stash`/`stash pop` that this fails identically on the pre-existing baseline before any of this session's changes — not a regression. |
-| `npm test` (new) | ✅ 20/20 passing |
+| `npm run type-check` | ✅ Pass, zero errors (re-confirmed after Phase 2 changes) |
+| `npm run build` | ✅ Pass — all new routes (`/api/auth/whatsapp/*`, `/api/payment/cashfree/*`, `/sign-in`, `/sign-up`, `/login/whatsapp`) compiled and registered correctly. Only pre-existing warning: `middleware.ts` → `proxy.ts` deprecation notice (Next.js 16, non-blocking, not introduced by this work). Re-confirmed after Phase 2 changes. |
+| `npm run lint` | ❌ Pre-existing failure, **unrelated to this work**: `next lint` errors with `Invalid project directory provided, no such directory: C:\Nikunj\lint` (Next.js 16 removed/changed the `next lint` subcommand). Running ESLint directly (`npx eslint src --ext .ts,.tsx`) also fails — no ESLint configuration file (`eslint.config.*`/`.eslintrc*`) exists in the repo. Confirmed this is a pre-existing project/tooling gap, not a regression caused by this work; not fixed here since adding an ESLint config is unrelated scope. |
+| `npm test` | ✅ 20/20 passing, re-run after Phase 2 changes with no new failures (no new tests were added for the Phase 2 auth-routing/client-bootstrap changes — they are exercised by `type-check`/`build` and are better validated by manual/E2E testing once Clerk sandbox credentials are available, since they depend on Clerk's runtime hook behavior) |
 
 No real OTPs, emails, or payment transactions were sent or run at any point in this work.

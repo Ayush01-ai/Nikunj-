@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/backend/lib/mongodb';
 import { Order } from '@/backend/models/Order';
-import { requireAuth, AuthError, isValidPhone, sanitizePhone } from '@/backend/lib/auth';
+import { AuthError, isValidPhone, sanitizePhone } from '@/backend/lib/auth';
+import { requireAuthHybrid } from '@/backend/lib/clerk';
 import { nanoid } from 'nanoid';
 import sanitizeHtml from 'sanitize-html';
 import { client } from '@/cms/lib/client';
@@ -39,10 +40,10 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    // Optional auth
+    // Optional auth — recognizes either a Clerk session or the legacy `ns_token` cookie.
     let userId: string | undefined;
     try {
-      const payload = requireAuth(req);
+      const payload = await requireAuthHybrid(req);
       userId = payload.userId;
     } catch {
       // Guest checkout
@@ -241,7 +242,7 @@ export async function POST(req: NextRequest) {
 // ─── GET: Fetch orders (admin or own orders) ──────────────────────────────
 export async function GET(req: NextRequest) {
   try {
-    const { userId, role } = requireAuth(req);
+    const { userId, role } = await requireAuthHybrid(req);
 
     await connectDB();
 
