@@ -7,9 +7,11 @@ export interface IUser extends Document {
   /** bcrypt hash; never selected by default */
   passwordHash?: string;
   googleId?: string;
+  /** Clerk user ID (e.g. "user_xxx"), set once an account is linked to or created via Clerk. Additive only. */
+  clerkUserId?: string;
   avatar?: string;
   emailVerified?: boolean;
-  authProviders: ('phone' | 'email' | 'google')[];
+  authProviders: ('phone' | 'email' | 'google' | 'clerk')[];
   /** sha256 of the emailed reset token; never selected by default */
   resetTokenHash?: string;
   resetTokenExpires?: Date;
@@ -50,9 +52,10 @@ const UserSchema = new Schema<IUser>(
     email:    { type: String, lowercase: true, trim: true },
     passwordHash:      { type: String, select: false },
     googleId:          { type: String },
+    clerkUserId:       { type: String },
     avatar:            { type: String },
     emailVerified:     { type: Boolean, default: false },
-    authProviders:     [{ type: String, enum: ['phone', 'email', 'google'] }],
+    authProviders:     [{ type: String, enum: ['phone', 'email', 'google', 'clerk'] }],
     resetTokenHash:    { type: String, select: false },
     resetTokenExpires: { type: Date, select: false },
     role:     { type: String, enum: ['user', 'admin'], default: 'user' },
@@ -67,6 +70,7 @@ const UserSchema = new Schema<IUser>(
 UserSchema.index({ phone: 1 }, { name: 'phone_unique', unique: true, partialFilterExpression: { phone: { $type: 'string' } } });
 UserSchema.index({ email: 1 }, { name: 'email_unique', unique: true, partialFilterExpression: { email: { $type: 'string' } } });
 UserSchema.index({ googleId: 1 }, { name: 'google_unique', unique: true, partialFilterExpression: { googleId: { $type: 'string' } } });
+UserSchema.index({ clerkUserId: 1 }, { name: 'clerk_unique', unique: true, partialFilterExpression: { clerkUserId: { $type: 'string' } } });
 
 export const User: Model<IUser> =
   mongoose.models.User || mongoose.model<IUser>('User', UserSchema);

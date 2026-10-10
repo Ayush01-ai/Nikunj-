@@ -5,6 +5,7 @@ import { client } from '@/cms/lib/client';
 import { SITE_SETTINGS_QUERY, NAV_MENU_QUERY } from '@/cms/lib/queries';
 import { urlFor } from '@/cms/lib/image';
 import { CookieConsent } from '@/frontend/components/ui/CookieConsent';
+import { ClerkAppProvider } from '@/frontend/providers/ClerkAppProvider';
 import type { NavMenuCategory, SiteSettings } from '@/types';
 
 export const revalidate = 3600; // Revalidate hourly
@@ -104,8 +105,10 @@ export default async function RootLayout({
       className={`${cinzel.variable} ${cinzelDecorative.variable} ${crimsonText.variable} ${lato.variable} ${montserrat.variable} ${greatVibes.variable} ${yatraOne.variable}`}
     >
       <body className="font-lato antialiased bg-cream text-deep selection:bg-gold selection:text-white">
-        <Providers siteSettings={settings} menu={menu}>{children}</Providers>
-        <CookieConsent gaId={process.env.NEXT_PUBLIC_GA_ID} />
+        <ClerkAppProvider>
+          <Providers siteSettings={settings} menu={menu}>{children}</Providers>
+          <CookieConsent gaId={process.env.NEXT_PUBLIC_GA_ID} />
+        </ClerkAppProvider>
       </body>
     </html>
   );

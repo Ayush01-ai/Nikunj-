@@ -287,7 +287,7 @@ export interface User {
   name?: string;
   email?: string;
   avatar?: string;
-  authProviders?: ('phone' | 'email' | 'google')[];
+  authProviders?: ('phone' | 'email' | 'google' | 'clerk')[];
   role: 'user' | 'admin';
   addresses?: ShippingAddress[];
   wishlist?: string[];
