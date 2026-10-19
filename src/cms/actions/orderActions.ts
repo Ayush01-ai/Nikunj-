@@ -100,7 +100,7 @@ export const CancelOrderAction: DocumentActionComponent = (props) => {
     dialog: confirming && {
       type: 'confirm',
       tone: 'critical',
-      message: `Cancel order ${doc.orderNumber}? Items go back into stock.${paid ? ' It will be marked "Refund due" — refund it from your Razorpay dashboard.' : ''}`,
+      message: `Cancel order ${doc.orderNumber}? Items go back into stock.${paid ? ' It will be marked "Refund due" — approve the refund from the Orders Dashboard to send the money back.' : ''}`,
       onConfirm: () => void cancel(),
       onCancel: () => {
         setConfirming(false);

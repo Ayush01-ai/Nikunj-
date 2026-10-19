@@ -8,10 +8,12 @@ import { ViewProductOnSiteAction } from './src/cms/actions/productActions';
 import { AdvanceOrderStatusAction, CancelOrderAction, SendToDeliveryPartnerAction, WhatsAppOrderUpdateAction } from './src/cms/actions/orderActions';
 import { PackageIcon } from '@sanity/icons/Package';
 import { UploadIcon } from '@sanity/icons/Upload';
+import { ChartUpwardIcon } from '@sanity/icons/ChartUpward';
 import { OrdersDashboard } from './src/cms/tools/OrdersDashboard';
+import { AnalyticsDashboard } from './src/cms/tools/AnalyticsDashboard';
 import { BulkProductImport } from './src/cms/tools/BulkProductImport';
 
-const SINGLETON_TYPES = new Set(['siteSettings', 'adminSettings', 'order']);
+const SINGLETON_TYPES = new Set(['siteSettings', 'adminSettings', 'order', 'lead']);
 
 const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || 'x33a83r6';
 const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || 'production';
@@ -27,6 +29,10 @@ export default defineConfig({
   projectId,
   dataset,
 
+  // Token login gives the Orders Dashboard a credential it can send to the website's
+  // owner-only APIs (e.g. /api/refunds/process), which verify it with Sanity.
+  auth: { loginMethod: 'token' },
+
   plugins: [
     structureTool({
       structure: deskStructure,
@@ -37,6 +43,7 @@ export default defineConfig({
   tools: (prev) => [
     ...prev.slice(0, 1),
     { name: 'orders', title: 'Orders Dashboard', icon: PackageIcon, component: OrdersDashboard },
+    { name: 'analytics', title: 'Analytics', icon: ChartUpwardIcon, component: AnalyticsDashboard },
     { name: 'bulk-import', title: 'Bulk Import', icon: UploadIcon, component: BulkProductImport },
     ...prev.slice(1),
   ],

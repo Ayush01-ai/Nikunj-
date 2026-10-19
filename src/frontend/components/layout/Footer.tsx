@@ -34,7 +34,7 @@ export function Footer({ settings }: FooterProps) {
 
   const trustHighlights = [
     { icon: Truck, title: 'Free Delivery', sub: `On orders above ₹${settings?.freeDeliveryThreshold || 999}` },
-    { icon: ShieldCheck, title: 'Secure Payments', sub: 'Razorpay • UPI • COD' },
+    { icon: ShieldCheck, title: 'Secure Payments', sub: 'Cashfree • UPI • COD' },
     { icon: Sparkles, title: 'Handcrafted', sub: 'With divine precision' },
     { icon: Award, title: '100% Authentic', sub: 'Pure & sacred materials' },
   ];
@@ -99,9 +99,9 @@ export function Footer({ settings }: FooterProps) {
 
           {/* Quick Links */}
           <div>
-            <h3 className="font-cinzel text-xs tracking-[0.2em] uppercase text-gold-light mb-5 font-semibold">
+            <h2 className="font-cinzel text-sm tracking-wide text-gold-light mb-5 font-semibold">
               Collections
-            </h3>
+            </h2>
             <ul className="space-y-3 text-xs">
               {quickLinks.map((link) => (
                 <li key={link.href}>
@@ -118,9 +118,9 @@ export function Footer({ settings }: FooterProps) {
 
           {/* Support */}
           <div>
-            <h3 className="font-cinzel text-xs tracking-[0.2em] uppercase text-gold-light mb-5 font-semibold">
+            <h2 className="font-cinzel text-sm tracking-wide text-gold-light mb-5 font-semibold">
               Help &amp; Info
-            </h3>
+            </h2>
             <ul className="space-y-3 text-xs">
               {supportLinks.map((link) => (
                 <li key={link.href}>
@@ -137,9 +137,9 @@ export function Footer({ settings }: FooterProps) {
 
           {/* Contact */}
           <div>
-            <h3 className="font-cinzel text-xs tracking-[0.2em] uppercase text-gold-light mb-5 font-semibold">
+            <h2 className="font-cinzel text-sm tracking-wide text-gold-light mb-5 font-semibold">
               Contact
-            </h3>
+            </h2>
             <ul className="space-y-3 text-xs">
               <li>
                 <Link href="/#feedback" className="text-xs text-white/50 hover:text-gold-light transition-colors">

@@ -142,6 +142,34 @@ export const deskStructure = (S: StructureBuilder) =>
               ordersByStatus(S, 'ordersAll', 'All Orders', 'true'),
             ]),
         ),
+      S.listItem()
+        .id('leads')
+        .title('📱 Checkout Leads')
+        .child(
+          S.list()
+            .id('leads')
+            .title('Checkout Leads')
+            .items(
+              [
+                ['leadsOpen', '🛒 Did not order', 'converted != true'],
+                ['leadsConverted', '✅ Ordered', 'converted == true'],
+                ['leadsAll', 'All leads', 'true'],
+              ].map(([id, title, filter]) =>
+                S.listItem()
+                  .id(id)
+                  .title(title)
+                  .child(
+                    S.documentList()
+                      .id(id)
+                      .title(title)
+                      .schemaType('lead')
+                      .filter(`_type == "lead" && (${filter})`)
+                      .defaultOrdering([{ field: 'lastSeenAt', direction: 'desc' }])
+                      .initialValueTemplates([]),
+                  ),
+              ),
+            ),
+        ),
       S.divider(),
       S.listItem()
         .id('siteSettings')

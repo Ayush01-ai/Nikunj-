@@ -19,15 +19,19 @@ if (!JWT_SECRET) {
 
 // ─── Token helpers ────────────────────────────────────────────────────────
 
-export function signToken(payload: { userId: string; phone: string; role: string }): string {
+export type LoginMethod = 'google' | 'email' | 'whatsapp';
+const LOGIN_METHODS: readonly string[] = ['google', 'email', 'whatsapp'];
+
+export function signToken(payload: { userId: string; phone: string; role: string; method?: LoginMethod }): string {
   return jwt.sign(payload as object, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN_SECONDS });
 }
 
-export function verifyToken(token: string): jwt.JwtPayload & { userId: string; phone: string; role: string } {
+export function verifyToken(token: string): jwt.JwtPayload & { userId: string; phone: string; role: string; method?: string } {
   return jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] }) as jwt.JwtPayload & {
     userId: string;
     phone: string;
     role: string;
+    method?: string;
   };
 }
 
@@ -59,6 +63,8 @@ export interface AuthPayload {
   userId: string;
   phone: string;
   role: 'user' | 'admin';
+  /** How this session was verified, taken only from the server-signed session (never from the client). */
+  method?: LoginMethod;
 }
 
 export function requireAuth(req: NextRequest): AuthPayload {
@@ -75,6 +81,7 @@ export function requireAuth(req: NextRequest): AuthPayload {
     userId: payload.userId,
     phone: payload.phone,
     role: payload.role as 'user' | 'admin',
+    ...(payload.method && LOGIN_METHODS.includes(payload.method) ? { method: payload.method as LoginMethod } : {}),
   };
 }
 

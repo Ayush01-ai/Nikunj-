@@ -10,6 +10,8 @@ import {
   RETURN_REASONS,
   type CancelRequestInfo,
 } from '@/cms/lib/orderRequests';
+import { deliveryChargeNotice } from '@/cms/lib/refunds';
+import { GuestOtpGate } from './GuestOtpGate';
 
 export interface RequestableOrder {
   orderId: string;
@@ -20,13 +22,29 @@ export interface RequestableOrder {
   returnWindowDays?: number;
   cancelRequest?: CancelRequestInfo | null;
   returnRequest?: { reasonCategory?: string; requestedAt?: string; rejectedReason?: string; rejectedAt?: string; photoCount?: number } | null;
+  /** How the customer proves ownership before changing the order. */
+  verifyWith?: 'account' | 'otp';
+  paymentStatus?: string;
+  /** What a cancellation / return refunds under the shop's policy. */
+  refundPolicy?: { deliveryCharge: number; refundable: number; deducted: number } | null;
 }
 
 const formatDate = (iso?: string) => (iso ? new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '');
 
 /** Small, understated cancel / return request link + form shown under an order. */
-export function OrderRequestPanel({ order, phone, onSubmitted }: { order: RequestableOrder; phone: string; onSubmitted: () => void }) {
+export function OrderRequestPanel({
+  order,
+  phone,
+  isLoggedIn = false,
+  onSubmitted,
+}: {
+  order: RequestableOrder;
+  phone: string;
+  isLoggedIn?: boolean;
+  onSubmitted: () => void;
+}) {
   const [open, setOpen] = useState(false);
+  const [guestProof, setGuestProof] = useState('');
   const [reason, setReason] = useState('');
   const [details, setDetails] = useState('');
   const [files, setFiles] = useState<File[]>([]);
@@ -38,6 +56,12 @@ export function OrderRequestPanel({ order, phone, onSubmitted }: { order: Reques
   const type: 'cancel' | 'return' | null = order.canCancel ? 'cancel' : order.canReturn ? 'return' : null;
   const reasons: readonly string[] = type === 'cancel' ? CANCEL_REASONS : RETURN_REASONS;
   const photoRequired = type === 'return' && PHOTO_REQUIRED_REASONS.includes(reason);
+  // Only relevant when money will actually go back (returns, or cancelling an already-paid order).
+  const policy = order.refundPolicy;
+  const chargeNotice =
+    policy && (type === 'return' || order.paymentStatus === 'paid')
+      ? deliveryChargeNotice({ total: policy.refundable + policy.deducted, deliveryCharge: policy.deliveryCharge, itemsOnly: policy.refundable, expected: policy.refundable, deducted: policy.deducted })
+      : '';
 
   useEffect(() => {
     const urls = files.map((f) => URL.createObjectURL(f));
@@ -71,11 +95,13 @@ export function OrderRequestPanel({ order, phone, onSubmitted }: { order: Reques
     body.set('type', type);
     body.set('reasonCategory', reason);
     body.set('details', details.trim());
+    if (guestProof) body.set('guestProof', guestProof);
     files.forEach((f) => body.append('photos', f));
     try {
       const res = await fetch('/api/orders/request', { method: 'POST', body });
       const json = await res.json().catch(() => ({}));
       if (!res.ok || !json.success) {
+        if (json.needsVerification) setGuestProof('');
         setError(json.error || 'Could not submit your request. Please try again.');
         return;
       }
@@ -119,7 +145,24 @@ export function OrderRequestPanel({ order, phone, onSubmitted }: { order: Reques
         </button>
       )}
 
-      {type && open && (
+      {type && open && order.verifyWith === 'account' && !isLoggedIn && (
+        <p className="mt-2 text-deep" role="status">
+          Please log in to the account used for this order to request a {type === 'cancel' ? 'cancellation' : 'return'}.
+        </p>
+      )}
+
+      {type && open && order.verifyWith === 'otp' && !guestProof && (
+        <div className="mt-2 text-left bg-white border border-[var(--border)] p-4 sm:p-5 max-w-xl mx-auto">
+          <GuestOtpGate
+            orderId={order.orderId}
+            phone={phone}
+            prompt={`To ${type === 'cancel' ? 'cancel' : 'return'} this order, first verify the phone number on it.`}
+            onVerified={setGuestProof}
+          />
+        </div>
+      )}
+
+      {type && open && (order.verifyWith === 'otp' ? Boolean(guestProof) : order.verifyWith !== 'account' || isLoggedIn) && (
         <form onSubmit={submit} className="mt-2 text-left bg-white border border-[var(--border)] p-4 sm:p-5 space-y-3 max-w-xl mx-auto" noValidate>
           <div className="flex items-start justify-between gap-3">
             <p className="font-cinzel text-[11px] tracking-widest uppercase text-deep">
@@ -134,6 +177,11 @@ export function OrderRequestPanel({ order, phone, onSubmitted }: { order: Reques
               ? 'Orders can be cancelled until they are handed to the courier. Our team will confirm, and any online payment is refunded to the original method in 5–7 working days.'
               : `Returns are accepted within ${order.returnWindowDays ?? 7} days of delivery for damaged, defective or wrong items. Please add clear photos — our team verifies every request before arranging pickup and refund.`}
           </p>
+          {chargeNotice && (
+            <p className="leading-relaxed bg-[var(--cream,#fdf8ee)] border border-[var(--border)] px-3 py-2 text-deep" role="note" data-testid="delivery-charge-notice">
+              {chargeNotice}
+            </p>
+          )}
 
           <label className="block">
             <span className="block mb-1 font-semibold text-deep">Reason</span>

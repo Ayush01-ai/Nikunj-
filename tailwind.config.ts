@@ -1,5 +1,6 @@
 import type { Config } from 'tailwindcss';
 import { fontFamily } from 'tailwindcss/defaultTheme';
+import typographyPlugin from '@tailwindcss/typography';
 
 const config: Config = {
   content: [
@@ -121,7 +122,7 @@ const config: Config = {
     },
   },
   plugins: [
-    require('@tailwindcss/typography'),
+    typographyPlugin,
     // @tailwindcss/aspect-ratio is intentionally NOT loaded: it disables Tailwind's native
     // `aspect-*` utilities, which collapsed the product-page image to 0px height.
   ],

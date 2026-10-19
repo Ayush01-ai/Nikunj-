@@ -331,13 +331,37 @@ export const PRODUCT_BY_SLUG_QUERY = groq`
 `;
 
 /** Related products (same category) */
+/**
+ * "You may also like": same category, product type or deity — best matches first.
+ * Unset references are passed as "" so they never match.
+ */
 export const RELATED_PRODUCTS_QUERY = groq`
   *[
     _type == "product"
     && isActive == true
-    && category._ref == $categoryId
     && _id != $productId
-  ] | order(coalesce(sortOrder, displayOrder, 0) asc, _createdAt desc)[0...4]{
+    && (category._ref == $categoryId || productType._ref == $productTypeId || deity._ref == $deityId)
+  ]
+  | score(
+      boost(category._ref == $categoryId, 3),
+      boost(productType._ref == $productTypeId, 2),
+      boost(deity._ref == $deityId, 2),
+      boost(isBestseller == true, 1),
+      boost(inStock == true, 1)
+    )
+  | order(_score desc, coalesce(sortOrder, displayOrder, 0) asc, _createdAt desc)[0...8]{
+    ${PRODUCT_CARD_FIELDS}
+  }
+`;
+
+/** Candidates for "Explore something different": popular products from other categories. */
+export const DIFFERENT_PRODUCTS_QUERY = groq`
+  *[
+    _type == "product"
+    && isActive == true
+    && _id != $productId
+    && category._ref != $categoryId
+  ] | order(coalesce(isBestseller, false) desc, coalesce(isFeatured, false) desc, _updatedAt desc)[0...40]{
     ${PRODUCT_CARD_FIELDS}
   }
 `;

@@ -150,4 +150,96 @@ describe('POST /api/payment/cashfree/webhook', () => {
     expect(res.status).toBe(200);
     expect(json).toEqual({ success: true, ignored: 'SOME_OTHER_WEBHOOK' });
   });
-});
+
+  const successPayload = (payment: Record<string, unknown>, order: Record<string, unknown> = {}) => ({
+    type: 'PAYMENT_SUCCESS_WEBHOOK',
+    data: {
+      order: { order_id: 'order-1', ...order },
+      payment: { cf_payment_id: 'cf-pay-1', payment_status: 'SUCCESS', payment_amount: 499, payment_currency: 'INR', ...payment },
+    },
+  });
+
+  it('verifies the signature against the exact raw body and headers', async () => {
+    const raw = '{"type":"PAYMENT_SUCCESS_WEBHOOK",  "data":{}}';
+    verifyCashfreeWebhookSignature.mockReturnValue({ object: { type: 'IGNORED' } });
+
+    const { POST } = await import('@/app/api/payment/cashfree/webhook/route');
+    await POST(makeRequest(raw, VALID_HEADERS));
+
+    expect(verifyCashfreeWebhookSignature).toHaveBeenCalledWith('sig', raw, '1700000000');
+  });
+
+  it.each([
+    ['a missing payment currency', successPayload({ payment_currency: undefined })],
+    ['a non-INR payment currency', successPayload({ payment_currency: 'USD' })],
+    ['a mismatched order-level amount', successPayload({}, { order_amount: 1 })],
+    ['a non-INR order currency', successPayload({}, { order_currency: 'USD' })],
+  ])('never marks paid on %s', async (_label, payload) => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    verifyCashfreeWebhookSignature.mockReturnValue({ object: payload });
+    findOne.mockResolvedValue({ _id: 'mongo-id', orderId: 'order-1', total: 499, paymentStatus: 'pending' });
+
+    const { POST } = await import('@/app/api/payment/cashfree/webhook/route');
+    const res = await POST(makeRequest(JSON.stringify(payload), VALID_HEADERS));
+
+    expect(res.status).toBe(200);
+    expect(findOneAndUpdate).not.toHaveBeenCalled();
+    expect(pushConfirmedOrderToSanity).not.toHaveBeenCalled();
+  });
+
+  it('stores a numeric cf_payment_id as a string', async () => {
+    const payload = successPayload({ cf_payment_id: 5114915034 }, { order_amount: 499, order_currency: 'INR' });
+    verifyCashfreeWebhookSignature.mockReturnValue({ object: payload });
+    findOne.mockResolvedValue({ _id: 'mongo-id', orderId: 'order-1', total: 499, paymentStatus: 'pending' });
+    findOneAndUpdate.mockResolvedValue({ _id: 'mongo-id', paymentStatus: 'paid' });
+
+    const { POST } = await import('@/app/api/payment/cashfree/webhook/route');
+    await POST(makeRequest(JSON.stringify(payload), VALID_HEADERS));
+
+    expect(findOneAndUpdate).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ cashfreePaymentId: '5114915034' }),
+      { new: true },
+    );
+  });
+
+  it('does not re-sync Sanity when a concurrent verify/webhook already won the paid update', async () => {
+    const payload = successPayload({});
+    verifyCashfreeWebhookSignature.mockReturnValue({ object: payload });
+    findOne.mockResolvedValue({ _id: 'mongo-id', orderId: 'order-1', total: 499, paymentStatus: 'pending' });
+    findOneAndUpdate.mockResolvedValue(null);
+
+    const { POST } = await import('@/app/api/payment/cashfree/webhook/route');
+    const res = await POST(makeRequest(JSON.stringify(payload), VALID_HEADERS));
+
+    expect(res.status).toBe(200);
+    expect(pushConfirmedOrderToSanity).not.toHaveBeenCalled();
+  });
+
+  it('delivering the same success webhook twice syncs Sanity at most once', async () => {
+    const payload = successPayload({});
+    verifyCashfreeWebhookSignature.mockReturnValue({ object: payload });
+    findOne
+      .mockResolvedValueOnce({ _id: 'mongo-id', orderId: 'order-1', total: 499, paymentStatus: 'pending' })
+      .mockResolvedValueOnce({ _id: 'mongo-id', orderId: 'order-1', total: 499, paymentStatus: 'paid' });
+    findOneAndUpdate.mockResolvedValue({ _id: 'mongo-id', paymentStatus: 'paid' });
+
+    const { POST } = await import('@/app/api/payment/cashfree/webhook/route');
+    await POST(makeRequest(JSON.stringify(payload), VALID_HEADERS));
+    await POST(makeRequest(JSON.stringify(payload), VALID_HEADERS));
+
+    expect(findOneAndUpdate).toHaveBeenCalledTimes(1);
+    expect(pushConfirmedOrderToSanity).toHaveBeenCalledTimes(1);
+  });
+
+  it('flips a pending order to failed on PAYMENT_USER_DROPPED_WEBHOOK', async () => {
+    const payload = { type: 'PAYMENT_USER_DROPPED_WEBHOOK', data: { order: { order_id: 'order-3' } } };
+    verifyCashfreeWebhookSignature.mockReturnValue({ object: payload });
+
+    const { POST } = await import('@/app/api/payment/cashfree/webhook/route');
+    const res = await POST(makeRequest(JSON.stringify(payload), VALID_HEADERS));
+
+    expect(res.status).toBe(200);
+    expect(findOneAndUpdate).toHaveBeenCalledWith({ cashfreeOrderId: 'order-3', paymentStatus: 'pending' }, { paymentStatus: 'failed' });
+    expect(pushConfirmedOrderToSanity).not.toHaveBeenCalled();
+  });});

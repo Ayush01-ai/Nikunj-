@@ -1,5 +1,23 @@
 # Security & Migration Report
 
+> **Update (Cashfree-only checkout migration):** the sections below describing Cashfree
+> as a "second, feature-flagged, opt-in gateway" alongside Razorpay reflect the state at
+> the time this report was first written. Cashfree has since become the **sole active
+> checkout gateway**: `checkout/page.tsx` no longer offers a gateway choice, and
+> `/api/payment/create` (Razorpay order creation) now returns `410 Gone` for new
+> requests. Razorpay's `/verify` and `/webhook` routes, and `src/backend/lib/razorpay.ts`,
+> remain fully intact and unmodified — they are required indefinitely to settle/refund
+> pre-existing Razorpay orders already recorded in MongoDB. Guest checkout now requires
+> an OTP-verified short-lived proof (`src/backend/lib/guestPaymentProof.ts` +
+> `/api/payment/guest-verify/send-otp` and `/confirm-otp`) instead of a bare phone-number
+> match before `authorizeOrderForPayment()` will allow a guest payment to be created, for
+> both Cashfree and the legacy Razorpay settlement path. See
+> `docs/PRODUCTION-HARDENING-REPORT.md` for the original guest-authorization finding and
+> `tests/orderAccess.test.ts` / `tests/guestPaymentProof.test.ts` /
+> `tests/guestVerifySendOtp.test.ts` / `tests/guestVerifyConfirmOtp.test.ts` for the
+> current behavior's test coverage. The remainder of this document is preserved as
+> originally written for historical context.
+
 ## 1. Security review summary
 
 A dedicated security review was performed against the diff introduced on this branch
@@ -162,3 +180,74 @@ desired) would need a **separate, explicitly reviewed plan** covering:
 - `main` branch — all work is isolated to
   `feature/clerk-resend-whatsapp-cashfree`, with a pre-work baseline commit (`71b3e5e`)
   available as a rollback point.
+
+---
+
+## Dependency vulnerability remediation (Snyk SCA) — 2026-10-17
+
+Scope: Snyk Open Source (dependency) scan only. **Snyk Code (SAST) is not enabled for the
+org (`SNYK-CODE-0005`) and was never run, so no code-level result is claimed.** Nothing was
+committed, pushed or deployed; no credentials, databases, providers, DNS or hosting changed.
+
+### Results
+
+| Initial 37 findings | Status |
+|---|---|
+| 32 × `next@14.2.35`/`postcss`/`nanoid` in `_ai-tooling/.../ui-ux-pro-max-skill/gallery` (vendored, git-ignored tooling, not part of the shop) | **Fixed** — upgraded to Next 16 / React 19 / postcss 8.5; Snyk scan of that folder: 0 issues. Not built or run. |
+| `zod@3.25.76` high (via `next-cloudinary` → `@cloudinary-util/url-loader`) | **Fixed** — zod 4.6.7 app-wide plus override for `@cloudinary-util/url-loader` |
+| `deepmerge@4.3.1` prototype pollution (via `sanitize-html`) | **Fixed** — `sanitize-html` ^2.18.1 |
+| `xlsx@0.20.3` ReDoS (`SNYK-JS-XLSX-6252523`) and prototype pollution (`SNYK-JS-XLSX-5457926`) — no upstream fix | **Fixed by removal/migration** — replaced with ExcelJS 4.4.0 (see below) |
+| `braces@3.0.3` `SNYK-JS-BRACES-19963945` (CVE-2026-93687, CWE-674, high) | **Unresolved — no fix exists** (see below). No `.snyk` ignore added. |
+
+Final Snyk scan of `C:\Nikunj` (excluding `node_modules`, `_ai-tooling`): **1 issue** (the braces advisory above).
+A transient `SNYK-JS-UNZIPPER-18365659` (zip-slip, via ExcelJS) appeared after migration; fixed with override `unzipper@^0.12.5`.
+
+### `xlsx` usage and migration
+
+- Only user: `src/cms/tools/BulkProductImport.tsx` (Sanity Studio "Bulk Import" tool, embedded at `/studio`, used by
+  authenticated admins). Runs in the **browser**: reads an uploaded .xlsx/.xls/.csv into product rows, and generates the
+  download template (Products / Instructions / Lists sheets). Not used by API routes, server import/export or scripts.
+- New [spreadsheet.ts](../src/cms/tools/spreadsheet.ts) (`readProductRows`, `buildWorkbook`, `parseCsv`) on ExcelJS. The
+  prebuilt `exceljs/dist/exceljs.min.js` bundle is used so the Node-only streaming reader (`unzipper`, which needs
+  optional AWS SDK modules) is not bundled; only buffer load/write is used.
+- ExcelJS review: 4.4.0 has Snyk-clean direct dependencies after the `unzipper` override; its deps are archiver, dayjs,
+  fast-csv, jszip, readable-stream, saxes, tmp, unzipper, uuid.
+- **Behaviour changes (please note):** (1) legacy binary **`.xls` is no longer supported** (ExcelJS cannot read it); the
+  tool shows "Save the file as .xlsx or .csv" and the picker accepts `.xlsx,.csv`. (2) New safety limit: files over 10 MB
+  are rejected. (3) CSV is parsed by an in-repo RFC 4180 parser. Cell values are read as display text (as before with
+  `raw:false`); blank rows skipped; "Products" sheet preferred, else first sheet.
+- Tests: `tests/bulk-import-spreadsheet.test.ts` (16) — round trip, unicode/newlines/numbers, sheet selection, blank rows,
+  duplicate/blank/`__proto__` headers, formulas/dates/rich text, CSV quirks (BOM, quotes, CRLF), corrupt/truncated xlsx,
+  legacy .xls, oversize, unterminated CSV quote.
+
+### `braces@3.0.3` investigation
+
+- Path (verified with `npm ls`): `sanity@6.18.0 → @sanity/cli → @sanity/codegen → chokidar@3.6.0 → braces`; also
+  `tailwindcss@3.4.19 → chokidar / micromatch → braces`.
+- Production tree: `sanity` is a runtime `dependency`, so `npm ls --omit=dev` **does** list braces and it is installed
+  with production dependencies. It is **not** imported by the app: `src/` only imports `sanity` APIs in `src/cms`
+  (Studio UI), never the CLI/codegen/chokidar; I did not find `braces` traced into the Next server output (`.nft.json`).
+  The Tailwind path is build-time (devDependency).
+- Reachability: braces expands brace patterns in file globs. Patterns come from developer-controlled config/CLI
+  (`tailwind.config.ts` content globs, Sanity CLI/codegen config), not from HTTP requests, form fields, uploads or
+  CMS content. I found no exposed application input that reaches it. Risk is limited to a developer/CI machine running a
+  hostile glob — low, but not zero.
+- Fix options: `braces` 3.0.3 is the latest release (no patched version), so no override is possible; `npm audit`'s
+  suggested "fixes" are major downgrades/upgrades (Sanity 5.7.0, Tailwind 4) and were rejected. A Tailwind 4 migration
+  would remove one path but not the Sanity CLI path, and is out of scope.
+- Decision: **retained, unresolved, documented.** No `.snyk` ignore was added (no project ignore policy file exists and
+  the finding is real). Re-check when braces or `@sanity/codegen`/`chokidar` ships a fix.
+
+### zod 4 migration review
+
+Schemas were inline in five files; they are now in `src/frontend/lib/formSchemas.ts` (same rules and messages) and
+imported by the login, WhatsApp login, reset-password and feedback forms and by `/api/feedback`, whose runtime
+`safeParse` + generic-400 handling is unchanged. `tests/form-schemas.test.ts` (41) covers valid/invalid values, length
+boundaries (2/80, 10/500, 8-char passwords), trim behaviour, rating coercion (`'4'`, 0, 6, 3.5, NaN, `'Infinity'`),
+password mismatch path, non-string/null/array bodies, and that unknown keys are stripped.
+
+### Verification
+
+`tsc --noEmit` 0 errors · `vitest run` 22 files / 230 tests pass · `npm run build` succeeds · `eslint` on touched files:
+0 errors (4 pre-existing warnings). `npm audit` still reports other advisories on dev tooling (vitest/tinypool, eslint-config-next,
+tailwind chain) that Snyk did not flag; not addressed here.

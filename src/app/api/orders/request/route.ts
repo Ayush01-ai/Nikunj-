@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyOrderAccess } from '@/backend/lib/orderAccess';
+import { authorizeOrderForPayment, verifyOrderAccess } from '@/backend/lib/orderAccess';
+import { requireAuthHybrid } from '@/backend/lib/clerk';
 import { clientIp, createRateLimiter } from '@/backend/lib/rateLimit';
 import { getAdminSettings, getSanityOrder, sanityOrderId } from '@/backend/lib/sanityOrders';
-import { sendOrderWhatsApp } from '@/backend/lib/whatsapp';
+import { notifyOrder } from '@/backend/lib/orderNotify';
 import { Order } from '@/backend/models/Order';
 import { writeClient } from '@/cms/lib/client';
 import { historyEntry } from '@/cms/lib/orderOps';
@@ -18,7 +19,7 @@ import {
 
 export const runtime = 'nodejs';
 
-const isRateLimited = createRateLimiter(5, 10 * 60 * 1000);
+const isRateLimited = createRateLimiter(5, 10 * 60 * 1000, 'api/orders/request:isRateLimited');
 const fail = (error: string, status = 400) => NextResponse.json({ success: false, error }, { status });
 const key = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 
@@ -32,7 +33,7 @@ function imageExt(buf: Buffer): 'jpg' | 'png' | 'webp' | null {
 
 /** Customer-raised cancellation or return request. The admin approves / rejects it in the Studio Orders Dashboard. */
 export async function POST(req: NextRequest) {
-  if (isRateLimited(`order-request:${clientIp(req)}`)) return fail('Too many requests. Please try again in a few minutes.', 429);
+  if (await isRateLimited(`order-request:${clientIp(req)}`)) return fail('Too many requests. Please try again in a few minutes.', 429);
 
   let form: FormData;
   try {
@@ -60,6 +61,27 @@ export async function POST(req: NextRequest) {
   const access = await verifyOrderAccess(req, form.get('orderId'), form.get('phone'));
   if (!access.ok) return fail(access.error, access.status);
   const { orderId, order: mongoOrder } = access;
+
+  // Knowing the order ID + phone is enough to *view* status, but changing an order needs real
+  // proof: the logged-in owner, or a guest who verified an OTP sent to the order's phone.
+  let viewerId: string | undefined;
+  try {
+    viewerId = (await requireAuthHybrid(req)).userId;
+  } catch {
+    // guest
+  }
+  if (!authorizeOrderForPayment(mongoOrder, viewerId, form.get('guestProof')).ok) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: mongoOrder.userId
+          ? 'Please log in to the account used for this order to request a cancellation or return.'
+          : 'Please verify your phone number with the OTP first.',
+        needsVerification: !mongoOrder.userId,
+      },
+      { status: 403 },
+    );
+  }
 
   if (!process.env.SANITY_API_TOKEN) return fail('Requests are temporarily unavailable. Please contact us on WhatsApp.', 503);
   const [managed, admin] = await Promise.all([getSanityOrder(orderId), getAdminSettings()]);
@@ -129,13 +151,12 @@ export async function POST(req: NextRequest) {
       .append('statusHistory', [historyEntry('return_requested', `Customer requested return (day ${days ?? '?'} of ${windowDays}) — ${reasonCategory}`)])
       .commit();
     await Order.updateOne({ orderId }, { $set: { status: 'return_requested' } }).catch(() => undefined);
-    await sendOrderWhatsApp({
+    await notifyOrder(orderId, {
       orderNumber: orderId,
       status: 'return_requested',
       customerName: mongoOrder.shippingAddress?.fullName,
-      phone: mongoOrder.shippingAddress?.phone,
-    });
-    return NextResponse.json({ success: true, message: 'Your return request has been sent. Our team will review the photos and update you on WhatsApp.' });
+    }).catch(() => undefined);
+    return NextResponse.json({ success: true, message: 'Your return request has been sent. Our team will review the photos and keep you updated.' });
   } catch (error) {
     console.error('[order-request]', orderId, error instanceof Error ? error.message : error);
     return fail('Could not submit your request right now. Please try again or contact us on WhatsApp.', 500);

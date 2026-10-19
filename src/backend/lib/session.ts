@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import type { IUser } from '@/backend/models/User';
-import { signToken } from '@/backend/lib/auth';
+import { signToken, type LoginMethod } from '@/backend/lib/auth';
 import { getAdminSettings } from '@/backend/lib/sanityOrders';
 
 const SESSION_MAX_AGE = 7 * 24 * 60 * 60;
@@ -15,6 +15,7 @@ export function publicUser(user: IUser) {
     avatar: user.avatar,
     role: user.role,
     authProviders: user.authProviders ?? [],
+    addresses: user.addresses ?? [],
     createdAt: user.createdAt?.toISOString?.() ?? '',
   };
 }
@@ -32,8 +33,8 @@ export async function syncAdminRole(user: IUser): Promise<void> {
   }
 }
 
-export function setSessionCookie(res: NextResponse, user: IUser): string {
-  const token = signToken({ userId: user._id.toString(), phone: user.phone ?? '', role: user.role });
+export function setSessionCookie(res: NextResponse, user: IUser, method?: LoginMethod): string {
+  const token = signToken({ userId: user._id.toString(), phone: user.phone ?? '', role: user.role, ...(method ? { method } : {}) });
   res.cookies.set('ns_token', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -45,9 +46,9 @@ export function setSessionCookie(res: NextResponse, user: IUser): string {
 }
 
 /** JSON success response that also starts the cookie session. */
-export function sessionResponse(user: IUser, message = 'Login successful') {
+export function sessionResponse(user: IUser, message = 'Login successful', method?: LoginMethod) {
   const res = NextResponse.json({ success: true, message, user: publicUser(user) });
-  setSessionCookie(res, user);
+  setSessionCookie(res, user, method);
   return res;
 }
 

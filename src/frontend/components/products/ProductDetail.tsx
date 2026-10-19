@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, Zap, Heart, Share2, ChevronLeft, ChevronRight, ZoomIn, Check, Truck, Shield, RotateCcw } from 'lucide-react';
@@ -13,6 +13,7 @@ import { Button } from '@/frontend/components/ui/button';
 import { SacredPlaceholder } from '@/frontend/components/ui/SacredIcon';
 import { colourAtImage, colourImageIndex, productGallery, toCartItem } from '@/frontend/lib/product';
 import { defaultVariant, getVariantPricing } from '@/cms/lib/pricing';
+import { track } from '@/frontend/lib/analytics';
 import { ColorSelector, PriceBlock, QuantitySelector, VariantSelector } from '@/frontend/components/products/ProductOptions';
 import type { Product, SiteSettings } from '@/types';
 
@@ -31,6 +32,10 @@ export function ProductDetail({ product, settings }: ProductDetailProps) {
   const [zoomed, setZoomed] = useState(false);
 
   const { addItem, openCart } = useCartStore();
+
+  useEffect(() => {
+    track('product_view', { productId: product._id, productName: product.name });
+  }, [product._id, product.name]);
   const { toggleWishlist, isWishlisted } = useWishlistStore();
   const wishlistReady = useWishlistHydrated();
   const wished = wishlistReady && isWishlisted(product._id);

@@ -247,6 +247,7 @@ export interface OrderItem {
 }
 
 export interface ShippingAddress {
+  _id?: string;
   fullName: string;
   phone: string;
   line1: string;
@@ -255,6 +256,7 @@ export interface ShippingAddress {
   state: string;
   pincode: string;
   landmark?: string;
+  isDefault?: boolean;
 }
 
 export interface Order {

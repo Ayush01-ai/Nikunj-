@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
-  Package, MapPin, Heart, LogOut, ChevronRight, ShoppingBag, Truck, CheckCircle2, Clock, User as UserIcon, Mail, Phone,
+  Package, MapPin, Heart, LogOut, ChevronRight, ShoppingBag, Truck, CheckCircle2, Clock, User as UserIcon, Mail, Phone, Trash2, Pencil, Plus, X, Star, KeyRound,
 } from 'lucide-react';
 import { useAuthStore } from '@/frontend/store/authStore';
 import { useWishlistStore } from '@/frontend/store/wishlistStore';
@@ -20,9 +20,13 @@ import { urlFor } from '@/cms/lib/image';
 import { WISHLIST_PRODUCTS_QUERY } from '@/cms/lib/queries';
 import { getProductHref } from '@/frontend/lib/product';
 import { lowestPricing, formatINR } from '@/cms/lib/pricing';
-import type { Order, Product } from '@/types';
+import type { Order, Product, ShippingAddress } from '@/types';
 import { ORDER_STATUS_LABEL, ORDER_STEPS, isReturnStatus } from '@/cms/lib/orderMessages';
 import toast from 'react-hot-toast';
+import { RefundPanel, type RefundView } from '@/frontend/components/orders/RefundPanel';
+import { CopyCodeButton, deliveryStatusText, type DeliveryOtpStatus } from '@/frontend/components/orders/DeliveryCode';
+
+type AccountOrder = Order & { refund?: RefundView | null; delivery?: { otpRequired?: boolean; code?: string; verifiedAt?: string; otpStatus?: DeliveryOtpStatus; otpSentAt?: string | null } | null };
 
 // Same build-time pattern used elsewhere (e.g. login/whatsapp/page.tsx) — only render the
 // Clerk sign-out bridge when a <ClerkProvider> ancestor is guaranteed to exist.
@@ -31,6 +35,44 @@ const CLERK_ENABLED = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 type Tab = 'orders' | 'wishlist' | 'cart' | 'profile';
 
 const ACTIVE_STATUSES = new Set(['pending', 'confirmed', 'processing', 'shipped']);
+
+// Local form state for the address book: '_id' is set when editing an existing address,
+// and omitted (undefined) when adding a new one.
+type AddressFormState = ShippingAddress;
+
+const EMPTY_ADDRESS: AddressFormState = {
+  fullName: '', phone: '', line1: '', line2: '', city: '', state: '', pincode: '', landmark: '', isDefault: false,
+};
+
+function AddressFormFields({
+  value, onChange,
+}: { value: AddressFormState; onChange: (next: AddressFormState) => void }) {
+  const field = (key: keyof AddressFormState) => ({
+    value: (value[key] as string) ?? '',
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...value, [key]: e.target.value }),
+  });
+  return (
+    <div className="grid sm:grid-cols-2 gap-3">
+      <input className="divine-input text-sm" placeholder="Full name" maxLength={100} {...field('fullName')} />
+      <input className="divine-input text-sm" placeholder="Phone number" maxLength={10} {...field('phone')} />
+      <input className="divine-input text-sm sm:col-span-2" placeholder="Address line 1 (house no., street)" {...field('line1')} />
+      <input className="divine-input text-sm sm:col-span-2" placeholder="Address line 2 (optional)" {...field('line2')} />
+      <input className="divine-input text-sm" placeholder="City" {...field('city')} />
+      <input className="divine-input text-sm" placeholder="State" {...field('state')} />
+      <input className="divine-input text-sm" placeholder="Pincode" maxLength={6} {...field('pincode')} />
+      <input className="divine-input text-sm" placeholder="Landmark (optional)" {...field('landmark')} />
+      <label className="flex items-center gap-2 sm:col-span-2 font-lato text-xs text-[var(--text-mid)]">
+        <input
+          type="checkbox"
+          checked={Boolean(value.isDefault)}
+          onChange={(e) => onChange({ ...value, isDefault: e.target.checked })}
+          className="w-4 h-4 accent-gold-dark"
+        />
+        Set as default address
+      </label>
+    </div>
+  );
+}
 
 function OrderProgress({ status }: { status: string }) {
   if (status === 'cancelled' || status === 'refunded') {
@@ -77,11 +119,17 @@ function StatCard({
 
 export default function AccountPage() {
   const router = useRouter();
-  const { user, isAuthenticated, authChecked, logout } = useAuthStore();
+  const { user, isAuthenticated, authChecked, logout, setUser } = useAuthStore();
   const wishlistIds = useWishlistStore((s) => s.ids);
   const toggleWishlist = useWishlistStore((s) => s.toggleWishlist);
   const cartItems = useCartStore((s) => s.items);
-  const cartSubtotal = useCartStore((s) => s.subtotal());
+  const deselectedIds = useCartStore((s) => s.deselectedIds);
+  const toggleSelected = useCartStore((s) => s.toggleSelected);
+  const selectAllCart = useCartStore((s) => s.selectAll);
+  const deselectAllCart = useCartStore((s) => s.deselectAll);
+  const cartSelectedItems = useCartStore((s) => s.selectedItems());
+  const cartSelectedSubtotal = useCartStore((s) => s.selectedSubtotal());
+  const removeCartItem = useCartStore((s) => s.removeItem);
   const openCart = useCartStore((s) => s.openCart);
 
   const [activeTab, setActiveTab] = useState<Tab>('orders');
@@ -91,6 +139,16 @@ export default function AccountPage() {
   const [loadingWishlist, setLoadingWishlist] = useState(false);
   const [clerkSignOutTrigger, setClerkSignOutTrigger] = useState(0);
 
+  // Profile editing
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({ name: '', phone: '', email: '' });
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  // Address book
+  const [addressForm, setAddressForm] = useState<AddressFormState | null>(null);
+  const [savingAddress, setSavingAddress] = useState(false);
+  const [deletingAddressId, setDeletingAddressId] = useState<string | null>(null);
+
   useEffect(() => {
     // Wait for the app-wide `/api/auth/me` bootstrap check (AuthBootstrap) to finish —
     // a Clerk-only session isn't in the persisted store yet on first load, so redirecting
@@ -98,7 +156,7 @@ export default function AccountPage() {
     if (authChecked && !isAuthenticated) router.replace('/login?next=/account');
   }, [authChecked, isAuthenticated, router]);
 
-  useEffect(() => {
+  const loadOrders = useCallback(() => {
     if (!isAuthenticated) return;
     setLoadingOrders(true);
     // Session identity comes from the HttpOnly `ns_token` cookie, sent automatically.
@@ -115,6 +173,20 @@ export default function AccountPage() {
       .catch(() => toast.error('Failed to load orders'))
       .finally(() => setLoadingOrders(false));
   }, [isAuthenticated, logout]);
+
+  useEffect(() => {
+    loadOrders();
+  }, [loadOrders]);
+
+  // Refunds waiting for the customer's UPI / bank details — shown first, above everything else.
+  const refundActions = useMemo(
+    () => (orders as AccountOrder[]).filter((o) => o.refund?.canSubmitDetails && o.refund.state !== 'details_submitted'),
+    [orders],
+  );
+  const refundsInReview = useMemo(
+    () => (orders as AccountOrder[]).filter((o) => o.refund && !refundActions.includes(o) && o.refund.state !== 'success'),
+    [orders, refundActions],
+  );
 
   useEffect(() => {
     if (wishlistIds.length === 0) { setWishlist([]); return; }
@@ -139,6 +211,84 @@ export default function AccountPage() {
     logout();
     toast.success('Logged out');
     router.push('/');
+  };
+
+  const startEditProfile = () => {
+    setProfileForm({ name: user?.name || '', phone: user?.phone || '', email: user?.email || '' });
+    setEditingProfile(true);
+  };
+
+  const saveProfile = async () => {
+    setSavingProfile(true);
+    try {
+      const res = await fetch('/api/account/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profileForm),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Could not update profile');
+      setUser(json.user);
+      toast.success('Profile updated');
+      setEditingProfile(false);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Could not update profile');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  const saveAddress = async () => {
+    if (!addressForm) return;
+    setSavingAddress(true);
+    try {
+      const isEdit = Boolean(addressForm._id);
+      const res = await fetch('/api/account/addresses', {
+        method: isEdit ? 'PATCH' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(isEdit ? { ...addressForm, id: addressForm._id } : addressForm),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Could not save address');
+      setUser(json.user);
+      toast.success(isEdit ? 'Address updated' : 'Address added');
+      setAddressForm(null);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Could not save address');
+    } finally {
+      setSavingAddress(false);
+    }
+  };
+
+  const deleteAddress = async (id: string) => {
+    setDeletingAddressId(id);
+    try {
+      const res = await fetch(`/api/account/addresses?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Could not remove address');
+      setUser(json.user);
+      toast.success('Address removed');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Could not remove address');
+    } finally {
+      setDeletingAddressId(null);
+    }
+  };
+
+  const setDefaultAddress = async (address: ShippingAddress) => {
+    try {
+      const res = await fetch('/api/account/addresses', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...address, id: address._id, isDefault: true }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Could not update default address');
+      setUser(json.user);
+      toast.success('Default address updated');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Could not update default address');
+    }
   };
 
   if (!user) {
@@ -187,10 +337,45 @@ export default function AccountPage() {
             </button>
           </div>
 
+          {/* Refund details needed — top of the page so it can't be missed */}
+          {refundActions.length > 0 && (
+            <section aria-labelledby="refund-action-title" className="mb-8 border-2 border-gold/60 bg-gold/5 p-4 sm:p-5" data-testid="account-refund-action">
+              <h2 id="refund-action-title" className="font-cinzel text-sm tracking-widest uppercase text-deep">
+                Action needed · Share your refund details
+              </h2>
+              <p className="mt-1 mb-4 font-lato text-sm text-[var(--text-mid)] leading-relaxed">
+                {refundActions.length === 1 ? 'Your refund is ready to be sent.' : `You have ${refundActions.length} refunds ready to be sent.`} Please tell us the UPI ID or bank
+                account where you&apos;d like to receive the money — it goes only to the account you share here.
+              </p>
+              <div className="space-y-4">
+                {refundActions.map((o) => (
+                  <div key={o.orderId}>
+                    <p className="mb-2 font-lato text-xs text-[var(--text-mid)]">
+                      Order <span className="font-semibold text-deep">{o.orderId}</span>
+                    </p>
+                    <RefundPanel orderId={o.orderId} phone="" refund={o.refund!} isLoggedIn onSaved={loadOrders} />
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+          {refundActions.length === 0 && refundsInReview.length > 0 && (
+            <div className="mb-8 space-y-3" data-testid="account-refund-status">
+              {refundsInReview.map((o) => (
+                <div key={o.orderId}>
+                  <p className="mb-1 font-lato text-xs text-[var(--text-mid)]">
+                    Order <span className="font-semibold text-deep">{o.orderId}</span>
+                  </p>
+                  <RefundPanel orderId={o.orderId} phone="" refund={o.refund!} isLoggedIn onSaved={loadOrders} />
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-            <StatCard icon={Package} label="Total orders" value={loadingOrders ? '–' : stats.total} onClick={() => setActiveTab('orders')} accent="bg-teal/10 text-teal" />
-            <StatCard icon={Truck} label="In progress" value={loadingOrders ? '–' : stats.active} onClick={() => setActiveTab('orders')} accent="bg-gold/15 text-gold-dark" />
+            <StatCard icon={Package} label="My Orders" value={loadingOrders ? '–' : stats.total} onClick={() => setActiveTab('orders')} accent="bg-teal/10 text-teal" />
+            <StatCard icon={Truck} label="On the way" value={loadingOrders ? '–' : stats.active} onClick={() => setActiveTab('orders')} accent="bg-gold/15 text-gold-dark" />
             <StatCard icon={Heart} label="Wishlist" value={wishlistIds.length} onClick={() => setActiveTab('wishlist')} accent="bg-rose-50 text-rose-500" />
             <StatCard icon={ShoppingBag} label="In cart" value={cartCount} onClick={() => setActiveTab('cart')} accent="bg-emerald-50 text-emerald-600" />
           </div>
@@ -225,7 +410,7 @@ export default function AccountPage() {
               </div>
             ) : (
               <div className="grid gap-4">
-                {orders.map((order) => (
+                {(orders as AccountOrder[]).map((order) => (
                   <motion.div key={order._id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                     <Link
                       href={`/track-order?id=${encodeURIComponent(order.orderId)}`}
@@ -266,6 +451,14 @@ export default function AccountPage() {
                         </div>
                       </div>
                       <OrderProgress status={order.status} />
+                      {order.status === 'shipped' && order.delivery?.code && !order.delivery.verifiedAt && (
+                        <p className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 bg-cream border border-gold/50 px-3 py-2 font-lato text-xs text-deep" data-testid="account-delivery-code">
+                          <KeyRound size={13} className="text-gold-dark" aria-hidden="true" />
+                          Out for delivery · Delivery code <span className="font-semibold text-sm tracking-[0.25em]">{order.delivery.code}</span>
+                          <CopyCodeButton code={order.delivery.code} />
+                          <span className="text-[var(--text-mid)]">— {deliveryStatusText(order.delivery.otpStatus, order.delivery.otpSentAt)} Share it with the delivery partner only after you receive the parcel.</span>
+                        </p>
+                      )}
                     </Link>
                   </motion.div>
                 ))}
@@ -332,9 +525,30 @@ export default function AccountPage() {
               </div>
             ) : (
               <div className="bg-white border border-[var(--border)]">
+                {cartItems.length > 1 && (
+                  <label className="flex items-center gap-2 p-4 border-b border-[var(--border)] cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={deselectedIds.length === 0}
+                      onChange={() => (deselectedIds.length === 0 ? deselectAllCart() : selectAllCart())}
+                      className="w-4 h-4 accent-gold-dark"
+                    />
+                    <span className="font-cinzel text-[10px] tracking-widest uppercase text-[var(--text-mid)]">
+                      {deselectedIds.length === 0 ? 'All items selected' : `Select all (${cartSelectedItems.length}/${cartItems.length} selected)`}
+                    </span>
+                  </label>
+                )}
                 <ul className="divide-y divide-[var(--border)]">
                   {cartItems.map((item) => (
                     <li key={item.id} className="flex items-center gap-4 p-4">
+                      <label className="shrink-0" aria-label={`Select ${item.name} for checkout`}>
+                        <input
+                          type="checkbox"
+                          checked={!deselectedIds.includes(item.id)}
+                          onChange={() => toggleSelected(item.id)}
+                          className="w-4 h-4 accent-gold-dark"
+                        />
+                      </label>
                       <span className="relative w-16 h-16 shrink-0 bg-cream overflow-hidden">
                         {item.image ? <Image src={item.image} alt="" fill sizes="64px" className="object-cover" /> : <SacredPlaceholder className="w-full h-full" />}
                       </span>
@@ -345,14 +559,29 @@ export default function AccountPage() {
                         </p>
                       </div>
                       <span className="font-cinzel text-sm text-gold-dark">{formatINR(item.price * item.quantity)}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeCartItem(item.id)}
+                        aria-label={`Remove ${item.name} from cart`}
+                        className="shrink-0 text-gray-400 hover:text-red-500 transition-colors"
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     </li>
                   ))}
                 </ul>
                 <div className="flex flex-wrap items-center justify-between gap-3 p-4 border-t border-[var(--border)] bg-cream/50">
-                  <p className="font-lato text-sm text-deep">Subtotal: <strong className="font-cinzel">{formatINR(cartSubtotal)}</strong></p>
+                  <p className="font-lato text-sm text-deep">
+                    Subtotal {deselectedIds.length > 0 && `(${cartSelectedItems.length} item${cartSelectedItems.length === 1 ? '' : 's'})`}:{' '}
+                    <strong className="font-cinzel">{formatINR(cartSelectedSubtotal)}</strong>
+                  </p>
                   <div className="flex gap-2">
                     <button type="button" onClick={openCart} className="btn-outline-gold">Edit Cart</button>
-                    <Link href="/checkout" className="btn-gold">Checkout</Link>
+                    {cartSelectedItems.length > 0 ? (
+                      <Link href="/checkout" className="btn-gold">Checkout ({cartSelectedItems.length})</Link>
+                    ) : (
+                      <span className="btn-gold opacity-40 pointer-events-none" aria-disabled="true">Checkout</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -361,25 +590,156 @@ export default function AccountPage() {
 
           {/* Profile */}
           {activeTab === 'profile' && (
-            <div className="bg-white border border-[var(--border)] p-6 grid sm:grid-cols-2 gap-5">
-              <div>
-                <p className="font-cinzel text-[10px] tracking-widest uppercase text-[var(--text-mid)] mb-1">Name</p>
-                <p className="font-lato text-sm text-deep">{user.name || '—'}</p>
+            <div className="space-y-6">
+              <div className="bg-white border border-[var(--border)] p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="font-cinzel text-sm font-semibold text-deep">Personal Details</h2>
+                  {!editingProfile && (
+                    <button
+                      type="button"
+                      onClick={startEditProfile}
+                      className="flex items-center gap-1.5 font-cinzel text-[10px] tracking-widest uppercase text-gold-dark hover:text-gold transition-colors"
+                    >
+                      <Pencil size={12} /> Edit
+                    </button>
+                  )}
+                </div>
+
+                {editingProfile ? (
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="font-cinzel text-[10px] tracking-widest uppercase text-[var(--text-mid)] mb-1 block">Name</label>
+                      <input
+                        className="divine-input text-sm w-full"
+                        value={profileForm.name}
+                        onChange={(e) => setProfileForm((f) => ({ ...f, name: e.target.value }))}
+                        maxLength={80}
+                      />
+                    </div>
+                    <div>
+                      <label className="font-cinzel text-[10px] tracking-widest uppercase text-[var(--text-mid)] mb-1 block">Email</label>
+                      <input
+                        type="email"
+                        className="divine-input text-sm w-full"
+                        value={profileForm.email}
+                        onChange={(e) => setProfileForm((f) => ({ ...f, email: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <label className="font-cinzel text-[10px] tracking-widest uppercase text-[var(--text-mid)] mb-1 block">Phone</label>
+                      <input
+                        className="divine-input text-sm w-full"
+                        value={profileForm.phone}
+                        onChange={(e) => setProfileForm((f) => ({ ...f, phone: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
+                        maxLength={10}
+                      />
+                    </div>
+                    <div className="sm:col-span-2 flex gap-2 mt-1">
+                      <button type="button" onClick={saveProfile} disabled={savingProfile} className="btn-gold disabled:opacity-50">
+                        {savingProfile ? 'Saving…' : 'Save Changes'}
+                      </button>
+                      <button type="button" onClick={() => setEditingProfile(false)} disabled={savingProfile} className="btn-outline-gold">
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid sm:grid-cols-2 gap-5">
+                    <div>
+                      <p className="font-cinzel text-[10px] tracking-widest uppercase text-[var(--text-mid)] mb-1 flex items-center gap-1"><UserIcon size={11} /> Name</p>
+                      <p className="font-lato text-sm text-deep">{user.name || '—'}</p>
+                    </div>
+                    <div>
+                      <p className="font-cinzel text-[10px] tracking-widest uppercase text-[var(--text-mid)] mb-1 flex items-center gap-1"><Mail size={11} /> Email</p>
+                      <p className="font-lato text-sm text-deep">{user.email || '—'}</p>
+                    </div>
+                    <div>
+                      <p className="font-cinzel text-[10px] tracking-widest uppercase text-[var(--text-mid)] mb-1 flex items-center gap-1"><Phone size={11} /> Phone</p>
+                      <p className="font-lato text-sm text-deep">{user.phone ? `+91 ${user.phone}` : '—'}</p>
+                    </div>
+                    <div>
+                      <p className="font-cinzel text-[10px] tracking-widest uppercase text-[var(--text-mid)] mb-1 flex items-center gap-1"><Clock size={11} /> Sign-in methods</p>
+                      <p className="font-lato text-sm text-deep capitalize">{(user.authProviders?.length ? user.authProviders : ['phone']).join(', ')}</p>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div>
-                <p className="font-cinzel text-[10px] tracking-widest uppercase text-[var(--text-mid)] mb-1 flex items-center gap-1"><Mail size={11} /> Email</p>
-                <p className="font-lato text-sm text-deep">{user.email || '—'}</p>
-              </div>
-              <div>
-                <p className="font-cinzel text-[10px] tracking-widest uppercase text-[var(--text-mid)] mb-1 flex items-center gap-1"><Phone size={11} /> Phone</p>
-                <p className="font-lato text-sm text-deep">{user.phone ? `+91 ${user.phone}` : '—'}</p>
-              </div>
-              <div>
-                <p className="font-cinzel text-[10px] tracking-widest uppercase text-[var(--text-mid)] mb-1 flex items-center gap-1"><Clock size={11} /> Sign-in methods</p>
-                <p className="font-lato text-sm text-deep capitalize">{(user.authProviders?.length ? user.authProviders : ['phone']).join(', ')}</p>
-              </div>
-              <div className="sm:col-span-2 flex items-start gap-2 font-lato text-xs text-[var(--text-mid)]">
-                <MapPin size={13} className="mt-0.5 shrink-0" /> Delivery addresses are entered and saved during checkout.
+
+              {/* Address book */}
+              <div className="bg-white border border-[var(--border)] p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="font-cinzel text-sm font-semibold text-deep flex items-center gap-1.5"><MapPin size={14} /> Saved Addresses</h2>
+                  {!addressForm && (
+                    <button
+                      type="button"
+                      onClick={() => setAddressForm({ ...EMPTY_ADDRESS })}
+                      className="flex items-center gap-1.5 font-cinzel text-[10px] tracking-widest uppercase text-gold-dark hover:text-gold transition-colors"
+                    >
+                      <Plus size={12} /> Add Address
+                    </button>
+                  )}
+                </div>
+
+                {addressForm && (
+                  <div className="border border-[var(--border)] p-4 mb-4 bg-cream/40">
+                    <AddressFormFields value={addressForm} onChange={setAddressForm} />
+                    <div className="flex gap-2 mt-3">
+                      <button type="button" onClick={saveAddress} disabled={savingAddress} className="btn-gold disabled:opacity-50">
+                        {savingAddress ? 'Saving…' : addressForm._id ? 'Update Address' : 'Save Address'}
+                      </button>
+                      <button type="button" onClick={() => setAddressForm(null)} disabled={savingAddress} className="btn-outline-gold flex items-center gap-1">
+                        <X size={13} /> Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {!user.addresses || user.addresses.length === 0 ? (
+                  <p className="font-crimson italic text-sm text-[var(--text-mid)]">
+                    No saved addresses yet. Add one here, or save it during checkout.
+                  </p>
+                ) : (
+                  <ul className="space-y-3">
+                    {user.addresses.map((addr) => (
+                      <li key={addr._id} className="border border-[var(--border)] p-4 flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="font-lato text-sm text-deep font-semibold flex items-center gap-2">
+                            {addr.fullName}
+                            {addr.isDefault && (
+                              <span className="flex items-center gap-1 font-cinzel text-[9px] uppercase tracking-wider text-gold-dark bg-gold/15 px-1.5 py-0.5 rounded-full">
+                                <Star size={9} fill="currentColor" /> Default
+                              </span>
+                            )}
+                          </p>
+                          <p className="font-lato text-xs text-[var(--text-mid)] mt-1">
+                            {[addr.line1, addr.line2, addr.city, addr.state, addr.pincode].filter(Boolean).join(', ')}
+                          </p>
+                          <p className="font-lato text-xs text-[var(--text-mid)]">+91 {addr.phone}</p>
+                        </div>
+                        <div className="flex flex-col items-end gap-2 shrink-0 font-cinzel text-[9px] uppercase tracking-wider">
+                          <div className="flex gap-3">
+                            <button type="button" onClick={() => setAddressForm(addr)} className="text-gold-dark hover:text-gold flex items-center gap-1">
+                              <Pencil size={11} /> Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => deleteAddress(addr._id!)}
+                              disabled={deletingAddressId === addr._id}
+                              className="text-red-500 hover:text-red-700 flex items-center gap-1 disabled:opacity-50"
+                            >
+                              <Trash2 size={11} /> Remove
+                            </button>
+                          </div>
+                          {!addr.isDefault && (
+                            <button type="button" onClick={() => setDefaultAddress(addr)} className="text-[var(--text-mid)] hover:text-gold-dark">
+                              Set as default
+                            </button>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             </div>
           )}

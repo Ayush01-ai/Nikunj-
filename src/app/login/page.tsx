@@ -2,43 +2,20 @@
 
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Phone, Mail, Lock, User as UserIcon, ArrowRight, RotateCcw, Eye, EyeOff, KeyRound } from 'lucide-react';
+import { Phone, Mail, Lock, User as UserIcon, ArrowRight, Eye, EyeOff, KeyRound } from 'lucide-react';
 import { useAuthStore } from '@/frontend/store/authStore';
 import { Navbar } from '@/frontend/components/layout/Navbar';
 import { Footer } from '@/frontend/components/layout/Footer';
+import { signInSchema, signUpSchema, forgotSchema } from '@/frontend/lib/formSchemas';
 import toast from 'react-hot-toast';
 
-const phoneSchema = z.object({
-  phone: z.string().regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit mobile number'),
-});
-const otpSchema = z.object({
-  otp: z.string().regex(/^\d{6}$/, 'Enter the 6-digit OTP'),
-});
-const passwordRule = z
-  .string()
-  .min(8, 'At least 8 characters')
-  .regex(/[A-Za-z]/, 'Include a letter')
-  .regex(/\d/, 'Include a number');
-const signInSchema = z.object({
-  email: z.string().trim().email('Enter a valid email'),
-  password: z.string().min(1, 'Enter your password'),
-});
-const signUpSchema = z.object({
-  name: z.string().trim().min(2, 'Enter your name').max(80),
-  email: z.string().trim().email('Enter a valid email'),
-  password: passwordRule,
-});
-const forgotSchema = z.object({
-  email: z.string().trim().email('Enter a valid email'),
-});
 
-type PhoneForm = z.infer<typeof phoneSchema>;
-type OtpForm = z.infer<typeof otpSchema>;
 type SignInForm = z.infer<typeof signInSchema>;
 type SignUpForm = z.infer<typeof signUpSchema>;
 type ForgotForm = z.infer<typeof forgotSchema>;
@@ -47,7 +24,7 @@ type Method = 'email' | 'phone';
 type EmailMode = 'signin' | 'signup' | 'forgot';
 
 const OAUTH_ERRORS: Record<string, string> = {
-  google_unavailable: 'Google sign-in is not available yet. Please use email or phone OTP.',
+  google_unavailable: 'Google sign-in is not available yet. Please use email or WhatsApp.',
   google_failed: 'Google sign-in failed. Please try again.',
   google_unverified: 'Your Google email is not verified.',
 };
@@ -92,16 +69,13 @@ export default function LoginPage() {
 
   const [method, setMethod] = useState<Method>('email');
   const [emailMode, setEmailMode] = useState<EmailMode>('signin');
-  const [phoneStep, setPhoneStep] = useState<'phone' | 'otp'>('phone');
-  const [phone, setPhone] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [resetSentTo, setResetSentTo] = useState('');
   const [devResetUrl, setDevResetUrl] = useState('');
   const [next, setNext] = useState('/account');
   const [googleEnabled, setGoogleEnabled] = useState(true);
+  const [clerkEnabled, setClerkEnabled] = useState(false);
 
-  const phoneForm = useForm<PhoneForm>({ resolver: zodResolver(phoneSchema) });
-  const otpForm = useForm<OtpForm>({ resolver: zodResolver(otpSchema) });
   const signInForm = useForm<SignInForm>({ resolver: zodResolver(signInSchema) });
   const signUpForm = useForm<SignUpForm>({ resolver: zodResolver(signUpSchema) });
   const forgotForm = useForm<ForgotForm>({ resolver: zodResolver(forgotSchema) });
@@ -135,7 +109,10 @@ export default function LoginPage() {
 
     fetch('/api/auth/providers')
       .then((r) => r.json())
-      .then((p) => setGoogleEnabled(Boolean(p?.google)))
+      .then((p) => {
+        setGoogleEnabled(Boolean(p?.google));
+        setClerkEnabled(Boolean(p?.clerk));
+      })
       .catch(() => {});
   }, [router, setUser]);
 
@@ -143,27 +120,6 @@ export default function LoginPage() {
     setUser(user);
     toast.success(message);
     router.push(next);
-  };
-
-  const sendOtp = async (data: PhoneForm) => {
-    try {
-      const json = await postJSON('/api/auth/send-otp', { phone: data.phone });
-      setPhone(data.phone);
-      setPhoneStep('otp');
-      toast.success('OTP sent!');
-      if (json._devOtp) toast(`Dev OTP: ${json._devOtp}`, { duration: 10000 });
-    } catch (err) {
-      toast.error(errMsg(err, 'Error sending OTP'));
-    }
-  };
-
-  const verifyOtp = async (data: OtpForm) => {
-    try {
-      const json = await postJSON('/api/auth/verify-otp', { phone, otp: data.otp });
-      finishLogin(json.user, 'Logged in successfully! 🙏');
-    } catch (err) {
-      toast.error(errMsg(err, 'Invalid OTP'));
-    }
   };
 
   const signIn = async (data: SignInForm) => {
@@ -202,17 +158,21 @@ export default function LoginPage() {
     setShowPassword(false);
   };
 
-  const googleHref = `/api/auth/google?next=${encodeURIComponent(next)}`;
+  // Prefer the built-in Google OAuth when its env vars exist; otherwise use Clerk's Google.
+  const googleViaClerk = !googleEnabled && clerkEnabled;
+  const googleHref = googleViaClerk
+    ? `/sign-in?redirect_url=${encodeURIComponent(next)}`
+    : `/api/auth/google?next=${encodeURIComponent(next)}`;
 
   const heading =
     method === 'phone'
-      ? phoneStep === 'otp' ? 'Enter OTP 🙏' : 'Namaste'
+      ? 'Namaste'
       : emailMode === 'signup' ? 'Create Account 🙏' : emailMode === 'forgot' ? 'Forgot Password' : 'Namaste';
   const isGreeting = heading === 'Namaste';
 
   const subheading =
     method === 'phone'
-      ? phoneStep === 'otp' ? `OTP sent to +91 ${phone}` : 'Sign in or sign up with your mobile number'
+      ? 'Sign in or sign up with your WhatsApp number'
       : emailMode === 'signup' ? 'Join the Nikunj Sakhi family'
       : emailMode === 'forgot' ? 'We will email you a secure reset link'
       : 'Sign in to Continue';
@@ -266,9 +226,9 @@ export default function LoginPage() {
             <p className="font-crimson italic text-[var(--text-mid)] mb-5">{subheading}</p>
 
             {/* Google */}
-            {!(method === 'email' && emailMode === 'forgot') && !(method === 'phone' && phoneStep === 'otp') && (
+            {!(method === 'email' && emailMode === 'forgot') && (
               <>
-                {googleEnabled ? (
+                {googleEnabled || googleViaClerk ? (
                   <a
                     href={googleHref}
                     className="w-full flex items-center justify-center gap-3 border border-[var(--border)] bg-white py-3 font-lato text-sm text-deep hover:border-gold hover:shadow-gold-sm transition-all"
@@ -305,7 +265,7 @@ export default function LoginPage() {
                         method === m ? 'bg-teal text-white' : 'text-[var(--text-mid)] hover:text-gold'
                       }`}
                     >
-                      {m === 'email' ? <><Mail size={13} /> Email</> : <><Phone size={13} /> Phone OTP</>}
+                      {m === 'email' ? <><Mail size={13} /> Email</> : <><Phone size={13} /> WhatsApp</>}
                     </button>
                   ))}
                 </div>
@@ -434,75 +394,20 @@ export default function LoginPage() {
                   <div className="mt-5 flex flex-col items-center gap-2">
                     <button type="button" onClick={() => switchEmailMode('signin')} className={linkBtnCls}>Back to sign in</button>
                     <button type="button" onClick={() => { setMethod('phone'); switchEmailMode('signin'); }} className={linkBtnCls}>
-                      Signed up with phone? Log in with OTP instead
+                      Signed up with phone? Log in with WhatsApp instead
                     </button>
                   </div>
                 </motion.div>
               )}
 
-              {method === 'phone' && phoneStep === 'phone' && (
-                <motion.form
-                  key="phone"
-                  initial={{ opacity: 0, x: -16 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 16 }}
-                  onSubmit={phoneForm.handleSubmit(sendOtp)}
-                  noValidate
-                >
-                  <label htmlFor="ph-phone" className={labelCls}>Mobile Number</label>
-                  <div className={inputWrapCls}>
-                    <span className="px-3 py-3 border-r border-[var(--border)] font-lato text-sm text-[var(--text-mid)] flex items-center gap-2">
-                      <Phone size={14} /> +91
-                    </span>
-                    <input id="ph-phone" {...phoneForm.register('phone')} type="tel" inputMode="numeric" autoComplete="tel-national" className={`${inputCls} pl-3`} placeholder="9XXXXXXXXX" maxLength={10} />
-                  </div>
-                  <FieldError message={phoneForm.formState.errors.phone?.message} />
-                  <button type="submit" disabled={phoneForm.formState.isSubmitting} className="btn-gold w-full mt-4 flex items-center justify-center gap-2 disabled:opacity-60">
-                    {phoneForm.formState.isSubmitting ? 'Sending...' : <>Send OTP <ArrowRight size={14} /></>}
-                  </button>
-                  <p className="mt-4 text-center font-lato text-xs text-[var(--text-mid)]">
-                    No password needed. Forgot access? Just request a fresh OTP.
+              {method === 'phone' && (
+                <motion.div key="phone" initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 16 }}>
+                  <p className="font-lato text-sm text-[var(--text-mid)] mb-4">
+                    We send a 6-digit code to your WhatsApp number. No password needed.
                   </p>
-                </motion.form>
-              )}
-
-              {method === 'phone' && phoneStep === 'otp' && (
-                <motion.div key="otp" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }}>
-                  <form onSubmit={otpForm.handleSubmit(verifyOtp)} noValidate>
-                    <label htmlFor="ph-otp" className={labelCls}>6-Digit OTP</label>
-                    <input
-                      id="ph-otp"
-                      {...otpForm.register('otp')}
-                      type="text"
-                      inputMode="numeric"
-                      autoComplete="one-time-code"
-                      maxLength={6}
-                      className="divine-input text-center text-2xl tracking-[0.5em] font-cinzel"
-                      placeholder="------"
-                      autoFocus
-                    />
-                    <FieldError message={otpForm.formState.errors.otp?.message} />
-                    <button type="submit" disabled={otpForm.formState.isSubmitting} className="btn-gold w-full mt-4 disabled:opacity-60">
-                      {otpForm.formState.isSubmitting ? 'Verifying...' : 'Verify & Continue'}
-                    </button>
-                  </form>
-                  <div className="mt-4 flex items-center justify-between">
-                    <button
-                      type="button"
-                      onClick={() => { setPhoneStep('phone'); otpForm.reset(); }}
-                      className="font-cinzel text-[10px] tracking-widest uppercase text-[var(--text-mid)] hover:text-gold transition-colors flex items-center gap-2"
-                    >
-                      <RotateCcw size={12} /> Change Number
-                    </button>
-                    <button
-                      type="button"
-                      disabled={phoneForm.formState.isSubmitting}
-                      onClick={() => sendOtp({ phone })}
-                      className="font-cinzel text-[10px] tracking-widest uppercase text-teal hover:text-gold transition-colors disabled:opacity-50"
-                    >
-                      Resend OTP
-                    </button>
-                  </div>
+                  <Link href={`/login/whatsapp?next=${encodeURIComponent(next)}`} className="btn-gold w-full flex items-center justify-center gap-2">
+                    <Phone size={14} /> Continue with WhatsApp <ArrowRight size={14} />
+                  </Link>
                 </motion.div>
               )}
             </AnimatePresence>

@@ -4,8 +4,7 @@ import { Badge, Box, Button, Card, Checkbox, Flex, Heading, Radio, Spinner, Stac
 import { DownloadIcon } from '@sanity/icons/Download';
 import { UploadIcon } from '@sanity/icons/Upload';
 
-type XLSXModule = typeof import('xlsx');
-const loadXlsx = () => import('xlsx') as Promise<XLSXModule>;
+const loadSheets = () => import('./spreadsheet');
 
 interface RefDoc {
   _id: string;
@@ -291,10 +290,8 @@ export function BulkProductImport() {
     setMessage('');
     setProgress({});
     try {
-      const XLSX = await loadXlsx();
-      const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
-      const sheetName = wb.SheetNames.find((n) => n.toLowerCase() === 'products') ?? wb.SheetNames[0];
-      const raw = XLSX.utils.sheet_to_json<Record<string, unknown>>(wb.Sheets[sheetName], { defval: '', raw: false });
+      const { readProductRows } = await loadSheets();
+      const raw = await readProductRows(await file.arrayBuffer());
       rawRef.current = raw;
       setFileName(file.name);
       setRows(parseRows(raw, localImages));
@@ -311,8 +308,7 @@ export function BulkProductImport() {
   };
 
   const downloadTemplate = async () => {
-    const XLSX = await loadXlsx();
-    const wb = XLSX.utils.book_new();
+    const { buildWorkbook } = await loadSheets();
     const cats = (refs ?? []).filter((r) => r._type === 'category');
     const types = (refs ?? []).filter((r) => r._type === 'productType');
     const example = COLUMNS.map((c) => {
@@ -320,11 +316,9 @@ export function BulkProductImport() {
       if (c.key === 'productType') return types.find((t) => t.category === cats[0]?._id)?.name ?? '';
       return c.example;
     });
-    const products = XLSX.utils.aoa_to_sheet([COLUMNS.map((c) => c.header), example]);
-    products['!cols'] = COLUMNS.map((c) => ({ wch: Math.max(14, Math.min(40, c.header.length + 6)) }));
-    XLSX.utils.book_append_sheet(wb, products, 'Products');
+    const productsRows = [COLUMNS.map((c) => c.header), example];
 
-    const help = XLSX.utils.aoa_to_sheet([
+    const helpRows = [
       ['Column', 'Required', 'How to fill'],
       ...COLUMNS.map((c) => [c.header.replace('*', ''), c.header.endsWith('*') ? 'Yes' : '', c.help]),
       [],
@@ -333,12 +327,10 @@ export function BulkProductImport() {
       ['• Images: paste public https:// links, or type the file name (e.g. mukut.jpg) and select those files in the "Images" picker before importing.'],
       ['• Use | to separate multiple values, and ; between the parts of one variant / colour.'],
       ['• A row whose slug matches an existing product updates that product (if "Update existing" is ticked).'],
-    ]);
-    help['!cols'] = [{ wch: 22 }, { wch: 10 }, { wch: 110 }];
-    XLSX.utils.book_append_sheet(wb, help, 'Instructions');
+    ];
 
     const catName = (id?: string) => cats.find((c) => c._id === id)?.name ?? '';
-    const lists = XLSX.utils.aoa_to_sheet([
+    const listsRows = [
       ['Category', 'Product Type', '', 'Deity', '', 'Fragrance'],
       ...Array.from({ length: Math.max(types.length, 1) }, (_, i) => [
         catName(types[i]?.category),
@@ -348,10 +340,21 @@ export function BulkProductImport() {
         '',
         (refs ?? []).filter((r) => r._type === 'fragrance')[i]?.name ?? '',
       ]),
+    ];
+
+    const bytes = await buildWorkbook([
+      { name: 'Products', rows: productsRows, widths: COLUMNS.map((c) => Math.max(14, Math.min(40, c.header.length + 6))) },
+      { name: 'Instructions', rows: helpRows, widths: [22, 10, 110] },
+      { name: 'Lists', rows: listsRows, widths: [26, 28, 2, 22, 2, 22] },
     ]);
-    lists['!cols'] = [{ wch: 26 }, { wch: 28 }, { wch: 2 }, { wch: 22 }, { wch: 2 }, { wch: 22 }];
-    XLSX.utils.book_append_sheet(wb, lists, 'Lists');
-    XLSX.writeFile(wb, 'nikunj-sakhi-product-import-template.xlsx');
+    const url = URL.createObjectURL(
+      new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }),
+    );
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'nikunj-sakhi-product-import-template.xlsx';
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const valid = rows.filter((r) => r.errors.length === 0 && !(r.existingId && !updateExisting));
@@ -437,7 +440,7 @@ export function BulkProductImport() {
           <Stack gap={4}>
             <Flex gap={3} wrap="wrap" align="center">
               <label>
-                <input type="file" accept=".xlsx,.xls,.csv" style={{ display: 'none' }} onChange={(e) => void onFile(e.currentTarget.files?.[0])} />
+                <input type="file" accept=".xlsx,.csv" style={{ display: 'none' }} onChange={(e) => void onFile(e.currentTarget.files?.[0])} />
                 <Button as="span" icon={UploadIcon} text={fileName ? `File: ${fileName}` : 'Choose Excel / CSV file'} mode="ghost" />
               </label>
               <label>

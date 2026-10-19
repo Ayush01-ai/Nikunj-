@@ -41,6 +41,31 @@ export interface IOrder extends Document {
   cashfreePaymentId?: string;
   status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'return_requested' | 'return_approved' | 'returned' | 'refunded';
   notes?: string;
+  /** True while this order's quantities are reserved but not yet decremented in Sanity. */
+  stockHeld?: boolean;
+  /** Verified notification destination captured when the order was placed (see orderNotify.ts). */
+  notification?: {
+    channel: 'email' | 'whatsapp' | 'none';
+    method: string;
+    email?: string;
+    phone?: string;
+    reason?: string;
+    capturedAt: Date;
+  };
+  /** Idempotency log of order notifications already sent (no contact details). */
+  notificationLog?: { key: string; channel: string; at: Date }[];
+  /** Delivery-partner hand-off: secret link token + OTP verification state. */
+  delivery?: {
+    token?: string;
+    partnerName?: string;
+    assignedAt?: Date;
+    otpSentAt?: Date;
+    /** Meta WhatsApp message id of the delivery OTP and its last provider-reported status. */
+    otpMessageId?: string;
+    otpStatus?: 'accepted' | 'sent' | 'delivered' | 'read' | 'failed';
+    attempts?: number;
+    verifiedAt?: Date;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -100,6 +125,26 @@ const OrderSchema = new Schema<IOrder>(
       default: 'pending',
     },
     notes: { type: String },
+    stockHeld: { type: Boolean, default: false },
+    notification: {
+      channel:    { type: String, enum: ['email', 'whatsapp', 'none'] },
+      method:     { type: String },
+      email:      { type: String, lowercase: true },
+      phone:      { type: String },
+      reason:     { type: String },
+      capturedAt: { type: Date },
+    },
+    notificationLog: [{ _id: false, key: String, channel: String, at: Date }],
+    delivery: {
+      token:       { type: String },
+      partnerName: { type: String },
+      assignedAt:  { type: Date },
+      otpSentAt:   { type: Date },
+      otpMessageId: { type: String },
+      otpStatus:   { type: String, enum: ['accepted', 'sent', 'delivered', 'read', 'failed'] },
+      attempts:    { type: Number, default: 0 },
+      verifiedAt:  { type: Date },
+    },
   },
   { timestamps: true },
 );
@@ -107,6 +152,11 @@ const OrderSchema = new Schema<IOrder>(
 // Index for admin queries
 OrderSchema.index({ status: 1, createdAt: -1 });
 OrderSchema.index({ guestPhone: 1 });
+// Webhook lookups are by Cashfree order id; sparse so legacy/COD orders without one aren't indexed.
+OrderSchema.index({ cashfreeOrderId: 1 }, { sparse: true });
+OrderSchema.index({ 'delivery.token': 1 }, { sparse: true });
+OrderSchema.index({ 'delivery.otpMessageId': 1 }, { sparse: true });
+OrderSchema.index({ stockHeld: 1, createdAt: -1 });
 
 export const Order: Model<IOrder> =
   mongoose.models.Order || mongoose.model<IOrder>('Order', OrderSchema);

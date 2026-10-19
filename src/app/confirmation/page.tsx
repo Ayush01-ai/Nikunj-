@@ -8,6 +8,9 @@ import { orderPlacedMessage } from '@/cms/lib/orderMessages';
 import { connectDB } from '@/backend/lib/mongodb';
 import { Order } from '@/backend/models/Order';
 import { getAdminSettings } from '@/backend/lib/sanityOrders';
+import { isCashfreeConfigured } from '@/backend/lib/cashfreeConfig';
+import { settleCashfreeOrder } from '@/backend/lib/cashfreeSettlement';
+import { createRateLimiter } from '@/backend/lib/rateLimit';
 import type { SiteSettings } from '@/types';
 
 export const metadata: Metadata = {
@@ -21,9 +24,26 @@ const inr = (n?: number) => `₹${(n ?? 0).toLocaleString('en-IN')}`;
 async function getOrderSummary(orderId: string) {
   try {
     await connectDB();
+    await reconcileCashfreePayment(orderId);
     return await Order.findOne({ orderId }).select('items total paymentMethod paymentStatus status shippingAddress.city').lean();
   } catch {
     return null;
+  }
+}
+
+// Cashfree's return_url lands here. The redirect itself proves nothing, so a still-unpaid
+// Cashfree order is re-checked against Cashfree's API (settleCashfreeOrder only marks it paid
+// on a matching PAID order + SUCCESS payment). Throttled per order to bound outbound API calls.
+const isReconcileLimited = createRateLimiter(6, 5 * 60 * 1000, 'confirmation:isReconcileLimited');
+async function reconcileCashfreePayment(orderId: string) {
+  if (!isCashfreeConfigured()) return;
+  const order = await Order.findOne({ orderId });
+  if (!order || order.paymentStatus === 'paid' || order.paymentGateway !== 'cashfree' || !order.cashfreeOrderId) return;
+  if (await isReconcileLimited(`confirm:${orderId}`)) return;
+  try {
+    await settleCashfreeOrder(order, 'Payment received online (Cashfree)');
+  } catch (error) {
+    console.error('[confirmation] Cashfree reconcile failed:', error instanceof Error ? error.message : 'unknown');
   }
 }
 

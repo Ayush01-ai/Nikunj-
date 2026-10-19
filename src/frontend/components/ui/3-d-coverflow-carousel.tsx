@@ -84,7 +84,9 @@ export function CoverFlowCarousel({
       onTouchStart={(event) => { touchStartX.current = event.touches[0].clientX; }}
       onTouchEnd={(event) => {
         const difference = event.changedTouches[0].clientX - touchStartX.current;
-        if (Math.abs(difference) > 45) difference < 0 ? nextSlide() : prevSlide();
+        if (Math.abs(difference) > 45) {
+          if (difference < 0) nextSlide(); else prevSlide();
+        }
       }}
     >
       <div className="absolute inset-0 -z-10 overflow-hidden">

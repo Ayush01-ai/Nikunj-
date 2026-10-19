@@ -8,16 +8,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { CheckCircle, Star } from 'lucide-react';
 import { Button } from '@/frontend/components/ui/button';
+import { feedbackFormSchema as feedbackSchema } from '@/frontend/lib/formSchemas';
 import type { Testimonial } from '@/types';
 
-const feedbackSchema = z.object({
-  name: z.string().min(2, 'Name required').max(80),
-  phone: z.string().regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit mobile number'),
-  rating: z.string().min(1, 'Please select a rating'),
-  product: z.string().max(100).optional(),
-  message: z.string().min(10, 'Please write at least 10 characters').max(500),
-  website: z.string().optional(),
-});
 
 type FeedbackFormData = z.infer<typeof feedbackSchema>;
 
@@ -125,7 +118,7 @@ export function FeedbackForm({ reviews = [], showReviews = true, showForm = true
             {visibleReviews.map((review) => (
               <li key={review._id}>
               <article className="bg-white/75 backdrop-blur-xs border border-gold/20 p-5 sm:p-6 shadow-xs rounded-xs">
-                <div className="flex items-center gap-1 mb-3" aria-label={`${review.rating} out of 5 stars`}>
+                <div className="flex items-center gap-1 mb-3" role="img" aria-label={`${review.rating} out of 5 stars`}>
                   {Array.from({ length: 5 }, (_, i) => (
                     <span
                       key={`${review._id}-${i}`}

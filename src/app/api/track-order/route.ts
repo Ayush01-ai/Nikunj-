@@ -3,11 +3,14 @@ import { verifyOrderAccess } from '@/backend/lib/orderAccess';
 import { clientIp, createRateLimiter } from '@/backend/lib/rateLimit';
 import { getAdminSettings, getSanityOrder } from '@/backend/lib/sanityOrders';
 import { requestEligibility } from '@/cms/lib/orderRequests';
+import { refundBreakdown } from '@/cms/lib/refunds';
+import { refundView } from '@/backend/lib/refundView';
+import { deliveryView } from '@/backend/lib/delivery';
 
-const isRateLimited = createRateLimiter(10, 10 * 60 * 1000);
+const isRateLimited = createRateLimiter(10, 10 * 60 * 1000, 'api/track-order:isRateLimited');
 
 export async function POST(req: NextRequest) {
-  if (isRateLimited(`track:${clientIp(req)}`)) {
+  if (await isRateLimited(`track:${clientIp(req)}`)) {
     return NextResponse.json({ success: false, error: 'Too many attempts. Please try again in a few minutes.' }, { status: 429 });
   }
 
@@ -20,7 +23,7 @@ export async function POST(req: NextRequest) {
 
   const access = await verifyOrderAccess(req, body.orderId, body.phone);
   if (!access.ok) return NextResponse.json({ success: false, error: access.error }, { status: access.status });
-  const { orderId, order: mongoOrder } = access;
+  const { orderId, order: mongoOrder, viaAccount } = access;
 
   // Owner-managed status lives in Sanity; fall back to the website record until it is synced.
   const [managed, admin] = await Promise.all([getSanityOrder(orderId), getAdminSettings()]);
@@ -28,6 +31,7 @@ export async function POST(req: NextRequest) {
   const statusHistory = managed?.statusHistory ?? [{ status: mongoOrder.status, at: new Date(mongoOrder.createdAt).toISOString() }];
   const ri = managed?.returnInfo;
   const addr = mongoOrder.shippingAddress;
+  const policy = refundBreakdown(mongoOrder, admin.refundDeliveryCharge);
   const data = {
     orderId,
     status,
@@ -57,6 +61,11 @@ export async function POST(req: NextRequest) {
       ? requestEligibility({ status, statusHistory, cancelRequest: managed.cancelRequest, returnInfo: ri }, admin.returnWindowDays ?? 7)
       : { canCancel: false, canReturn: false, returnDaysLeft: null, returnWindowDays: admin.returnWindowDays ?? 7 }),
     shipTo: { name: addr?.fullName, city: addr?.city, state: addr?.state, pincode: addr?.pincode },
+    verifyWith: mongoOrder.userId ? 'account' : 'otp',
+    refund: refundView(managed, mongoOrder.userId ? 'account' : 'otp', policy),
+    // What a cancellation / return would refund, so the customer is told before they ask.
+    refundPolicy: { deliveryCharge: policy.deliveryCharge, refundable: policy.expected, deducted: policy.deducted },
+    delivery: deliveryView(mongoOrder, status, viaAccount),
   };
 
   return NextResponse.json({ success: true, data }, { headers: { 'Cache-Control': 'no-store' } });

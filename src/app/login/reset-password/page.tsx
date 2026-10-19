@@ -12,13 +12,7 @@ import toast from 'react-hot-toast';
 import { useAuthStore } from '@/frontend/store/authStore';
 import { Navbar } from '@/frontend/components/layout/Navbar';
 import { Footer } from '@/frontend/components/layout/Footer';
-
-const schema = z
-  .object({
-    password: z.string().min(8, 'At least 8 characters').regex(/[A-Za-z]/, 'Include a letter').regex(/\d/, 'Include a number'),
-    confirm: z.string(),
-  })
-  .refine((v) => v.password === v.confirm, { message: 'Passwords do not match', path: ['confirm'] });
+import { resetPasswordSchema as schema } from '@/frontend/lib/formSchemas';
 
 type Form = z.infer<typeof schema>;
 

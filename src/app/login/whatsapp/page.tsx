@@ -14,13 +14,8 @@ import { Navbar } from '@/frontend/components/layout/Navbar';
 import { Footer } from '@/frontend/components/layout/Footer';
 import type { User } from '@/types';
 import { ClerkTicketRedeemer } from './ClerkTicketRedeemer';
+import { phoneSchema, otpSchema } from '@/frontend/lib/formSchemas';
 
-const phoneSchema = z.object({
-  phone: z.string().regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit mobile number'),
-});
-const otpSchema = z.object({
-  otp: z.string().regex(/^\d{6}$/, 'Enter the 6-digit OTP'),
-});
 type PhoneForm = z.infer<typeof phoneSchema>;
 type OtpForm = z.infer<typeof otpSchema>;
 
@@ -139,7 +134,7 @@ export default function WhatsAppLoginPage() {
                     {phoneForm.formState.isSubmitting ? 'Sending...' : <>Send OTP via WhatsApp <ArrowRight size={14} /></>}
                   </button>
                   <p className="mt-4 text-center font-lato text-xs text-[var(--text-mid)]">
-                    Prefer SMS? <a href="/login" className="text-teal hover:text-gold underline-offset-2 hover:underline">Use email / phone OTP instead</a>.
+                    Prefer email? <a href="/login" className="text-teal hover:text-gold underline-offset-2 hover:underline">Sign in with email or Google instead</a>.
                   </p>
                 </motion.form>
               )}

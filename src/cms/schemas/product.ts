@@ -1,6 +1,18 @@
 import { defineArrayMember, defineField, defineType } from 'sanity';
 import { facetField } from '../components/FacetField';
 
+const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+const slugify = (input: string) =>
+  input
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 100)
+    .replace(/-+$/g, '');
+
 const isEmpty = (value: unknown) => value === undefined || value === null || (Array.isArray(value) && value.length === 0);
 
 export const product = defineType({
@@ -29,8 +41,15 @@ export const product = defineType({
       title: 'Slug',
       type: 'slug',
       group: 'basic',
-      options: { source: 'name', maxLength: 100 },
-      validation: (rule) => rule.required(),
+      options: { source: 'name', maxLength: 100, slugify: slugify },
+      validation: (rule) =>
+        rule.required().custom((value) => {
+          const current = (value as { current?: string } | undefined)?.current;
+          if (!current) return true;
+          return SLUG_PATTERN.test(current)
+            ? true
+            : 'Use lowercase letters, numbers and hyphens only (e.g. "radha-krishna-haar-set"). Click "Generate" to fix.';
+        }),
     }),
     defineField({
       name: 'category',
@@ -55,12 +74,21 @@ export const product = defineType({
         },
       },
       validation: (rule) =>
-        rule.required().custom(async (value, context) => {
+        rule.custom(async (value, context) => {
           const typeId = (value as { _ref?: string } | undefined)?._ref;
           const categoryId = (context.document?.category as { _ref?: string } | undefined)?._ref;
-          if (!typeId || !categoryId) return true;
-          const typeCategoryId = await context
-            .getClient({ apiVersion: '2024-01-01' })
+          const client = context.getClient({ apiVersion: '2024-01-01' });
+          if (!typeId) {
+            if (!categoryId) return 'Required';
+            // Categories without any product types (e.g. a one-off category) must still be publishable.
+            const typeCount = await client.fetch<number>(
+              'count(*[_type == "productType" && category._ref in [$categoryId, "drafts." + $categoryId]])',
+              { categoryId },
+            );
+            return typeCount > 0 ? 'Required' : true;
+          }
+          if (!categoryId) return true;
+          const typeCategoryId = await client
             .fetch<string | null>('*[_id == $typeId][0].category._ref', { typeId });
           return !typeCategoryId || typeCategoryId === categoryId
             ? true

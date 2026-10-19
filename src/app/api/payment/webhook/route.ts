@@ -18,8 +18,8 @@ async function getServerSetOrderNote(
     notes = orderEntity.notes;
   } else {
     try {
-      const { razorpay } = await import('@/backend/lib/razorpay');
-      const fetched = await razorpay.orders.fetch(razorpayOrderId);
+      const { fetchRazorpayOrder } = await import('@/backend/lib/razorpay');
+      const fetched = await fetchRazorpayOrder(razorpayOrderId);
       notes = fetched.notes as Record<string, unknown> | undefined;
     } catch (err) {
       console.error('[payment/webhook] Could not fetch Razorpay order for fallback', err);

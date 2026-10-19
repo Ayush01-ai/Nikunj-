@@ -6,13 +6,13 @@ import { createRateLimiter, clientIp } from '@/backend/lib/rateLimit';
 import { hashResetToken, isValidEmail, normalizeEmail, siteUrl } from '@/backend/lib/session';
 import { isEmailConfigured, passwordResetEmail, sendEmail } from '@/backend/lib/email';
 
-const isLimited = createRateLimiter(5, 15 * 60 * 1000);
+const isLimited = createRateLimiter(5, 15 * 60 * 1000, 'api/auth/forgot-password:isLimited');
 const RESET_TTL_MS = 30 * 60 * 1000;
 const GENERIC = 'If an account exists for this email, a reset link has been sent.';
 
 export async function POST(req: NextRequest) {
   try {
-    if (isLimited(clientIp(req))) {
+    if (await isLimited(clientIp(req))) {
       return NextResponse.json({ success: false, error: 'Too many requests. Please try again later.' }, { status: 429 });
     }
     const body = await req.json().catch(() => ({}));

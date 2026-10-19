@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -14,6 +14,7 @@ import { Footer } from '@/frontend/components/layout/Footer';
 import { SacredIcon } from '@/frontend/components/ui/SacredIcon';
 import { BackButton } from '@/frontend/components/ui/BackButton';
 import type { CartItem } from '@/types';
+import { trackOnce } from '@/frontend/lib/analytics';
 import toast from 'react-hot-toast';
 
 const STEPS = ['Cart', 'Address', 'Payment'] as const;
@@ -21,26 +22,7 @@ type Step = typeof STEPS[number];
 
 const FREE_DELIVERY_THRESHOLD = 999;
 const DELIVERY_CHARGE = 99;
-const RAZORPAY_SRC = 'https://checkout.razorpay.com/v1/checkout.js';
 const CASHFREE_SRC = 'https://sdk.cashfree.com/js/v3/cashfree.js';
-// Feature flag — Cashfree is only offered as a gateway choice once this is explicitly set.
-// Existing Razorpay checkout is completely unaffected when it's unset (the default).
-const CASHFREE_ENABLED = process.env.NEXT_PUBLIC_CASHFREE_ENABLED === 'true';
-
-type RazorpayCtor = new (opts: Record<string, unknown>) => { open: () => void };
-
-function loadRazorpay(): Promise<RazorpayCtor> {
-  return new Promise((resolve, reject) => {
-    const w = window as unknown as { Razorpay?: RazorpayCtor };
-    if (w.Razorpay) return resolve(w.Razorpay);
-    const script = document.createElement('script');
-    script.src = RAZORPAY_SRC;
-    script.async = true;
-    script.onload = () => (w.Razorpay ? resolve(w.Razorpay) : reject(new Error('Payment gateway failed to load')));
-    script.onerror = () => reject(new Error('Payment gateway failed to load. Check your connection.'));
-    document.body.appendChild(script);
-  });
-}
 
 type CashfreeCheckoutResult = { error?: { message?: string }; paymentDetails?: { paymentMessage?: string } };
 type CashfreeFactory = (opts: { mode: 'sandbox' | 'production' }) => {
@@ -72,7 +54,7 @@ interface Address {
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, updateQuantity, updateItemOptions, removeItem, clearCart, subtotal } = useCartStore();
+  const { items, updateQuantity, updateItemOptions, removeItem, removeItems, clearCart, selectedItems, selectedSubtotal } = useCartStore();
   const { user } = useAuthStore();
 
   const [step, setStep] = useState<Step>('Cart');
@@ -85,20 +67,63 @@ export default function CheckoutPage() {
     line1: '', city: '', state: '', pincode: '',
   });
   const [paymentMethod, setPaymentMethod] = useState<'cod' | 'upi' | 'card' | 'netbanking'>('cod');
-  // Only reachable when CASHFREE_ENABLED — otherwise every online payment uses Razorpay exactly
-  // as before.
-  const [gateway, setGateway] = useState<'razorpay' | 'cashfree'>('razorpay');
   const [placing, setPlacing] = useState(false);
+  // Guests must prove ownership of the order's phone number with a one-time code before a
+  // Cashfree payment order can be created for it (see /api/payment/guest-verify/*). Registered
+  // customers skip this entirely — their session is sufficient (see authorizeOrderForPayment).
+  const [guestVerify, setGuestVerify] = useState<{ orderId: string; otp: string; sending: boolean; verifying: boolean } | null>(null);
 
-  const sub = subtotal();
+  // Checkout only ever acts on the items the customer selected in the cart/sidebar — any
+  // items left deselected stay in the cart untouched (see cartStore's deselectedIds).
+  const checkoutItems = selectedItems();
+  const sub = selectedSubtotal();
+
+  // Removes only the items that were actually purchased, leaving any deselected items
+  // behind in the cart. Falls back to a full clear when every item was selected.
+  const clearSelectedFromCart = () => {
+    if (checkoutItems.length === items.length) clearCart();
+    else removeItems(checkoutItems.map((item) => item.id));
+  };
   const delivery = sub >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_CHARGE;
   const discount = couponData?.discountAmount || 0;
   const total = sub + delivery - discount;
+
+  // Steps are client state on one URL, so the global ScrollReset never fires. Without this the
+  // previous step's scroll position is kept and a shorter next step (e.g. Address after a long
+  // cart) opens on the footer. Also move focus so keyboard/screen-reader users land on the step.
+  const stepTopRef = useRef<HTMLDivElement>(null);
+  const firstStepRender = useRef(true);
+  useEffect(() => {
+    if (firstStepRender.current) {
+      firstStepRender.current = false;
+      return;
+    }
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    stepTopRef.current?.focus({ preventScroll: true });
+  }, [step]);
 
   // Cart changed after coupon was applied — discount is no longer valid
   useEffect(() => {
     setCouponData(null);
   }, [sub]);
+
+  // A valid mobile number is recorded (once per number per visit) so unfinished checkouts show up
+  // in the Studio's Analytics tool for follow-up.
+  useEffect(() => {
+    const phone = address.phone;
+    if (!/^[6-9]\d{9}$/.test(phone)) return;
+    const timer = setTimeout(() => {
+      trackOnce(`phone:${phone}`, 'phone_entered', {
+        phone,
+        name: address.fullName || undefined,
+        cartValue: sub,
+        cartItems: checkoutItems.map((i) => `${i.quantity}× ${i.name}`).join(', ').slice(0, 300),
+      });
+    }, 1500);
+    return () => clearTimeout(timer);
+    // Only a new phone number should trigger this; name/cart are captured as they are at that moment.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [address.phone]);
 
   const validateCoupon = async () => {
     if (!couponInput.trim()) return;
@@ -120,11 +145,106 @@ export default function CheckoutPage() {
     }
   };
 
+  // Starts (or resumes, if a Cashfree session already exists) the Cashfree checkout modal
+  // for `orderId`. `guestProof` is required for guest orders (minted by confirmGuestOtpAndPay
+  // below) and ignored for registered orders, which are authorized by the signed-in session.
+  const startCashfreePayment = async (orderId: string, guestProof?: string) => {
+    setPlacing(true);
+    try {
+      const [Cashfree, payRes] = await Promise.all([
+        loadCashfreeSDK(),
+        fetch('/api/payment/cashfree/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId, guestProof }),
+        }),
+      ]);
+      const pay = await payRes.json();
+      if (!payRes.ok || !pay.data) throw new Error(pay.error || 'Could not start payment');
+
+      const cashfree = Cashfree({ mode: pay.data.environment === 'production' ? 'production' : 'sandbox' });
+      const result = await cashfree.checkout({
+        paymentSessionId: pay.data.paymentSessionId,
+        redirectTarget: '_modal',
+      });
+      if (result?.error) {
+        toast.error('Payment cancelled. Your order is saved as pending.');
+        return;
+      }
+      // The modal closed without a reported error — confirm server-side (never trust the
+      // client's view of payment status). The same guestProof authorizes the verify call.
+      const verifyRes = await fetch('/api/payment/cashfree/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, guestProof }),
+      });
+      const verify = await verifyRes.json().catch(() => ({}));
+      if (verify.status === 'failed' && verifyRes.status === 402) {
+        toast.error('Payment was not completed. Your order is saved as pending.');
+        return;
+      }
+      if (verifyRes.status === 202 || verifyRes.status === 403) {
+        // Still processing at Cashfree (or the guest proof expired). The confirmation page
+        // re-checks with Cashfree server-side, and the webhook confirms it regardless.
+        toast('Payment is being confirmed. We will update your order shortly.');
+      } else if (!verifyRes.ok) {
+        throw new Error(verify.error || 'Payment verification failed');
+      }
+      clearSelectedFromCart();
+      router.push(`/confirmation?orderId=${encodeURIComponent(orderId)}`);
+    } catch (err: unknown) {
+      toast.error(`${err instanceof Error ? err.message : 'Payment failed'}. Contact support with order ${orderId}.`);
+    } finally {
+      setPlacing(false);
+    }
+  };
+
+  // Step 1 of guest-order payment authorization: request a one-time code for the phone
+  // number on the order. Safe to call again for "Resend code".
+  const requestGuestOtp = async (orderId: string) => {
+    setGuestVerify((gv) => (gv ? { ...gv, sending: true } : gv));
+    try {
+      const res = await fetch('/api/payment/guest-verify/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, phone: address.phone }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Could not send verification code');
+      toast.success(json.message || 'Verification code sent');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Could not send verification code');
+    } finally {
+      setGuestVerify((gv) => (gv ? { ...gv, sending: false } : gv));
+    }
+  };
+
+  // Step 2: verify the code, mint the guestPaymentProof token, then proceed to payment.
+  const confirmGuestOtpAndPay = async () => {
+    if (!guestVerify) return;
+    setGuestVerify((gv) => (gv ? { ...gv, verifying: true } : gv));
+    try {
+      const res = await fetch('/api/payment/guest-verify/confirm-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: guestVerify.orderId, phone: address.phone, otp: guestVerify.otp }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.guestProof) throw new Error(json.error || 'Invalid or expired code');
+      const { orderId } = guestVerify;
+      setGuestVerify(null);
+      await startCashfreePayment(orderId, json.guestProof);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Invalid or expired code');
+      setGuestVerify((gv) => (gv ? { ...gv, verifying: false } : gv));
+    }
+  };
+
   const placeOrder = async () => {
     setPlacing(true);
     try {
       const orderPayload = {
-        items: items.map((item: CartItem) => ({
+        items: checkoutItems.map((item: CartItem) => ({
           productId: item.productId,
           productName: item.name,
           image: item.image,
@@ -148,98 +268,17 @@ export default function CheckoutPage() {
       if (!res.ok) throw new Error(json.error);
 
       if (paymentMethod === 'cod') {
-        clearCart();
+        clearSelectedFromCart();
         router.push(`/confirmation?orderId=${encodeURIComponent(json.orderId)}`);
         setPlacing(false);
-      } else if (CASHFREE_ENABLED && gateway === 'cashfree') {
-        const [Cashfree, payRes] = await Promise.all([
-          loadCashfreeSDK(),
-          fetch('/api/payment/cashfree/create', {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({ orderId: json.orderId }),
-          }),
-        ]);
-        const pay = await payRes.json();
-        if (!payRes.ok || !pay.data) throw new Error(pay.error || 'Could not start payment');
-
-        const cashfree = Cashfree({ mode: pay.data.environment === 'production' ? 'production' : 'sandbox' });
-        try {
-          const result = await cashfree.checkout({
-            paymentSessionId: pay.data.paymentSessionId,
-            redirectTarget: '_modal',
-          });
-          if (result?.error) {
-            toast.error('Payment cancelled. Your order is saved as pending.');
-            setPlacing(false);
-            return;
-          }
-          // The modal closed without a reported error — confirm server-side (never trust the
-          // client's view of payment status).
-          const verifyRes = await fetch('/api/payment/cashfree/verify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ orderId: json.orderId }),
-          });
-          const verify = await verifyRes.json();
-          if (!verifyRes.ok) throw new Error(verify.error || 'Payment verification failed');
-          clearCart();
-          router.push(`/confirmation?orderId=${encodeURIComponent(json.orderId)}`);
-        } catch (err: unknown) {
-          toast.error(
-            `${err instanceof Error ? err.message : 'Payment verification failed'}. Contact support with order ${json.orderId}.`,
-          );
-        } finally {
-          setPlacing(false);
-        }
+      } else if (!user) {
+        // Guest checkout: payment cannot start until the phone number on the order is
+        // verified with a one-time code (see authorizeOrderForPayment / guest-verify routes).
+        setPlacing(false);
+        setGuestVerify({ orderId: json.orderId, otp: '', sending: false, verifying: false });
+        requestGuestOtp(json.orderId);
       } else {
-        const [Razorpay, payRes] = await Promise.all([
-          loadRazorpay(),
-          fetch('/api/payment/create', {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({ orderId: json.orderId }),
-          }),
-        ]);
-        const pay = await payRes.json();
-        if (!payRes.ok || !pay.data) throw new Error(pay.error || 'Could not start payment');
-
-        const rzp = new Razorpay({
-          key: pay.data.keyId,
-          amount: pay.data.amount,
-          currency: pay.data.currency,
-          order_id: pay.data.razorpayOrderId,
-          name: 'Nikunj Sakhi',
-          description: 'Serve with Devotion',
-          prefill: { name: address.fullName, contact: `+91${address.phone}` },
-          theme: { color: '#C9922A' },
-          modal: {
-            ondismiss: () => {
-              setPlacing(false);
-              toast.error('Payment cancelled. Your order is saved as pending.');
-            },
-          },
-          handler: async (response: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
-            try {
-              const verifyRes = await fetch('/api/payment/verify', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...response, orderId: json.orderId }),
-              });
-              const verify = await verifyRes.json();
-              if (!verifyRes.ok) throw new Error(verify.error || 'Payment verification failed');
-              clearCart();
-              router.push(`/confirmation?orderId=${encodeURIComponent(json.orderId)}`);
-            } catch (err: unknown) {
-              toast.error(
-                `${err instanceof Error ? err.message : 'Payment verification failed'}. Contact support with order ${json.orderId}.`,
-              );
-            } finally {
-              setPlacing(false);
-            }
-          },
-        });
-        rzp.open();
+        await startCashfreePayment(json.orderId);
       }
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to place order');
@@ -247,13 +286,15 @@ export default function CheckoutPage() {
     }
   };
 
-  if (items.length === 0 && step === 'Cart') {
+  if ((items.length === 0 || checkoutItems.length === 0) && step === 'Cart') {
     return (
       <>
         <Navbar settings={null} />
         <div className="min-h-screen bg-cream flex items-center justify-center pt-8">
           <div className="text-center">
-            <p className="font-crimson italic text-[var(--text-mid)] mb-4">Your cart is empty</p>
+            <p className="font-crimson italic text-[var(--text-mid)] mb-4">
+              {items.length === 0 ? 'Your cart is empty' : 'No items selected for checkout'}
+            </p>
             <Link href="/collections" className="btn-gold">Shop Now</Link>
           </div>
         </div>
@@ -274,7 +315,13 @@ export default function CheckoutPage() {
           className="mb-6"
         />
         {/* Step indicator */}
-        <div className="flex items-center justify-center gap-2 mb-10">
+        <div
+          ref={stepTopRef}
+          tabIndex={-1}
+          aria-label={`Checkout step ${STEPS.indexOf(step) + 1} of ${STEPS.length}: ${step}`}
+          role="group"
+          className="flex items-center justify-center gap-2 mb-10 focus:outline-none"
+        >
           {STEPS.map((s, i) => (
             <React.Fragment key={s}>
               <div className={`font-cinzel text-[10px] tracking-widest uppercase px-4 py-1.5 transition-all ${
@@ -296,7 +343,7 @@ export default function CheckoutPage() {
                 <motion.div key="cart" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                   <h2 className="font-cinzel text-base font-semibold text-deep mb-4">Your Items</h2>
                   <ul className="space-y-3" aria-label="Items in your cart">
-                    {items.map((item: CartItem) => {
+                    {checkoutItems.map((item: CartItem) => {
                       const href = item.href || `/products/${encodeURIComponent(item.slug)}`;
                       const meta = [item.category, item.productType, item.deity].filter(Boolean).join(' › ');
                       return (
@@ -436,13 +483,14 @@ export default function CheckoutPage() {
 
                   <button
                     onClick={() => {
-                      const missing = items.find(
+                      const missing = checkoutItems.find(
                         (i) => (i.options?.length && !i.selectedSize) || (i.colors?.length && !i.selectedColor),
                       );
                       if (missing) {
                         toast.error(`Please choose an option for "${missing.name}"`);
                         return;
                       }
+                      trackOnce('checkout-started', 'checkout_started', { cartValue: sub });
                       setStep('Address');
                     }}
                     className="btn-gold w-full mt-5"
@@ -571,42 +619,51 @@ export default function CheckoutPage() {
                     })}
                   </div>
 
-                  {/* Gateway selector — only rendered when Cashfree is explicitly enabled.
-                      Razorpay remains the default and only option otherwise. */}
-                  {CASHFREE_ENABLED && paymentMethod !== 'cod' && (
-                    <div className="bg-white border border-[var(--border)] p-6 mt-4 space-y-3">
-                      <h3 className="font-cinzel text-xs font-semibold text-deep tracking-wider">Checkout Gateway</h3>
-                      {([
-                        { id: 'razorpay', label: 'Razorpay' },
-                        { id: 'cashfree', label: 'Cashfree' },
-                      ] as const).map((g) => (
-                        <label key={g.id} className={`flex items-center gap-3 p-3 border cursor-pointer transition-colors ${
-                          gateway === g.id ? 'border-gold bg-gold/5' : 'border-[var(--border)] hover:border-gold/50'
-                        }`}>
-                          <input
-                            type="radio"
-                            name="gateway"
-                            value={g.id}
-                            checked={gateway === g.id}
-                            onChange={() => setGateway(g.id)}
-                            className="accent-gold"
-                          />
-                          <span className="font-cinzel text-xs tracking-wider text-deep">{g.label}</span>
-                        </label>
-                      ))}
+                  <div className="flex items-center gap-3 mt-4 p-3 bg-green-50 border border-green-200">
+                    <ShieldCheck size={16} className="text-green-600" />
+                    <span className="font-lato text-xs text-green-700">100% Secure Payments by Cashfree</span>
+                  </div>
+
+                  {/* Guest-checkout payment authorization: a one-time code is required for the
+                      phone number on the order before Cashfree can be started (see
+                      authorizeOrderForPayment). Registered customers never see this. */}
+                  {guestVerify && (
+                    <div className="bg-white border border-gold/40 p-6 mt-4 space-y-3">
+                      <h3 className="font-cinzel text-xs font-semibold text-deep tracking-wider">Verify Your Phone Number</h3>
+                      <p className="font-lato text-xs text-[var(--text-mid)]">
+                        Enter the 6-digit code sent to +91-{address.phone} to authorize payment for this order.
+                      </p>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={6}
+                        value={guestVerify.otp}
+                        onChange={(e) => setGuestVerify((gv) => (gv ? { ...gv, otp: e.target.value.replace(/\D/g, '') } : gv))}
+                        placeholder="Enter 6-digit code"
+                        className="w-full border border-[var(--border)] px-3 py-2 font-lato text-sm tracking-widest"
+                      />
+                      <div className="flex gap-3">
+                        <button
+                          onClick={confirmGuestOtpAndPay}
+                          disabled={guestVerify.verifying || guestVerify.otp.length !== 6}
+                          className="btn-gold flex-1 disabled:opacity-60"
+                        >
+                          {guestVerify.verifying ? 'Verifying...' : 'Verify & Pay'}
+                        </button>
+                        <button
+                          onClick={() => requestGuestOtp(guestVerify.orderId)}
+                          disabled={guestVerify.sending}
+                          className="btn-outline-gold"
+                        >
+                          {guestVerify.sending ? 'Sending...' : 'Resend Code'}
+                        </button>
+                      </div>
                     </div>
                   )}
 
-                  <div className="flex items-center gap-3 mt-4 p-3 bg-green-50 border border-green-200">
-                    <ShieldCheck size={16} className="text-green-600" />
-                    <span className="font-lato text-xs text-green-700">
-                      100% Secure Payments by {CASHFREE_ENABLED && paymentMethod !== 'cod' && gateway === 'cashfree' ? 'Cashfree' : 'Razorpay'}
-                    </span>
-                  </div>
-
                   <div className="flex gap-3 mt-5">
                     <button onClick={() => setStep('Address')} className="btn-outline-gold flex-1">← Back</button>
-                    <button onClick={placeOrder} disabled={placing} className="btn-gold flex-1 disabled:opacity-60">
+                    <button onClick={placeOrder} disabled={placing || !!guestVerify} className="btn-gold flex-1 disabled:opacity-60">
                       {placing ? 'Placing Order...' : paymentMethod === 'cod' ? '🙏 Place Order' : '🔒 Pay Now'}
                     </button>
                   </div>

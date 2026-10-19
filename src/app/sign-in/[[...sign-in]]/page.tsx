@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { SignIn } from '@clerk/nextjs';
 import { isClerkConfigured } from '@/backend/lib/clerkConfig';
+import { clerkAppearance } from '@/frontend/components/auth/clerkAppearance';
 
 /**
  * New, additive Clerk-hosted sign-in route. Entirely separate from the existing
@@ -17,14 +18,7 @@ export default function ClerkSignInPage() {
         path="/sign-in"
         signUpUrl="/sign-up"
         fallbackRedirectUrl="/account"
-        appearance={{
-          variables: {
-            colorPrimary: '#C9922A',
-            colorBackground: '#FFF8EE',
-            colorForeground: '#2C1A00',
-            borderRadius: '0px',
-          },
-        }}
+        appearance={clerkAppearance}
       />
     </div>
   );

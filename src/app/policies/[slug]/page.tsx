@@ -36,10 +36,10 @@ const policies: Record<string, { title: string; content: string[] }> = {
     title: 'Privacy Policy',
     content: [
       'Your privacy is important to us. This policy explains how we collect, use, and protect your information.',
-      'Information We Collect: Name, phone number, and email address when you place an order. Delivery address for shipping. Payment information is processed securely via Razorpay and is never stored by us.',
-      'How We Use Your Information: To process and fulfil orders, send order updates, and respond to your queries.',
+      'Information We Collect: Name, phone number, and email address when you place an order. Delivery address for shipping. Payment information is processed securely via Cashfree and is never stored by us. If a refund is due on a Cash on Delivery order, the UPI ID or bank account you share is used only to send that refund.',
+      'How We Use Your Information: To process and fulfil orders, send order updates, and respond to your queries. If you enter your mobile number at checkout but do not complete the order, we may contact you once on WhatsApp to help you finish it.',
       'We Do Not sell or share your personal data with third parties for marketing purposes or store your payment credentials.',
-      'Cookies: We use essential cookies to keep you signed in and to remember your cart. With your consent, we also use Google Analytics cookies to understand how visitors use the site. You can choose "Essential only" in the cookie banner, or clear your browser storage to change your choice.',
+      'Cookies: We use essential cookies to keep you signed in and to remember your cart. We count visits and pages viewed (without cookies or personal identifiers) to improve the store, and with your consent we also use Google Analytics cookies to understand how visitors use the site. Choosing "Essential only" in the cookie banner turns off all visit counting; clear your browser storage to change your choice.',
       'Reviews: If you submit a review, your phone number is used only to verify it and is never shown publicly.',
       'Data Security: We use industry-standard encryption. You may request deletion of your data by contacting us.',
     ],
@@ -49,7 +49,7 @@ const policies: Record<string, { title: string; content: string[] }> = {
     content: [
       'By using this website and placing an order with Nikunj Sakhi, you agree to these terms.',
       'Products: We make every effort to display product colours, sizes and details accurately. Because our ornaments and attars are handcrafted, small variations in colour, finish and fragrance are natural and are not defects.',
-      'Pricing & Payment: All prices are in Indian Rupees (INR) and include applicable taxes unless stated otherwise. Prices are confirmed at checkout. Payments are processed securely by Razorpay; Cash on Delivery is available where shown.',
+      'Pricing & Payment: All prices are in Indian Rupees (INR) and include applicable taxes unless stated otherwise. Prices are confirmed at checkout. Payments are processed securely by Cashfree; Cash on Delivery is available where shown.',
       'Orders: An order is confirmed once payment is received (or once a Cash on Delivery order is accepted). We may cancel an order in case of a pricing error, stock unavailability, or suspected fraud, and will refund any amount paid in full.',
       'Shipping, Returns & Refunds: These are governed by our Shipping Policy and Return Policy, which form part of these terms.',
       'Reviews: Reviews you submit may be displayed on the website after moderation. We may decline to publish any review at our discretion.',

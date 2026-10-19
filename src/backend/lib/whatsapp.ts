@@ -134,3 +134,46 @@ export async function sendWhatsAppOtp(phone: string, otp: string): Promise<boole
     return false;
   }
 }
+
+/**
+ * Delivery confirmation code via a dedicated approved template (WHATSAPP_DELIVERY_OTP_TEMPLATE, one body
+ * variable = the code). Returns false when that template isn't configured, so callers can fall back to
+ * the login-OTP authentication template.
+ */
+export async function sendDeliveryOtpWhatsApp(phone: string, otp: string, orderId: string, onMessageId?: (id: string) => void): Promise<boolean> {
+  const template = process.env.WHATSAPP_DELIVERY_OTP_TEMPLATE;
+  if (!isWhatsAppConfigured() || !template) return false;
+  const to = toE164India(phone);
+  if (!to) return false;
+  try {
+    const res = await fetch(`${GRAPH_URL}/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to,
+        type: 'template',
+        template: {
+          name: template,
+          language: { code: process.env.WHATSAPP_TEMPLATE_LANG || 'en' },
+          components: [{ type: 'body', parameters: [{ type: 'text', text: otp }] }],
+        },
+      }),
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) {
+      console.error('[whatsapp-delivery-otp] send failed', orderId, res.status, (await res.text()).slice(0, 300));
+      return false;
+    }
+    if (onMessageId) {
+      const data = (await res.json().catch(() => null)) as { messages?: { id?: string }[] } | null;
+      const id = data?.messages?.[0]?.id;
+      if (id) onMessageId(id);
+    }
+    return true;
+  } catch (error) {
+    console.error('[whatsapp-delivery-otp] send error', orderId, error instanceof Error ? error.message : error);
+    return false;
+  }
+}

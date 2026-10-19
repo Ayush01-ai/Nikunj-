@@ -5,11 +5,11 @@ import { hashPassword } from '@/backend/lib/auth';
 import { createRateLimiter, clientIp } from '@/backend/lib/rateLimit';
 import { isValidEmail, normalizeEmail, passwordProblem, sessionResponse } from '@/backend/lib/session';
 
-const isLimited = createRateLimiter(10, 15 * 60 * 1000);
+const isLimited = createRateLimiter(10, 15 * 60 * 1000, 'api/auth/register:isLimited');
 
 export async function POST(req: NextRequest) {
   try {
-    if (isLimited(clientIp(req))) {
+    if (await isLimited(clientIp(req))) {
       return NextResponse.json({ success: false, error: 'Too many attempts. Please try again later.' }, { status: 429 });
     }
     const body = await req.json().catch(() => ({}));
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       user = await User.create({ email, name: name || undefined, passwordHash, authProviders: ['email'], role: 'user' });
     }
 
-    return sessionResponse(user, 'Account created');
+    return sessionResponse(user, 'Account created', 'email');
   } catch (error) {
     console.error('[register]', error);
     return NextResponse.json({ success: false, error: 'Could not create account. Try again.' }, { status: 500 });

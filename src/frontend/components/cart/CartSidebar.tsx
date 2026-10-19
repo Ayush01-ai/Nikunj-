@@ -10,7 +10,10 @@ import { Button } from '@/frontend/components/ui/button';
 import { SacredIcon } from '@/frontend/components/ui/SacredIcon';
 
 export function CartSidebar() {
-  const { items, isOpen, closeCart, removeItem, updateQuantity, subtotal } = useCartStore();
+  const {
+    items, isOpen, closeCart, removeItem, updateQuantity, deselectedIds,
+    toggleSelected, selectAll, deselectAll, selectedItems, selectedSubtotal,
+  } = useCartStore();
   const [mounted, setMounted] = useState(false);
 
   // Mark as mounted after hydration
@@ -37,7 +40,10 @@ export function CartSidebar() {
   // Use stable values for SSR; real values after mount
   const safeItems = mounted ? items : [];
   const safeIsOpen = mounted ? isOpen : false;
-  const total = mounted ? subtotal() : 0;
+  const safeSelectedItems = mounted ? selectedItems() : [];
+  const selectedCount = safeSelectedItems.length;
+  const allSelected = safeItems.length > 0 && selectedCount === safeItems.length;
+  const total = mounted ? selectedSubtotal() : 0;
   const FREE_THRESHOLD = 999;
   const deliveryCharge = total >= FREE_THRESHOLD ? 0 : 80;
   const remaining = FREE_THRESHOLD - total;
@@ -108,6 +114,19 @@ export function CartSidebar() {
 
         {/* Items */}
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+          {safeItems.length > 1 && (
+            <label className="flex items-center gap-2 pb-2 border-b border-[var(--border)] cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={allSelected}
+                onChange={() => (allSelected ? deselectAll() : selectAll())}
+                className="w-4 h-4 accent-gold-dark"
+              />
+              <span className="font-cinzel text-[11px] tracking-wider text-[var(--text-mid)]">
+                {allSelected ? 'All items selected' : `Select all (${selectedCount}/${safeItems.length} selected)`}
+              </span>
+            </label>
+          )}
           <AnimatePresence initial={false}>
             {safeItems.length === 0 ? (
               <motion.div
@@ -136,6 +155,15 @@ export function CartSidebar() {
                   exit={{ opacity: 0, x: -20 }}
                   className="flex gap-4 pb-4 border-b border-[var(--border)] last:border-0"
                 >
+                  {/* Select */}
+                  <label className="flex-shrink-0 pt-1" aria-label={`Select ${item.name} for checkout`}>
+                    <input
+                      type="checkbox"
+                      checked={!deselectedIds.includes(item.id)}
+                      onChange={() => toggleSelected(item.id)}
+                      className="w-4 h-4 accent-gold-dark"
+                    />
+                  </label>
                   {/* Image */}
                   <Link
                     href={item.href || `/products/${encodeURIComponent(item.slug)}`}
@@ -220,7 +248,9 @@ export function CartSidebar() {
             {/* Summary rows */}
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs">
-                <span className="text-[var(--text-mid)] font-lato">Subtotal</span>
+                <span className="text-[var(--text-mid)] font-lato">
+                  Subtotal {!allSelected && `(${selectedCount} item${selectedCount === 1 ? '' : 's'})`}
+                </span>
                 <span className="font-cinzel text-deep">₹{total.toLocaleString('en-IN')}</span>
               </div>
               <div className="flex justify-between text-xs">
@@ -240,14 +270,20 @@ export function CartSidebar() {
             </div>
 
             {/* Checkout button */}
-            <Button asChild className="w-full normal-case tracking-wider font-semibold">
-              <Link
-                href="/checkout"
-                onClick={closeCart}
-              >
-                Proceed to Checkout <ArrowRight size={14} />
-              </Link>
-            </Button>
+            {selectedCount === 0 ? (
+              <p className="text-center font-lato text-xs text-[var(--text-mid)] py-2">
+                Select at least one item to checkout.
+              </p>
+            ) : (
+              <Button asChild className="w-full normal-case tracking-wider font-semibold">
+                <Link
+                  href="/checkout"
+                  onClick={closeCart}
+                >
+                  Proceed to Checkout ({selectedCount}) <ArrowRight size={14} />
+                </Link>
+              </Button>
+            )}
 
             <button
               onClick={closeCart}

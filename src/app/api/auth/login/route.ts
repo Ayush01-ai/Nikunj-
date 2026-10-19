@@ -5,7 +5,7 @@ import { comparePassword } from '@/backend/lib/auth';
 import { createRateLimiter, clientIp } from '@/backend/lib/rateLimit';
 import { isValidEmail, normalizeEmail, sessionResponse, syncAdminRole } from '@/backend/lib/session';
 
-const isLimited = createRateLimiter(10, 15 * 60 * 1000);
+const isLimited = createRateLimiter(10, 15 * 60 * 1000, 'api/auth/login:isLimited');
 const INVALID = 'Incorrect email or password.';
 
 export async function POST(req: NextRequest) {
@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     const email = normalizeEmail(body?.email);
     const password = String(body?.password ?? '');
 
-    if (isLimited(`${clientIp(req)}:${email}`)) {
+    if (await isLimited(`${clientIp(req)}:${email}`)) {
       return NextResponse.json({ success: false, error: 'Too many attempts. Please try again in a few minutes.' }, { status: 429 });
     }
     if (!isValidEmail(email) || !password) {
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     if (!ok) return NextResponse.json({ success: false, error: INVALID }, { status: 401 });
 
     await syncAdminRole(user);
-    return sessionResponse(user);
+    return sessionResponse(user, 'Login successful', 'email');
   } catch (error) {
     console.error('[login]', error);
     return NextResponse.json({ success: false, error: 'Login failed. Try again.' }, { status: 500 });

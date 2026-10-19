@@ -6,6 +6,8 @@ export interface OrderMessageInput {
   customerName?: string;
   total?: number;
   paymentStatus?: string;
+  /** Lets refund messages say where the money goes (COD refunds go to the customer's UPI / bank). */
+  paymentMethod?: string;
   tracking?: { courier?: string; trackingNumber?: string; trackingUrl?: string };
   items?: { productName?: string; option?: string; colour?: string; quantity?: number; price?: number }[];
 }
@@ -55,6 +57,9 @@ export function orderStatusMessage(order: OrderMessageInput, origin: string) {
   const id = order.orderNumber ?? '';
   const track = trackOrderUrl(origin, id);
   const t = order.tracking;
+  const offline = order.paymentMethod === 'cod' || order.paymentMethod === 'whatsapp';
+  const refundTo = offline ? 'your UPI ID / bank account' : 'your original payment method';
+  const shareDetails = `Please share the UPI ID or bank account for your refund here: ${track}`;
   switch (order.status) {
     case 'confirmed':
       return `Namaste ${name} 🙏\nYour Nikunj Sakhi order *${id}* is confirmed.\n\n${itemLines(order.items)}\n\nTotal: *${inr(order.total)}*\nWe will update you when it ships.\nTrack anytime: ${track}`;
@@ -65,15 +70,15 @@ export function orderStatusMessage(order: OrderMessageInput, origin: string) {
     case 'delivered':
       return `Namaste ${name} 🙏\nYour order *${id}* has been delivered. We hope Thakur Ji loves it!\nPlease share your feedback: ${origin}/#feedback`;
     case 'cancelled':
-      return `Namaste ${name} 🙏\nYour order *${id}* has been cancelled.${order.paymentStatus === 'refund_due' || order.paymentStatus === 'refunded' ? ' Your refund is being processed to the original payment method.' : ''}\nPlease reply here if you have any questions.`;
+      return `Namaste ${name} 🙏\nYour order *${id}* has been cancelled.${order.paymentStatus === 'refund_due' || order.paymentStatus === 'refunded' ? ' ' + (offline && order.paymentStatus === 'refund_due' ? shareDetails : `Your refund is being processed to ${refundTo}.`) : ''}\nPlease reply here if you have any questions.`;
           case 'return_requested':
             return `Namaste ${name} 🙏\nWe have received your return request for order *${id}*. We will review it and get back to you shortly.`;
           case 'return_approved':
             return `Namaste ${name} 🙏\nYour return for order *${id}* is approved. Our delivery partner will pick up the item soon — please keep it packed with all tags.`;
           case 'returned':
-            return `Namaste ${name} 🙏\nWe have received the returned item for order *${id}*. Your refund will be processed shortly.`;
+            return `Namaste ${name} 🙏\nWe have received the returned item for order *${id}*. Your refund will be processed shortly.${offline && order.paymentStatus !== 'refunded' ? `\n${shareDetails}` : ''}`;
           case 'refunded':
-            return `Namaste ${name} 🙏\nThe refund for order *${id}* has been processed to your original payment method. It may take 5–7 working days to reflect.`;
+            return `Namaste ${name} 🙏\nThe refund for order *${id}* has been processed to ${refundTo}. It may take 5–7 working days to reflect.`;
           default:
       return `Namaste ${name} 🙏\nUpdate on your order *${id}*: ${ORDER_STATUS_LABEL[order.status ?? ''] ?? order.status}.\nTrack: ${track}`;
   }
@@ -86,14 +91,23 @@ export interface ShipmentInput extends OrderMessageInput {
 }
 
 /** Pickup / shipment request the owner forwards to the delivery partner. */
-export function deliveryPartnerMessage(order: ShipmentInput) {
+export function deliveryPartnerMessage(order: ShipmentInput, deliveryLink?: string) {
   const a = order.shippingAddress ?? {};
   const address = [a.line1, a.line2, a.landmark && `Near ${a.landmark}`, [a.city, a.state].filter(Boolean).join(', '), a.pincode]
     .filter(Boolean)
     .join('\n');
   const cod = order.paymentMethod === 'cod' && order.paymentStatus !== 'paid';
   const pieces = (order.items ?? []).reduce((n, i) => n + (i.quantity ?? 1), 0);
-  return `📦 *Pickup request — Nikunj Sakhi*\nOrder: *${order.orderNumber ?? ''}*\n\n*Deliver to*\n${order.customerName ?? ''}\n📞 ${order.phone ?? ''}\n${address}\n\n*Contents* (${pieces} pc)\n${itemLines(order.items)}\n\n${cod ? `💰 *COD — collect ${inr(order.total)}*` : '✅ Prepaid — do not collect cash'}\n\nPlease share the AWB / tracking number after pickup.`;
+  const closing = deliveryLink
+    ? `🔐 *At the door:* hand over the parcel${cod ? ' and collect the cash' : ''}, ask the customer for the 6-digit delivery code they got on WhatsApp, and enter it here to mark the order delivered:\n${deliveryLink}`
+    : 'Please share the AWB / tracking number after pickup.';
+  return `📦 *Pickup request — Nikunj Sakhi*\nOrder: *${order.orderNumber ?? ''}*\n\n*Deliver to*\n${order.customerName ?? ''}\n📞 ${order.phone ?? ''}\n${address}\n\n*Contents* (${pieces} pc)\n${itemLines(order.items)}\n\n${cod ? `💰 *COD — collect ${inr(order.total)}*` : '✅ Prepaid — do not collect cash'}\n\n${closing}`;
+}
+
+/** WhatsApp text giving the customer their doorstep delivery code (used when the automatic WhatsApp could not be sent). */
+export function deliveryCodeMessage(order: { customerName?: string; orderNumber?: string }, otp: string) {
+  const name = order.customerName?.split(' ')[0] || 'Devotee';
+  return `Namaste ${name} 🙏\nYour Nikunj Sakhi order *${order.orderNumber ?? ''}* is out for delivery.\n\nYour delivery code is *${otp}*.\nPlease share it only with the delivery partner at your door, after you receive the parcel.`;
 }
 
 /** WhatsApp text a customer sends to the shop right after placing an order. */

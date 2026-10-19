@@ -1,17 +1,16 @@
 import { ScrollText, Sparkles, RotateCcw } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import Image from 'next/image';
 import Link from 'next/link';
 import { client } from '@/cms/lib/client';
 import {
   PRODUCT_BY_SLUG_QUERY,
   RELATED_PRODUCTS_QUERY,
+  DIFFERENT_PRODUCTS_QUERY,
   PRODUCT_REVIEWS_QUERY,
   ALL_PRODUCT_SLUGS_QUERY,
   SITE_SETTINGS_QUERY,
 } from '@/cms/lib/queries';
-import { urlFor } from '@/cms/lib/image';
 import { Navbar } from '@/frontend/components/layout/Navbar';
 import { BackButton } from '@/frontend/components/ui/BackButton';
 import { Footer } from '@/frontend/components/layout/Footer';
@@ -20,8 +19,9 @@ import { ProductDetail } from '@/frontend/components/products/ProductDetail';
 import { ProductCard } from '@/frontend/components/products/ProductCard';
 import { CartSidebar } from '@/frontend/components/cart/CartSidebar';
 import { WhatsAppFloat } from '@/frontend/components/ui/WhatsAppFloat';
-import { PortableText } from '@portabletext/react';
+import { PortableText, type PortableTextBlock } from '@portabletext/react';
 import type { Product, SiteSettings, Testimonial } from '@/types';
+import { pickDiverse, seedFrom } from '@/cms/lib/suggestions';
 
 export const revalidate = 60;
 
@@ -65,20 +65,36 @@ async function getData(slug: string) {
   if (!product) return null;
 
   let relatedProducts: Product[] = [];
+  let differentProducts: Product[] = [];
   let reviews: Testimonial[] = [];
   let settings: SiteSettings | null = null;
-  try {
-    [relatedProducts, reviews, settings] = await Promise.all([
+  // Each section degrades on its own, so one failing query can't hide reviews or suggestions.
+  const safe = <T,>(p: Promise<T>, fallback: T) => p.catch(() => fallback);
+  let different: Product[];
+  [relatedProducts, different, reviews, settings] = await Promise.all([
+    safe(
       client.fetch<Product[]>(RELATED_PRODUCTS_QUERY, {
-        categoryId: product.category._id,
+        categoryId: product.category?._id ?? '',
+        productTypeId: product.productType?._id ?? '',
+        deityId: product.deityRef?._id ?? '',
         productId: product._id,
       }),
-      client.fetch<Testimonial[]>(PRODUCT_REVIEWS_QUERY, { productId: product._id }),
-      client.fetch<SiteSettings>(SITE_SETTINGS_QUERY),
-    ]);
-  } catch { /* use empty defaults */ }
+      [],
+    ),
+    safe(client.fetch<Product[]>(DIFFERENT_PRODUCTS_QUERY, { categoryId: product.category?._id ?? '', productId: product._id }), []),
+    safe(client.fetch<Testimonial[]>(PRODUCT_REVIEWS_QUERY, { productId: product._id }), []),
+    safe(client.fetch<SiteSettings | null>(SITE_SETTINGS_QUERY), null),
+  ]);
+  const seed = seedFrom(product._id);
+  relatedProducts = (relatedProducts ?? []).slice(0, 4);
+  different = different ?? [];
+  // Too few close matches: top up with popular picks so the section is never thin.
+  if (relatedProducts.length < 4) {
+    relatedProducts = [...relatedProducts, ...pickDiverse(different, 4 - relatedProducts.length, seed + 1)];
+  }
+  differentProducts = pickDiverse(different, 4, seed, relatedProducts.map((p) => p._id));
 
-  return { product, relatedProducts, reviews, settings };
+  return { product, relatedProducts, differentProducts, reviews: reviews ?? [], settings };
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
@@ -86,7 +102,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const data = await getData(slug);
   if (!data) notFound();
 
-  const { product, relatedProducts, reviews, settings } = data;
+  const { product, relatedProducts, differentProducts, reviews, settings } = data;
   const averageRating = reviews.length
     ? Math.round((reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length) * 10) / 10
     : 0;
@@ -192,7 +208,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
               <div className="p-5 flex-1">
                 {product.description ? (
                   <div className="prose prose-sm max-w-none font-crimson text-[var(--text-mid)]">
-                    <PortableText value={product.description as any} />
+                    <PortableText value={product.description as PortableTextBlock[]} />
                   </div>
                 ) : (
                   product.shortDescription && (
@@ -278,9 +294,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
               <ul className="space-y-5">
                 {reviews.map((r) => (
                   <li key={r._id} className="border-b border-[var(--border)] pb-5 last:border-0">
-                    <p className="text-gold text-sm mb-1" aria-label={`${r.rating} out of 5 stars`}>
-                      {'★'.repeat(r.rating)}
-                      <span className="text-gray-300">{'★'.repeat(5 - r.rating)}</span>
+                    <p className="text-gold text-sm mb-1" role="img" aria-label={`${r.rating} out of 5 stars`}>
+                      <span aria-hidden="true">{'★'.repeat(r.rating)}</span>
+                      <span aria-hidden="true" className="text-gray-300">{'★'.repeat(5 - r.rating)}</span>
                     </p>
                     <p className="font-crimson text-base text-[var(--text-mid)] leading-relaxed">{r.review}</p>
                     <p className="mt-2 font-lato text-xs text-deep font-semibold">
@@ -297,13 +313,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
         {/* Related Products */}
         {relatedProducts.length > 0 && (
-          <section className="py-16 px-4 sm:px-6 lg:px-8 bg-cream">
+          <section className="py-16 px-4 sm:px-6 lg:px-8 bg-cream" aria-labelledby="related-heading">
             <div className="max-w-7xl mx-auto">
               <div className="text-center mb-10">
                 <span className="font-cinzel text-[10px] tracking-[0.4em] uppercase text-gold block mb-2">
                   You May Also Like
                 </span>
-                <h2 className="font-cinzel text-2xl font-semibold text-deep">
+                <h2 id="related-heading" className="font-cinzel text-2xl font-semibold text-deep">
                   Related Products
                 </h2>
               </div>
@@ -312,6 +328,32 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   <ProductCard key={p._id} product={p} index={i} inView />
                 ))}
               </div>
+            </div>
+          </section>
+        )}
+
+        {/* Suggestions from other categories */}
+        {differentProducts.length > 0 && (
+          <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white" aria-labelledby="different-heading">
+            <div className="max-w-7xl mx-auto">
+              <div className="text-center mb-10">
+                <span className="font-cinzel text-[10px] tracking-[0.4em] uppercase text-gold block mb-2">
+                  Explore Something Different
+                </span>
+                <h2 id="different-heading" className="font-cinzel text-2xl font-semibold text-deep">
+                  Devotees Also Loved
+                </h2>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+                {differentProducts.map((p, i) => (
+                  <ProductCard key={p._id} product={p} index={i} inView />
+                ))}
+              </div>
+              <p className="mt-10 text-center">
+                <Link href="/collections" className="font-cinzel text-[10px] tracking-widest uppercase text-gold-dark hover:text-deep">
+                  View all collections →
+                </Link>
+              </p>
             </div>
           </section>
         )}

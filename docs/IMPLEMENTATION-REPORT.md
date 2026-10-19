@@ -1,5 +1,12 @@
 # Implementation Report
 
+> **Note:** this is a historical, append-only changelog of commits as they landed. Later
+> work on this branch made Cashfree the sole active checkout gateway (Razorpay retained
+> only to settle pre-existing orders) and replaced phone-only guest-payment checks with
+> an OTP-verified proof — see `docs/SECURITY-AND-MIGRATION.md` and
+> `docs/PRODUCTION-HARDENING-REPORT.md` for the current state. Entries below describe
+> what each commit did at the time, not current behavior.
+
 **Branch:** `feature/clerk-resend-whatsapp-cashfree`
 **Baseline commit (pre-existing work, rollback point):** `71b3e5e`
 **`main` branch:** untouched by this work.

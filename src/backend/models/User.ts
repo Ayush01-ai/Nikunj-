@@ -1,4 +1,16 @@
-﻿import mongoose, { Schema, Document, Model } from 'mongoose';
+﻿import mongoose, { Schema, Document, Model, Types } from 'mongoose';
+
+export interface IAddress {
+  fullName: string;
+  phone: string;
+  line1: string;
+  line2?: string;
+  city: string;
+  state: string;
+  pincode: string;
+  landmark?: string;
+  isDefault?: boolean;
+}
 
 export interface IUser extends Document {
   phone?: string;
@@ -11,22 +23,16 @@ export interface IUser extends Document {
   clerkUserId?: string;
   avatar?: string;
   emailVerified?: boolean;
+  /** Set server-side when a WhatsApp OTP login succeeds; used to tell WhatsApp-bridged Clerk sessions apart. */
+  whatsappLoginAt?: Date;
   authProviders: ('phone' | 'email' | 'google' | 'clerk' | 'whatsapp')[];
   /** sha256 of the emailed reset token; never selected by default */
   resetTokenHash?: string;
   resetTokenExpires?: Date;
   role: 'user' | 'admin';
-  addresses: {
-    fullName: string;
-    phone: string;
-    line1: string;
-    line2?: string;
-    city: string;
-    state: string;
-    pincode: string;
-    landmark?: string;
-    isDefault?: boolean;
-  }[];
+  // A mongoose DocumentArray (not a plain array) so individual addresses can be looked up
+  // and removed by subdocument id via `.id()` / `.deleteOne()` (see the account/addresses API route).
+  addresses: Types.DocumentArray<IAddress>;
   wishlist: string[];
   createdAt: Date;
   updatedAt: Date;
@@ -55,6 +61,7 @@ const UserSchema = new Schema<IUser>(
     clerkUserId:       { type: String },
     avatar:            { type: String },
     emailVerified:     { type: Boolean, default: false },
+    whatsappLoginAt:   { type: Date },
     authProviders:     [{ type: String, enum: ['phone', 'email', 'google', 'clerk', 'whatsapp'] }],
     resetTokenHash:    { type: String, select: false },
     resetTokenExpires: { type: Date, select: false },

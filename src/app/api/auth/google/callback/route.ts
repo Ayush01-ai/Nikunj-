@@ -83,7 +83,7 @@ export async function GET(req: NextRequest) {
 
     const dest = next.startsWith('/') && !next.startsWith('//') ? next : '/account';
     const res = NextResponse.redirect(`${base}/login?oauth=success&next=${encodeURIComponent(dest)}`);
-    setSessionCookie(res, user);
+    setSessionCookie(res, user, 'google');
     res.cookies.delete({ name: 'ns_oauth_state', path: '/api/auth/google' });
     res.cookies.delete({ name: 'ns_oauth_next', path: '/api/auth/google' });
     return res;

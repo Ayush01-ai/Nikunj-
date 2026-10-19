@@ -75,6 +75,24 @@ export const order = defineType({
       ],
     }),
     defineField({
+      name: 'delivery',
+      title: 'Doorstep Delivery (OTP)',
+      type: 'object',
+      group: 'manage',
+      readOnly: true,
+      description:
+        'Managed by the Orders Dashboard "Send to Delivery Partner" button. The customer gets a code on WhatsApp; the partner enters it on their delivery link and the order is marked Delivered automatically.',
+      hidden: ({ document }) => !document?.delivery,
+      fields: [
+        defineField({ name: 'partnerName', title: 'Delivery Partner', type: 'string' }),
+        defineField({ name: 'assignedAt', title: 'Link Created At', type: 'datetime' }),
+        defineField({ name: 'otpRequired', title: 'Customer OTP Required', type: 'boolean' }),
+        defineField({ name: 'otpSentAt', title: 'Code Sent to Customer At', type: 'datetime' }),
+        defineField({ name: 'attempts', title: 'Wrong Code Attempts', type: 'number', description: 'The link locks after 5 wrong codes. Create a new link from the dashboard.' }),
+        defineField({ name: 'verifiedAt', title: 'Delivered (OTP verified) At', type: 'datetime' }),
+      ],
+    }),
+    defineField({
       name: 'returnInfo',
       title: 'Return / Refund',
       type: 'object',
@@ -108,6 +126,76 @@ export const order = defineType({
         defineField({ name: 'refundAmount', title: 'Refund Amount (INR)', type: 'number', validation: (R) => R.min(0) }),
         defineField({ name: 'refundedAt', title: 'Refunded At', type: 'datetime' }),
         defineField({ name: 'withinWindow', title: 'Requested within return window', type: 'boolean', readOnly: true }),
+      ],
+    }),
+    defineField({
+      name: 'refund',
+      title: 'Refund (automatic)',
+      type: 'object',
+      group: 'manage',
+      readOnly: true,
+      description:
+        'Approve refunds from the Orders Dashboard. Online payments go back to the original payment method; Cash on Delivery refunds go to the UPI ID / bank account the customer shares on the Track Order page.',
+      hidden: ({ value }) => !value,
+      fields: [
+        defineField({
+          name: 'source',
+          title: 'Refund to',
+          type: 'string',
+          options: {
+            list: [
+              { title: 'Original payment (Cashfree)', value: 'cashfree' },
+              { title: 'Original payment (Razorpay)', value: 'razorpay' },
+              { title: 'Customer UPI / bank (payout)', value: 'payout' },
+            ],
+          },
+        }),
+        defineField({
+          name: 'state',
+          title: 'State',
+          type: 'string',
+          options: {
+            list: [
+              { title: '⏳ Waiting for customer details', value: 'awaiting_details' },
+              { title: '📝 Details received', value: 'details_submitted' },
+              { title: '✅ Approved', value: 'approved' },
+              { title: '🔄 Processing', value: 'processing' },
+              { title: '✋ Manual transfer', value: 'manual' },
+              { title: '💸 Refunded', value: 'success' },
+              { title: '⚠️ Failed', value: 'failed' },
+            ],
+          },
+        }),
+        defineField({ name: 'amount', title: 'Amount (INR)', type: 'number' }),
+        defineField({
+          name: 'deductedCharges',
+          title: 'Delivery / COD charges kept (INR)',
+          type: 'number',
+          description: '0 means the full amount paid was refunded.',
+        }),
+        ...(['payoutDetails', 'approvedDestination'] as const).map((name) =>
+          defineField({
+            name,
+            title: name === 'payoutDetails' ? 'Customer refund details' : 'Approved destination',
+            type: 'object',
+            fields: [
+              defineField({ name: 'mode', title: 'Mode', type: 'string', options: { list: ['upi', 'bank'] } }),
+              defineField({ name: 'upiId', title: 'UPI ID', type: 'string' }),
+              defineField({ name: 'accountHolder', title: 'Account holder', type: 'string' }),
+              defineField({ name: 'accountNumber', title: 'Account number', type: 'string' }),
+              defineField({ name: 'ifsc', title: 'IFSC', type: 'string' }),
+              defineField({ name: 'submittedAt', title: 'Submitted at', type: 'datetime' }),
+            ],
+          }),
+        ),
+        defineField({ name: 'approvedAt', title: 'Approved at', type: 'datetime' }),
+        defineField({ name: 'initiatedAt', title: 'Sent to gateway at', type: 'datetime' }),
+        defineField({ name: 'completedAt', title: 'Completed at', type: 'datetime' }),
+        defineField({ name: 'referenceId', title: 'Our reference', type: 'string' }),
+        defineField({ name: 'gatewayRefundId', title: 'Gateway refund / transfer ID', type: 'string' }),
+        defineField({ name: 'bankReference', title: 'Bank reference (UTR / ARN)', type: 'string' }),
+        defineField({ name: 'failureReason', title: 'Failure reason', type: 'string' }),
+        defineField({ name: 'attempt', title: 'Attempt', type: 'number' }),
       ],
     }),
     defineField({
@@ -221,6 +309,9 @@ export const order = defineType({
       },
     }),
     defineField({ name: 'razorpayPaymentId', title: 'Razorpay Payment ID', type: 'string', group: 'items', readOnly: true, hidden: ({ value }) => !value }),
+    defineField({ name: 'paymentGateway', title: 'Payment Gateway', type: 'string', group: 'items', readOnly: true, hidden: ({ value }) => !value }),
+    defineField({ name: 'cashfreeOrderId', title: 'Cashfree Order ID', type: 'string', group: 'items', readOnly: true, hidden: ({ value }) => !value }),
+    defineField({ name: 'cashfreePaymentId', title: 'Cashfree Payment ID', type: 'string', group: 'items', readOnly: true, hidden: ({ value }) => !value }),
 
     defineField({ name: 'customerName', title: 'Customer Name', type: 'string', group: 'customer', readOnly: true }),
     defineField({ name: 'phone', title: 'Phone', type: 'string', group: 'customer', readOnly: true }),

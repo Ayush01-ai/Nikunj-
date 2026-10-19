@@ -10,7 +10,8 @@ const MAX_RESEND_INTERVAL_SECONDS = 60;
 
 // Per-IP guard in addition to the per-phone cooldown below: WhatsApp template sends are
 // billed per-message, so this limits abuse/enumeration beyond the existing SMS flow.
-const isIpLimited = createRateLimiter(10, 60 * 60 * 1000); // 10 requests / hour / IP
+const isIpLimited = createRateLimiter(10, 60 * 60 * 1000, 'api/auth/whatsapp/send-otp:isIpLimited'); // 10 requests / hour / IP
+const loginOtpScope = { purpose: { $ne: 'guest_payment' }, channel: 'whatsapp' };
 
 /**
  * Sends a WhatsApp OTP login code via the Meta Cloud API. This is a distinct channel
@@ -19,7 +20,7 @@ const isIpLimited = createRateLimiter(10, 60 * 60 * 1000); // 10 requests / hour
  */
 export async function POST(req: NextRequest) {
   try {
-    if (isIpLimited(clientIp(req))) {
+    if (await isIpLimited(clientIp(req))) {
       return NextResponse.json({ success: false, error: 'Too many requests. Please try again later.' }, { status: 429 });
     }
 
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    const recentOtp = await Otp.findOne({ phone, channel: 'whatsapp' }).sort({ createdAt: -1 }).lean();
+    const recentOtp = await Otp.findOne({ phone, ...loginOtpScope }).sort({ createdAt: -1 }).lean();
     if (recentOtp) {
       const elapsed = (Date.now() - new Date(recentOtp.createdAt).getTime()) / 1000;
       if (elapsed < MAX_RESEND_INTERVAL_SECONDS) {
@@ -52,13 +53,13 @@ export async function POST(req: NextRequest) {
     const otp = generateOTP();
     const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
 
-    await Otp.deleteMany({ phone, channel: 'whatsapp' });
-    await Otp.create({ phone, otp, expiresAt, channel: 'whatsapp' });
+    await Otp.deleteMany({ phone, ...loginOtpScope });
+    await Otp.create({ phone, otp, expiresAt, channel: 'whatsapp', purpose: 'login' });
 
     if (isWhatsAppConfigured() && process.env.WHATSAPP_OTP_TEMPLATE) {
       const sent = await sendWhatsAppOtp(phone, otp);
       if (!sent) {
-        await Otp.deleteMany({ phone, channel: 'whatsapp' });
+        await Otp.deleteMany({ phone, ...loginOtpScope });
         return NextResponse.json(
           { success: false, error: 'Could not send WhatsApp OTP right now. Please try again.' },
           { status: 502 },

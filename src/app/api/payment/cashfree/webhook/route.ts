@@ -10,7 +10,7 @@ interface CashfreeWebhookPayload {
   data?: {
     order?: { order_id?: string; order_amount?: number; order_currency?: string };
     payment?: {
-      cf_payment_id?: string;
+      cf_payment_id?: string | number;
       payment_status?: string;
       payment_amount?: number;
       payment_currency?: string;
@@ -21,8 +21,11 @@ interface CashfreeWebhookPayload {
 /**
  * Cashfree server-to-server webhook. Mirrors /api/payment/webhook (Razorpay) in its
  * idempotency/amount-matching rules — only the signature scheme and payload shape differ.
+ * The signature is HMAC-SHA256 over `timestamp + raw body`, keyed by CASHFREE_SECRET_KEY
+ * (Cashfree does not issue a separate webhook secret).
  *
- * Configure this exact URL in the Cashfree Dashboard → Developers → Webhooks, subscribed to
+ * Configure https://<your-domain>/api/payment/cashfree/webhook in the Cashfree Dashboard →
+ * Developers → Webhooks (separately for Test and Production), subscribed to
  * "PAYMENT_SUCCESS_WEBHOOK", "PAYMENT_FAILED_WEBHOOK" and "PAYMENT_USER_DROPPED_WEBHOOK".
  */
 export async function POST(req: NextRequest) {
@@ -45,7 +48,7 @@ export async function POST(req: NextRequest) {
     try {
       verified = verifyCashfreeWebhookSignature(signature, rawBody, timestamp);
     } catch (err) {
-      console.warn('[payment/cashfree/webhook] Invalid webhook signature', err);
+      console.warn('[payment/cashfree/webhook] Invalid webhook signature:', err instanceof Error ? err.message : 'unknown');
       return NextResponse.json({ success: false, error: 'Invalid signature.' }, { status: 400 });
     }
 
@@ -75,7 +78,8 @@ export async function POST(req: NextRequest) {
 
     const cashfreeOrderId = event.data?.order?.order_id;
     const payment = event.data?.payment;
-    const cashfreePaymentId = payment?.cf_payment_id;
+    const cashfreePaymentId =
+      payment?.cf_payment_id !== undefined && payment?.cf_payment_id !== null ? String(payment.cf_payment_id) : '';
 
     if (!cashfreeOrderId || !cashfreePaymentId || payment?.payment_status !== 'SUCCESS') {
       return NextResponse.json({ success: false, error: 'Malformed webhook payload.' }, { status: 400 });
@@ -92,14 +96,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true });
     }
 
+    // The signed payload must agree with our server-computed total in INR — both the payment
+    // amount and (when present) the order-level amount/currency Cashfree echoes back.
+    const matches = (v: unknown) => typeof v === 'number' && Number.isFinite(v) && Math.abs(v - candidate.total) < 0.01;
+    const eventOrder = event.data?.order;
     const amountMatches =
-      typeof payment.payment_amount === 'number' && Math.abs(payment.payment_amount - candidate.total) < 0.01;
-    const currencyMatches = !payment.payment_currency || payment.payment_currency === 'INR';
+      matches(payment.payment_amount) && (eventOrder?.order_amount === undefined || matches(eventOrder.order_amount));
+    const currencyMatches =
+      payment.payment_currency === 'INR' &&
+      (eventOrder?.order_currency === undefined || eventOrder.order_currency === 'INR');
 
     if (!amountMatches || !currencyMatches) {
       console.error('[payment/cashfree/webhook] Amount/currency mismatch for order', candidate.orderId, {
         expectedAmount: candidate.total,
         receivedAmount: payment.payment_amount,
+        receivedOrderAmount: eventOrder?.order_amount,
         receivedCurrency: payment.payment_currency,
       });
       return NextResponse.json({ success: true, ignored: 'amount_mismatch' });
@@ -125,7 +136,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[payment/cashfree/webhook]', error);
+    console.error('[payment/cashfree/webhook]', error instanceof Error ? error.message : error);
     return NextResponse.json({ success: false, error: 'Webhook processing error.' }, { status: 500 });
   }
 }

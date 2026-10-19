@@ -125,7 +125,7 @@ function CategoryCard({
           {category.image?.asset ? (
             <Image
               src={urlFor(category.image).width(128).height(128).quality(80).url()}
-              alt={category.name}
+              alt=""
               fill
               sizes="64px"
               className="object-cover group-hover:scale-110 transition-transform duration-500"

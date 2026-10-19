@@ -4,13 +4,15 @@ import React, { Suspense, useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Check, Package, Search, Truck, XCircle } from 'lucide-react';
+import { Check, KeyRound, Package, Search, Truck, XCircle } from 'lucide-react';
+import { CopyCodeButton, deliveryStatusText, type DeliveryOtpStatus } from '@/frontend/components/orders/DeliveryCode';
 import { Navbar } from '@/frontend/components/layout/Navbar';
 import { Footer } from '@/frontend/components/layout/Footer';
 import { useAuthStore } from '@/frontend/store/authStore';
 import { useSiteSettings } from '@/frontend/providers/Providers';
 import { ORDER_STATUS_LABEL, ORDER_STEPS, isReturnStatus } from '@/cms/lib/orderMessages';
 import { OrderRequestPanel, type RequestableOrder } from '@/frontend/components/orders/OrderRequestPanel';
+import { RefundPanel, type RefundView } from '@/frontend/components/orders/RefundPanel';
 
 interface TrackedOrder extends RequestableOrder {
   orderId: string;
@@ -26,6 +28,8 @@ interface TrackedOrder extends RequestableOrder {
   paymentMethod: string;
   paymentStatus: string;
   shipTo: { name?: string; city?: string; state?: string; pincode?: string };
+  refund?: RefundView | null;
+  delivery?: { otpRequired: boolean; otpSentAt?: string | null; otpStatus?: DeliveryOtpStatus; code?: string; verifiedAt?: string } | null;
 }
 
 const inr = (n?: number) => `₹${(n ?? 0).toLocaleString('en-IN')}`;
@@ -155,14 +159,14 @@ function TrackOrderContent() {
               {cancelled ? (
                 <p className="mt-6 flex items-center gap-2 text-red-800 font-lato text-sm">
                   <XCircle size={18} aria-hidden="true" /> This order was cancelled.
-                  {(order.paymentStatus === 'refund_due' || order.paymentStatus === 'refunded') && ' Your refund is being processed.'}
+                  {(order.paymentStatus === 'refund_due' || order.paymentStatus === 'refunded') && !order.refund && ' Your refund is being processed.'}
                 </p>
               ) : order.status === 'pending' ? (
                 <p className="mt-6 font-lato text-sm text-[var(--text-mid)]">We are waiting for your payment to be confirmed.</p>
               ) : isReturnStatus(order.status) ? (
                 <p className="mt-6 flex items-center gap-2 text-amber-800 font-lato text-sm">
                   <Package size={18} aria-hidden="true" /> {ORDER_STATUS_LABEL[order.status]}.
-                  {order.status === 'refunded' ? ' The amount has been refunded to your original payment method.' : ' We will keep you updated on WhatsApp.'}
+                  {order.status === 'refunded' ? ' Your refund has been completed.' : ' We will keep you updated on WhatsApp.'}
                 </p>
               ) : (
                 <ol className="mt-8 grid grid-cols-4" aria-label="Order progress">
@@ -207,6 +211,37 @@ function TrackOrderContent() {
                     Track Parcel
                   </a>
                 )}
+              </div>
+            )}
+
+            {/* Doorstep delivery code */}
+            {order.delivery?.otpRequired && !order.delivery.verifiedAt && order.status === 'shipped' && (
+              <div className="bg-[var(--cream,#fdf8ee)] border border-gold/60 p-6" data-testid="delivery-code-notice">
+                <div className="flex items-start gap-3">
+                  <KeyRound size={22} className="text-gold-dark shrink-0" aria-hidden="true" />
+                  <div className="space-y-2">
+                    <p className="font-cinzel text-xs tracking-widest uppercase text-deep">Out for delivery</p>
+                    {order.delivery.code ? (
+                      <div className="font-lato text-sm text-deep space-y-1">
+                        <p>
+                          Your delivery code: <span className="font-semibold text-xl tracking-[0.3em] align-middle" data-testid="delivery-code">{order.delivery.code}</span>{' '}
+                          <CopyCodeButton code={order.delivery.code} />
+                        </p>
+                        <p className="text-xs text-[var(--text-mid)]" data-testid="delivery-otp-status">{deliveryStatusText(order.delivery.otpStatus, order.delivery.otpSentAt)}</p>
+                      </div>
+                    ) : (
+                      <p className="font-lato text-sm text-deep">
+                        {order.delivery.otpStatus === 'failed'
+                          ? 'We could not send the delivery code to WhatsApp. Sign in to your account to see it, or contact the shop.'
+                          : 'We have sent a 6-digit delivery code to the WhatsApp number on this order. Sign in to your account to see it here.'}
+                      </p>
+                    )}
+                    <p className="font-lato text-xs text-[var(--text-mid)] leading-relaxed">
+                      Please share this code with the delivery partner only after you have received your parcel
+                      {order.paymentMethod === 'cod' && order.paymentStatus !== 'paid' ? ` and paid ${inr(order.total)} in cash` : ''}. Our team will never ask for it on a call.
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -283,7 +318,16 @@ function TrackOrderContent() {
                 </a>
               </p>
             )}
-            <OrderRequestPanel order={order} phone={verifiedPhone} onSubmitted={() => void lookup(order.orderId, verifiedPhone)} />
+            {order.refund && (
+              <RefundPanel
+                orderId={order.orderId}
+                phone={verifiedPhone}
+                refund={order.refund}
+                isLoggedIn={isAuthenticated}
+                onSaved={() => void lookup(order.orderId, verifiedPhone)}
+              />
+            )}
+            <OrderRequestPanel order={order} phone={verifiedPhone} isLoggedIn={isAuthenticated} onSubmitted={() => void lookup(order.orderId, verifiedPhone)} />
           </section>
         )}
 

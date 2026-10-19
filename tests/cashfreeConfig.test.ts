@@ -46,4 +46,15 @@ describe('cashfreeConfig', () => {
     process.env.CASHFREE_ENVIRONMENT = 'PRODUCTION';
     expect(cashfreeEnvironment()).toBe('PRODUCTION');
   });
+
+  it('cashfreeEnvironment() accepts CASHFREE_ENV as an alias, with CASHFREE_ENVIRONMENT taking priority', async () => {
+    const { cashfreeEnvironment } = await import('@/backend/lib/cashfreeConfig');
+
+    delete process.env.CASHFREE_ENVIRONMENT;
+    process.env.CASHFREE_ENV = 'PRODUCTION';
+    expect(cashfreeEnvironment()).toBe('PRODUCTION');
+
+    process.env.CASHFREE_ENVIRONMENT = 'SANDBOX';
+    expect(cashfreeEnvironment()).toBe('SANDBOX');
+  });
 });

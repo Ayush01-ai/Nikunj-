@@ -9,6 +9,7 @@ import { useCartStore } from '@/frontend/store/cartStore';
 import { useAuthStore } from '@/frontend/store/authStore';
 import { useSiteSettings } from '@/frontend/providers/Providers';
 import { SearchModal } from '@/frontend/components/ui/SearchModal';
+import { ShopSuggestions } from '@/frontend/components/layout/ShopSuggestions';
 import { NikunjSakhiLogo } from '@/frontend/components/ui/NikunjSakhiLogo';
 import type { SiteSettings } from '@/types';
 
@@ -160,9 +161,6 @@ export function Navbar({ settings }: NavbarProps) {
             : 'bg-cream/90 backdrop-blur-sm border-b border-[var(--border)]'
           }
         `}
-        initial={{ y: -80 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.6, ease: 'easeOut' }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className={`flex items-center justify-between transition-[height] duration-500 ${scrolled ? 'h-14 md:h-16' : 'h-16 md:h-[76px]'}`}>
@@ -263,7 +261,7 @@ export function Navbar({ settings }: NavbarProps) {
 
               {/* Hamburger */}
               <button
-                className="lg:hidden p-2 text-[var(--text-mid)] cursor-pointer rounded-xs focus-visible:ring-2 focus-visible:ring-gold/50"
+                className="lg:hidden p-2 text-[var(--text-mid)] hover:text-gold transition-colors cursor-pointer rounded-xs focus-visible:ring-2 focus-visible:ring-gold/50"
                 onClick={() => setMobileOpen(true)}
                 aria-label="Open menu"
               >
@@ -309,6 +307,7 @@ export function Navbar({ settings }: NavbarProps) {
                     </ul>
                   </div>
                 ))}
+                <ShopSuggestions variant="desktop" onNavigate={() => setShopOpen(false)} />
                 <div className="flex flex-col justify-between border-l border-[var(--border)] pl-8">
                   <p className="font-crimson italic text-sm text-[var(--text-mid)]">
                     Handcrafted shringar and pooja essentials for your beloved deity.
@@ -382,6 +381,7 @@ export function Navbar({ settings }: NavbarProps) {
                         </div>
                       </div>
                     ))}
+                    <ShopSuggestions variant="mobile" count={4} onNavigate={() => setMobileOpen(false)} />
                   </div>
                 )}
               </div>

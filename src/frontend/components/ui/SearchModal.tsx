@@ -17,7 +17,7 @@ interface SearchModalProps {
   onClose: () => void;
 }
 
-interface SearchItem {
+export interface SearchItem {
   _id: string;
   name: string;
   slug: { current: string };
@@ -34,9 +34,9 @@ interface SearchItem {
 const MAX_SUGGESTIONS = 8;
 const POPULAR = ['Mukut', 'Haar', 'Bangles', 'Radha Krishna', 'Laddu Gopal', 'Attar'];
 
-// Fetched once per page session and shared by every open of the modal.
+// Fetched once per page session and shared by every open of the modal (and the Shop menu suggestions).
 let indexPromise: Promise<SearchItem[]> | null = null;
-function loadIndex() {
+export function loadSearchIndex() {
   if (!indexPromise) {
     indexPromise = client.fetch<SearchItem[]>(SEARCH_INDEX_QUERY).catch((err) => {
       indexPromise = null;
@@ -97,7 +97,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
     if (!isOpen || index) return;
     let cancelled = false;
     setError(false);
-    loadIndex()
+    loadSearchIndex()
       .then((data) => { if (!cancelled) setIndex(data); })
       .catch(() => { if (!cancelled) setError(true); });
     return () => { cancelled = true; };

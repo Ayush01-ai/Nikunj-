@@ -74,7 +74,7 @@ export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) 
             >
               {/* Quote mark */}
               <span className="absolute top-4 left-5 font-crimson text-6xl text-gold-light/60 leading-none select-none">
-                "
+                &ldquo;
               </span>
 
               {/* Stars */}
@@ -86,7 +86,7 @@ export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) 
 
               {/* Review */}
               <p className="font-crimson italic text-sm text-[var(--text-mid)] leading-7 mb-5 pt-4">
-                "{t.review}"
+                &ldquo;{t.review}&rdquo;
               </p>
 
               {/* Product */}

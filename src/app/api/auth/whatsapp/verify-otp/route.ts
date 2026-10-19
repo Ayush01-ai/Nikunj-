@@ -2,11 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/backend/lib/mongodb';
 import { Otp } from '@/backend/models/Otp';
 import { User, ensureUserIndexes } from '@/backend/models/User';
-import { isValidPhone, sanitizePhone, safeEqual } from '@/backend/lib/auth';
+import { isValidPhone, sanitizePhone } from '@/backend/lib/auth';
+import { otpMatches } from '@/backend/lib/otpHash';
 import { sessionResponse, syncAdminRole } from '@/backend/lib/session';
 import { isClerkConfigured } from '@/backend/lib/clerkConfig';
+import { createRateLimiter, clientIp } from '@/backend/lib/rateLimit';
 
 const MAX_ATTEMPTS = 5;
+
+// Per-IP guard: the per-phone MAX_ATTEMPTS above already stops brute-forcing one OTP,
+// but without this a caller could spread guesses across many phone numbers from a
+// single IP. Mirrors the limiter already used by the guest-verify confirm-otp route.
+const isIpLimited = createRateLimiter(30, 60 * 60 * 1000, 'api/auth/whatsapp/verify-otp:isIpLimited'); // 30 requests / hour / IP
+const loginOtpScope = { purpose: { $ne: 'guest_payment' }, channel: 'whatsapp' };
 // Short-lived: the client must redeem this ticket immediately via Clerk's `ticket`
 // sign-in strategy to turn it into a real Clerk session.
 const SIGN_IN_TOKEN_TTL_SECONDS = 120;
@@ -29,6 +37,10 @@ const SIGN_IN_TOKEN_TTL_SECONDS = 120;
  */
 export async function POST(req: NextRequest) {
   try {
+    if (await isIpLimited(clientIp(req))) {
+      return NextResponse.json({ success: false, error: 'Too many requests. Please try again later.' }, { status: 429 });
+    }
+
     const body = await req.json();
     const rawPhone = body?.phone;
     const otpInput = String(body?.otp || '').trim();
@@ -43,25 +55,30 @@ export async function POST(req: NextRequest) {
     const phone = sanitizePhone(String(rawPhone));
     await connectDB();
 
-    const record = await Otp.findOne({ phone, channel: 'whatsapp' }).sort({ createdAt: -1 });
+    // Atomically claim the attempt so concurrent requests cannot overwrite each
+    // other's counter update.
+    const record = await Otp.findOneAndUpdate(
+      { phone, ...loginOtpScope, expiresAt: { $gt: new Date() }, attempts: { $lt: MAX_ATTEMPTS } },
+      { $inc: { attempts: 1 } },
+      { new: true, sort: { createdAt: -1 } },
+    );
     if (!record) {
+      const latest = await Otp.findOne({ phone, ...loginOtpScope }).sort({ createdAt: -1 });
+      if (latest && new Date() > latest.expiresAt) {
+        await Otp.deleteMany({ phone, ...loginOtpScope });
+        return NextResponse.json({ success: false, error: 'OTP expired. Please request a new one.' }, { status: 400 });
+      }
+      if (latest && latest.attempts >= MAX_ATTEMPTS) {
+        await Otp.deleteMany({ phone, ...loginOtpScope });
+        return NextResponse.json(
+          { success: false, error: 'Too many failed attempts. Please request a new OTP.' },
+          { status: 429 },
+        );
+      }
       return NextResponse.json({ success: false, error: 'No OTP found. Please request a new one.' }, { status: 400 });
     }
-    if (new Date() > record.expiresAt) {
-      await Otp.deleteMany({ phone, channel: 'whatsapp' });
-      return NextResponse.json({ success: false, error: 'OTP expired. Please request a new one.' }, { status: 400 });
-    }
 
-    record.attempts += 1;
-    await record.save();
-    if (record.attempts > MAX_ATTEMPTS) {
-      await Otp.deleteMany({ phone, channel: 'whatsapp' });
-      return NextResponse.json(
-        { success: false, error: 'Too many failed attempts. Please request a new OTP.' },
-        { status: 429 },
-      );
-    }
-    if (!safeEqual(record.otp, otpInput)) {
+    if (!otpMatches(record.otp, otpInput)) {
       const remaining = MAX_ATTEMPTS - record.attempts;
       return NextResponse.json(
         { success: false, error: `Invalid OTP. ${remaining > 0 ? `${remaining} attempts remaining.` : ''}` },
@@ -69,7 +86,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await Otp.deleteMany({ phone, channel: 'whatsapp' });
+    await Otp.deleteMany({ phone, ...loginOtpScope });
 
     await ensureUserIndexes();
     let user = await User.findOne({ phone });
@@ -79,6 +96,8 @@ export async function POST(req: NextRequest) {
       user.authProviders = Array.from(new Set([...(user.authProviders ?? []), 'whatsapp' as const]));
       await user.save();
     }
+    user.whatsappLoginAt = new Date();
+    await user.save();
     await syncAdminRole(user);
 
     if (isClerkConfigured()) {
@@ -109,7 +128,7 @@ export async function POST(req: NextRequest) {
         // redeem the Clerk ticket), without claiming a Clerk session exists yet.
         const res = NextResponse.json({ success: true, clerkTicket: signInToken.token, user: { phone: user.phone } });
         const { setSessionCookie } = await import('@/backend/lib/session');
-        setSessionCookie(res, user);
+        setSessionCookie(res, user, 'whatsapp');
         return res;
       } catch (err) {
         console.error('[whatsapp verify-otp] Clerk bridge failed, using legacy session only', err);
@@ -117,7 +136,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return sessionResponse(user);
+    return sessionResponse(user, 'Login successful', 'whatsapp');
   } catch (error) {
     console.error('[whatsapp verify-otp]', error);
     return NextResponse.json({ success: false, error: 'Verification failed. Try again.' }, { status: 500 });

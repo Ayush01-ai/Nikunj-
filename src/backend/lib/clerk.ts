@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 import { connectDB } from '@/backend/lib/mongodb';
 import { User, type IUser } from '@/backend/models/User';
 import { syncAdminRole } from '@/backend/lib/session';
-import { AuthError, requireAuth, type AuthPayload } from '@/backend/lib/auth';
+import { AuthError, requireAuth, type AuthPayload, type LoginMethod } from '@/backend/lib/auth';
 import { isClerkConfigured } from '@/backend/lib/clerkConfig';
 
 export { isClerkConfigured };
@@ -74,17 +74,43 @@ async function getOrLinkMongoUser(clerkUserId: string): Promise<IUser> {
  * Intentionally separate from `requireAuth`/`requireAdmin` (which remain untouched) so
  * existing protected routes keep their exact current behavior unless a route opts in.
  */
+const WHATSAPP_SESSION_WINDOW_MS = 10 * 60 * 1000;
+
+/**
+ * Clerk does not expose which strategy created a session, so the method is derived from data the
+ * server controls: a session created within minutes of a successful WhatsApp OTP (which the server
+ * records on the user and bridges via a sign-in ticket) is a WhatsApp session; otherwise a Clerk
+ * session belongs to a Google or email/password sign-in, both of which verify the account email.
+ */
+export async function clerkSessionMethod(
+  user: Pick<IUser, 'whatsappLoginAt' | 'emailVerified'>,
+  sessionId: string | null | undefined,
+): Promise<LoginMethod | undefined> {
+  if (user.whatsappLoginAt && sessionId) {
+    try {
+      const client = await clerkClient();
+      const session = await client.sessions.getSession(sessionId);
+      if (Math.abs(session.createdAt - user.whatsappLoginAt.getTime()) <= WHATSAPP_SESSION_WINDOW_MS) return 'whatsapp';
+    } catch {
+      return undefined;
+    }
+  }
+  return user.emailVerified ? 'email' : undefined;
+}
+
 export async function requireAuthHybrid(req: NextRequest): Promise<AuthPayload> {
   if (isClerkConfigured()) {
     try {
-      const { userId: clerkUserId } = await auth();
+      const { userId: clerkUserId, sessionId } = await auth();
       if (clerkUserId) {
         const mongoUser = await getOrLinkMongoUser(clerkUserId);
         await syncAdminRole(mongoUser);
+        const method = await clerkSessionMethod(mongoUser, sessionId);
         return {
           userId: mongoUser._id.toString(),
           phone: mongoUser.phone ?? '',
           role: mongoUser.role,
+          ...(method ? { method } : {}),
         };
       }
     } catch (err) {

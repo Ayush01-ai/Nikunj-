@@ -5,12 +5,12 @@ import { hashPassword, safeEqual } from '@/backend/lib/auth';
 import { createRateLimiter, clientIp } from '@/backend/lib/rateLimit';
 import { hashResetToken, isValidEmail, normalizeEmail, passwordProblem, sessionResponse } from '@/backend/lib/session';
 
-const isLimited = createRateLimiter(10, 15 * 60 * 1000);
+const isLimited = createRateLimiter(10, 15 * 60 * 1000, 'api/auth/reset-password:isLimited');
 const INVALID = 'This reset link is invalid or has expired. Please request a new one.';
 
 export async function POST(req: NextRequest) {
   try {
-    if (isLimited(clientIp(req))) {
+    if (await isLimited(clientIp(req))) {
       return NextResponse.json({ success: false, error: 'Too many attempts. Please try again later.' }, { status: 429 });
     }
     const body = await req.json().catch(() => ({}));
@@ -38,10 +38,12 @@ export async function POST(req: NextRequest) {
     user.passwordHash = await hashPassword(password);
     user.resetTokenHash = undefined;
     user.resetTokenExpires = undefined;
+    // The reset link was delivered to this address, so completing it proves control of the mailbox.
+    user.emailVerified = true;
     user.authProviders = Array.from(new Set([...(user.authProviders ?? []), 'email' as const]));
     await user.save();
 
-    return sessionResponse(user, 'Password updated');
+    return sessionResponse(user, 'Password updated', 'email');
   } catch (error) {
     console.error('[reset-password]', error);
     return NextResponse.json({ success: false, error: 'Could not reset password. Try again.' }, { status: 500 });

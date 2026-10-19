@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { ScrollReset } from '@/frontend/providers/ScrollReset';
 import { AuthBootstrap } from '@/frontend/providers/AuthBootstrap';
+import { AnalyticsTracker } from '@/frontend/providers/AnalyticsTracker';
 import { useWishlistStore } from '@/frontend/store/wishlistStore';
 import type { NavMenuCategory, SiteSettings } from '@/types';
 
@@ -37,6 +38,7 @@ export function Providers({
     <SiteSettingsContext.Provider value={{ settings: siteSettings, menu }}>
       <AuthBootstrap />
       <ScrollReset />
+      <AnalyticsTracker />
       {children}
       <Toaster
         position="top-right"

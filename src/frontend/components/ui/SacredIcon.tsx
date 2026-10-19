@@ -118,7 +118,6 @@ export function SacredPlaceholder({
   return (
     <div
       className={`flex flex-col items-center justify-center text-center p-4 select-none ${className}`}
-      aria-label={label}
     >
       <div className="relative flex items-center justify-center mb-2">
         <div className="absolute inset-0 rounded-full bg-gold/10 blur-md" />
