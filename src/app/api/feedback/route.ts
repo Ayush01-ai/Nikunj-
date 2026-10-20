@@ -1,22 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'node:crypto';
-import { z } from 'zod';
 import sanitizeHtml from 'sanitize-html';
+import { feedbackApiSchema as feedbackSchema } from '@/frontend/lib/formSchemas';
 import { writeClient } from '@/cms/lib/client';
 import { isValidPhone, sanitizePhone } from '@/backend/lib/auth';
 import { clientIp, createRateLimiter } from '@/backend/lib/rateLimit';
 
-const feedbackSchema = z.object({
-  name: z.string().trim().min(2).max(80),
-  phone: z.string().trim().max(20),
-  rating: z.coerce.number().int().min(1).max(5),
-  product: z.string().trim().max(100).optional(),
-  message: z.string().trim().min(10).max(500),
-  website: z.string().max(200).optional(), // honeypot
-});
-
 // Best-effort, per-instance limiter: 3 submissions per 10 minutes per IP and per phone.
-const isRateLimited = createRateLimiter(3, 10 * 60 * 1000);
+const isRateLimited = createRateLimiter(3, 10 * 60 * 1000, 'api/feedback:isRateLimited');
 
 const plain = (v: string) => sanitizeHtml(v, { allowedTags: [], allowedAttributes: {} }).replace(/\s+/g, ' ').trim();
 
@@ -51,7 +42,7 @@ export async function POST(req: NextRequest) {
   const cleanPhone = sanitizePhone(phone);
 
   const ip = clientIp(req);
-  if (isRateLimited(`ip:${ip}`) || isRateLimited(`phone:${cleanPhone}`)) {
+  if (await isRateLimited(`ip:${ip}`) || await isRateLimited(`phone:${cleanPhone}`)) {
     return NextResponse.json(
       { success: false, error: 'Too many submissions. Please try again later.' },
       { status: 429 },

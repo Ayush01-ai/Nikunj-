@@ -9,6 +9,7 @@ import { useCartStore } from '@/frontend/store/cartStore';
 import { useAuthStore } from '@/frontend/store/authStore';
 import { useSiteSettings } from '@/frontend/providers/Providers';
 import { SearchModal } from '@/frontend/components/ui/SearchModal';
+import { ShopSuggestions } from '@/frontend/components/layout/ShopSuggestions';
 import { NikunjSakhiLogo } from '@/frontend/components/ui/NikunjSakhiLogo';
 import type { SiteSettings } from '@/types';
 
@@ -160,16 +161,22 @@ export function Navbar({ settings }: NavbarProps) {
             : 'bg-cream/90 backdrop-blur-sm border-b border-[var(--border)]'
           }
         `}
-        initial={{ y: -80 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.6, ease: 'easeOut' }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 md:h-20">
+          <div className={`flex items-center justify-between transition-[height] duration-500 ${scrolled ? 'h-14 md:h-16' : 'h-16 md:h-[76px]'}`}>
 
-            {/* Logo */}
-            <Link href="/" className="flex items-center group flex-shrink-0" aria-label="Nikunj Sakhi – Home">
-              <NikunjSakhiLogo className="w-52 sm:w-64" variant="light" />
+            {/* Logo sits fully inside the bar so it never overlaps page content below */}
+            <Link
+              href="/"
+              className="group relative z-10 flex-shrink-0 flex items-center h-full py-1 mr-4"
+              aria-label="Nikunj Sakhi – Home"
+            >
+              <NikunjSakhiLogo
+                className={`transition-all duration-500 group-hover:scale-[1.03] ${
+                  scrolled ? 'h-[50px] md:h-[58px]' : 'h-[56px] md:h-[68px]'
+                }`}
+                variant="light"
+              />
             </Link>
 
             {/* Desktop Nav Links */}
@@ -180,7 +187,7 @@ export function Navbar({ settings }: NavbarProps) {
                   aria-expanded={shopOpen}
                   aria-controls="shop-menu"
                   onClick={() => setShopOpen((o) => !o)}
-                  className={`nav-link inline-flex items-center gap-1 text-xs font-semibold tracking-widest cursor-pointer ${isShopRoute ? 'text-gold-dark after:w-full' : ''}`}
+                  className={`nav-link inline-flex items-center gap-1 text-[11px] font-medium tracking-[0.18em] cursor-pointer ${isShopRoute ? 'text-gold-dark after:w-full' : ''}`}
                 >
                   Shop <ChevronDown size={12} className={`transition-transform ${shopOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
                 </button>
@@ -194,7 +201,7 @@ export function Navbar({ settings }: NavbarProps) {
                       href={link.href}
                       aria-current={isActive ? 'page' : undefined}
                       onClick={(event) => handleSectionNav(event, link.href)}
-                      className={`nav-link text-xs font-semibold tracking-widest ${isActive ? 'text-gold-dark after:w-full' : ''}`}
+                      className={`nav-link text-[11px] font-medium tracking-[0.18em] ${isActive ? 'text-gold-dark after:w-full' : ''}`}
                     >
                       {link.label}
                     </Link>
@@ -236,10 +243,10 @@ export function Navbar({ settings }: NavbarProps) {
               <button
                 onClick={openCart}
                 aria-label={`Cart (${cartCount} items)`}
-                className="relative flex items-center gap-2 border border-gold text-gold-dark bg-transparent px-4 py-2.5 font-cinzel text-xs tracking-widest uppercase hover:bg-gold-dark hover:text-white transition-colors cursor-pointer rounded-xs focus-visible:ring-2 focus-visible:ring-gold/50"
+                className="relative flex items-center gap-2 border border-gold text-gold-dark bg-transparent px-3.5 py-2 font-cinzel text-[11px] tracking-[0.18em] uppercase hover:bg-gold-dark hover:text-white transition-colors cursor-pointer rounded-xs focus-visible:ring-2 focus-visible:ring-gold/50"
               >
                 <ShoppingBag size={16} />
-                <span className="hidden sm:inline font-semibold">Cart</span>
+                <span className="hidden sm:inline font-medium">Cart</span>
                 {cartCount > 0 && (
                   <motion.span
                     key={cartCount}
@@ -254,7 +261,7 @@ export function Navbar({ settings }: NavbarProps) {
 
               {/* Hamburger */}
               <button
-                className="lg:hidden p-2 text-[var(--text-mid)] cursor-pointer rounded-xs focus-visible:ring-2 focus-visible:ring-gold/50"
+                className="lg:hidden p-2 text-[var(--text-mid)] hover:text-gold transition-colors cursor-pointer rounded-xs focus-visible:ring-2 focus-visible:ring-gold/50"
                 onClick={() => setMobileOpen(true)}
                 aria-label="Open menu"
               >
@@ -300,12 +307,13 @@ export function Navbar({ settings }: NavbarProps) {
                     </ul>
                   </div>
                 ))}
+                <ShopSuggestions variant="desktop" onNavigate={() => setShopOpen(false)} />
                 <div className="flex flex-col justify-between border-l border-[var(--border)] pl-8">
                   <p className="font-crimson italic text-sm text-[var(--text-mid)]">
                     Handcrafted shringar and pooja essentials for your beloved deity.
                   </p>
                   <Link href="/collections" className="btn-outline-gold self-start mt-4">
-                    Shop All
+                    Shop Products
                   </Link>
                 </div>
               </div>
@@ -348,7 +356,7 @@ export function Navbar({ settings }: NavbarProps) {
                 {mobileShopOpen && (
                   <div className="mt-4 space-y-4 text-left border-y border-[var(--border)] py-4">
                     <Link href="/collections" onClick={() => setMobileOpen(false)} className="block font-cinzel text-xs tracking-widest uppercase text-gold-dark">
-                      Shop All
+                      Shop Products
                     </Link>
                     {menu.map((cat) => (
                       <div key={cat._id}>
@@ -373,6 +381,7 @@ export function Navbar({ settings }: NavbarProps) {
                         </div>
                       </div>
                     ))}
+                    <ShopSuggestions variant="mobile" count={4} onNavigate={() => setMobileOpen(false)} />
                   </div>
                 )}
               </div>

@@ -9,9 +9,9 @@ export function FooterShopLinks() {
 
   return (
     <div>
-      <h3 className="font-cinzel text-xs tracking-[0.2em] uppercase text-gold-light mb-5 font-semibold">
+      <h2 className="font-cinzel text-sm tracking-wide text-gold-light mb-5 font-semibold">
         Shop by Category
-      </h3>
+      </h2>
       <ul className="space-y-3 text-xs">
         {menu.map((cat) => (
           <li key={cat._id}>

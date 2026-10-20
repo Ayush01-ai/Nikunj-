@@ -1,5 +1,6 @@
 import type { Config } from 'tailwindcss';
 import { fontFamily } from 'tailwindcss/defaultTheme';
+import typographyPlugin from '@tailwindcss/typography';
 
 const config: Config = {
   content: [
@@ -54,6 +55,7 @@ const config: Config = {
         montserrat: ['var(--font-montserrat)', 'Montserrat', ...fontFamily.sans],
         'great-vibes': ['var(--font-great-vibes)', 'Great Vibes', 'cursive'],
         sacramento: ['var(--font-great-vibes)', 'Sacramento', 'cursive'],
+        namaste: ['var(--font-yatra)', 'Yatra One', 'serif'],
       },
       backgroundImage: {
         'gold-gradient': 'linear-gradient(135deg, #C9922A 0%, #E8C16A 50%, #C9922A 100%)',
@@ -120,8 +122,9 @@ const config: Config = {
     },
   },
   plugins: [
-    require('@tailwindcss/typography'),
-    require('@tailwindcss/aspect-ratio'),
+    typographyPlugin,
+    // @tailwindcss/aspect-ratio is intentionally NOT loaded: it disables Tailwind's native
+    // `aspect-*` utilities, which collapsed the product-page image to 0px height.
   ],
 };
 

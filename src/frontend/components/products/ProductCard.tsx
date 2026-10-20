@@ -4,14 +4,15 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Heart, ShoppingBag, Eye } from 'lucide-react';
+import { Heart, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { urlFor } from '@/cms/lib/image';
 import { useCartStore } from '@/frontend/store/cartStore';
-import { useWishlistStore } from '@/frontend/store/wishlistStore';
+import { useWishlistStore, useWishlistHydrated } from '@/frontend/store/wishlistStore';
 import { ProductQuickModal } from '@/frontend/components/products/ProductQuickModal';
 import { SacredPlaceholder } from '@/frontend/components/ui/SacredIcon';
 import { getProductHref, needsChoice, toCartItem } from '@/frontend/lib/product';
+import { lowestPricing } from '@/cms/lib/pricing';
 import type { Product } from '@/types';
 
 interface ProductCardProps {
@@ -25,15 +26,32 @@ export function ProductCard({ product, index = 0, inView = true }: ProductCardPr
   const [modalOpen, setModalOpen] = useState(false);
   const { addItem } = useCartStore();
   const { toggleWishlist, isWishlisted } = useWishlistStore();
-  const wished = isWishlisted(product._id);
+  const wishlistReady = useWishlistHydrated();
+  const wished = wishlistReady && isWishlisted(product._id);
 
-  const images = product.images || [];
-  const primaryImage = images[0];
-  const hoverImage = images[1] || images[0];
+  const images = React.useMemo(() => {
+    const seen = new Set<string>();
+    return [...(product.images || []), ...(product.colors || []).map((c) => c.image)]
+      .filter((img): img is NonNullable<typeof img> => !!img?.asset)
+      .filter((img) => {
+        const key = img.asset._id || img.asset.url;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+  }, [product.images, product.colors]);
+  const [imgIndex, setImgIndex] = useState(0);
+  const activeImage = images[imgIndex] || images[0];
+  const hasMany = images.length > 1;
 
-  const discount = product.originalPrice
-    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
-    : 0;
+  const stepImage = (e: React.MouseEvent, dir: 1 | -1) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setImgIndex((i) => (i + dir + images.length) % images.length);
+  };
+
+  const pricing = lowestPricing(product);
+  const discount = pricing.discount;
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -65,25 +83,47 @@ export function ProductCard({ product, index = 0, inView = true }: ProductCardPr
       >
         {/* Image */}
         <Link href={getProductHref(product)} className="block relative overflow-hidden product-image-ratio bg-cream">
-          {primaryImage?.asset ? (
+          {activeImage ? (
             <>
-              {/* Primary image */}
-              <Image
-                src={urlFor(primaryImage).width(500).height(625).quality(80).url()}
-                alt={primaryImage.alt || product.name}
-                fill
-                className={`object-cover transition-all duration-700 ${hovered && hoverImage !== primaryImage ? 'opacity-0' : 'opacity-100'}`}
-                sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-              />
-              {/* Hover image */}
-              {hoverImage && hoverImage !== primaryImage && (
+              {images.map((img, i) => (
                 <Image
-                  src={urlFor(hoverImage).width(500).height(625).quality(80).url()}
-                  alt={hoverImage.alt || product.name}
+                  key={img.asset._id || i}
+                  src={urlFor(img).width(500).height(625).quality(80).url()}
+                  alt={img.alt || product.name}
                   fill
-                  className={`object-cover transition-all duration-700 absolute inset-0 ${hovered ? 'opacity-100' : 'opacity-0'}`}
+                  loading={i === 0 ? undefined : 'lazy'}
+                  className={`object-cover transition-opacity duration-500 ${i === imgIndex ? 'opacity-100' : 'opacity-0'}`}
                   sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
                 />
+              ))}
+
+              {hasMany && (
+                <>
+                  <button
+                    type="button"
+                    onClick={(e) => stepImage(e, -1)}
+                    aria-label="Previous image"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 z-[2] w-8 h-8 rounded-full bg-white/90 text-deep shadow-xs flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:bg-gold hover:text-white transition-all cursor-pointer focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-gold/50"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => stepImage(e, 1)}
+                    aria-label="Next image"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 z-[2] w-8 h-8 rounded-full bg-white/90 text-deep shadow-xs flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:bg-gold hover:text-white transition-all cursor-pointer focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-gold/50"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                  <div className={`absolute left-1/2 -translate-x-1/2 z-[2] flex gap-1.5 transition-all duration-200 ${hovered ? 'bottom-12' : 'bottom-2.5'}`} aria-hidden="true">
+                    {images.map((_, i) => (
+                      <span
+                        key={i}
+                        className={`h-1.5 rounded-full transition-all ${i === imgIndex ? 'w-4 bg-gold' : 'w-1.5 bg-white/80'}`}
+                      />
+                    ))}
+                  </div>
+                </>
               )}
             </>
           ) : (
@@ -128,23 +168,16 @@ export function ProductCard({ product, index = 0, inView = true }: ProductCardPr
 
           {/* Quick view overlay */}
           <motion.div
-            className="absolute inset-x-0 bottom-0 bg-deep/80 backdrop-blur-sm py-3 flex items-center justify-center gap-2"
+            className="absolute inset-x-0 bottom-0 z-[3] bg-deep/80 backdrop-blur-sm py-3 flex items-center justify-center"
             initial={{ y: '100%' }}
             animate={{ y: hovered ? '0%' : '100%' }}
             transition={{ duration: 0.2 }}
           >
             <button
-              onClick={(e) => { e.preventDefault(); setModalOpen(true); }}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setModalOpen(true); }}
               className="flex items-center gap-1.5 text-white font-cinzel text-[9px] tracking-widest uppercase hover:text-gold-light transition-colors cursor-pointer"
             >
               <Eye size={12} /> Quick View
-            </button>
-            <span className="text-white/30">|</span>
-            <button
-              onClick={handleAddToCart}
-              className="flex items-center gap-1.5 text-white font-cinzel text-[9px] tracking-widest uppercase hover:text-gold-light transition-colors cursor-pointer"
-            >
-              <ShoppingBag size={12} /> Add to Cart
             </button>
           </motion.div>
         </Link>
@@ -168,11 +201,12 @@ export function ProductCard({ product, index = 0, inView = true }: ProductCardPr
           {/* Price */}
           <div className="flex items-center gap-2 mb-3">
             <span className="font-cinzel text-sm sm:text-base font-bold text-gold-dark tracking-wide">
-              ₹{product.price.toLocaleString('en-IN')}
+              {pricing.hasRange && <span className="text-[10px] font-normal text-[var(--text-mid)] mr-1">From</span>}
+              ₹{pricing.price.toLocaleString('en-IN')}
             </span>
-            {product.originalPrice && (
+            {pricing.mrp && pricing.mrp > pricing.price && (
               <span className="text-xs text-gray-400 line-through">
-                ₹{product.originalPrice.toLocaleString('en-IN')}
+                ₹{pricing.mrp.toLocaleString('en-IN')}
               </span>
             )}
           </div>

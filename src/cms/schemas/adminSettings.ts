@@ -27,6 +27,37 @@ export const adminSettings = defineType({
       of: [defineArrayMember({ type: 'string', validation: (R) => R.regex(MOBILE, { name: '10-digit Indian mobile number' }) })],
       validation: (R) => R.unique(),
     }),
+    defineField({
+      name: 'deliveryPartnerName',
+      title: 'Delivery Partner',
+      type: 'string',
+      description: 'Your usual courier / pickup person, e.g. Delhivery, Shiprocket, India Post, local rider.',
+    }),
+    defineField({
+      name: 'deliveryPartnerWhatsApp',
+      title: 'Delivery Partner WhatsApp Number',
+      type: 'string',
+      description:
+        '10-digit number (no +91). The "Send to Delivery Partner" button on an order opens WhatsApp to this number with the address, items and COD amount.',
+      validation: (R) => R.regex(MOBILE, { name: '10-digit Indian mobile number' }),
+    }),
+    defineField({
+      name: 'returnWindowDays',
+      title: 'Return Window (days after delivery)',
+      type: 'number',
+      initialValue: 7,
+      description: 'The Orders Dashboard flags return requests made after this many days from delivery.',
+      validation: (R) => R.min(0).max(60).integer(),
+    }),
+    defineField({
+      name: 'refundDeliveryCharge',
+      title: 'Refund delivery / COD charges too',
+      type: 'boolean',
+      initialValue: false,
+      description:
+        'OFF (recommended): refunds return only the item value — delivery / COD charges are kept, and customers are told this politely before they cancel or return. ' +
+        'ON: the full amount paid is refunded. You can still switch between "Full" and "Items only" for any single refund in the Orders Dashboard.',
+    }),
   ],
   preview: { prepare: () => ({ title: 'Admin Access' }) },
 });

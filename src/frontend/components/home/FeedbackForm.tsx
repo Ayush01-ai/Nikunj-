@@ -8,16 +8,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { CheckCircle, Star } from 'lucide-react';
 import { Button } from '@/frontend/components/ui/button';
+import { feedbackFormSchema as feedbackSchema } from '@/frontend/lib/formSchemas';
 import type { Testimonial } from '@/types';
 
-const feedbackSchema = z.object({
-  name: z.string().min(2, 'Name required').max(80),
-  phone: z.string().regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit mobile number'),
-  rating: z.string().min(1, 'Please select a rating'),
-  product: z.string().max(100).optional(),
-  message: z.string().min(10, 'Please write at least 10 characters').max(500),
-  website: z.string().optional(),
-});
 
 type FeedbackFormData = z.infer<typeof feedbackSchema>;
 
@@ -109,7 +102,7 @@ export function FeedbackForm({ reviews = [], showReviews = true, showForm = true
           className={`grid grid-cols-1 gap-10 items-start ${twoColumns ? 'lg:grid-cols-2' : 'max-w-xl mx-auto'}`}
         >
           {showReviews && (
-          <div id="reviews" className="scroll-mt-28">
+          <div id="reviews" className="scroll-mt-16 md:scroll-mt-20">
             <h3 className="font-cinzel text-sm tracking-[0.2em] uppercase text-gold-dark font-semibold mb-5 pb-3 border-b border-gold/20">
               Visible Feedback
             </h3>
@@ -125,7 +118,7 @@ export function FeedbackForm({ reviews = [], showReviews = true, showForm = true
             {visibleReviews.map((review) => (
               <li key={review._id}>
               <article className="bg-white/75 backdrop-blur-xs border border-gold/20 p-5 sm:p-6 shadow-xs rounded-xs">
-                <div className="flex items-center gap-1 mb-3" aria-label={`${review.rating} out of 5 stars`}>
+                <div className="flex items-center gap-1 mb-3" role="img" aria-label={`${review.rating} out of 5 stars`}>
                   {Array.from({ length: 5 }, (_, i) => (
                     <span
                       key={`${review._id}-${i}`}
@@ -169,7 +162,7 @@ export function FeedbackForm({ reviews = [], showReviews = true, showForm = true
           )}
 
           {showForm && (
-          <div id="feedback" className="scroll-mt-28">
+          <div id="feedback" className="scroll-mt-16 md:scroll-mt-20">
           <h3 className="font-cinzel text-sm tracking-[0.2em] uppercase text-gold-dark font-semibold mb-5 pb-3 border-b border-gold/20">
             Share Your Feedback
           </h3>

@@ -1,63 +1,20 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createRazorpayOrder } from '@/backend/lib/razorpay';
-import { requireAuth } from '@/backend/lib/auth';
-import { connectDB } from '@/backend/lib/mongodb';
-import { Order } from '@/backend/models/Order';
+import { NextResponse } from 'next/server';
 
-export async function POST(req: NextRequest) {
-  try {
-    // Auth optional — allow guest checkout with phone verification
-    let userId: string | undefined;
-    try {
-      const payload = requireAuth(req);
-      userId = payload.userId;
-    } catch {
-      // Guest checkout allowed
-    }
-
-    const body = await req.json();
-    const { orderId } = body;
-
-    if (!orderId || typeof orderId !== 'string') {
-      return NextResponse.json({ success: false, error: 'Order ID is required.' }, { status: 400 });
-    }
-
-    await connectDB();
-    const order = await Order.findOne({ orderId });
-    if (!order) {
-      return NextResponse.json({ success: false, error: 'Order not found.' }, { status: 404 });
-    }
-
-    if (order.paymentStatus === 'paid') {
-      return NextResponse.json({ success: false, error: 'Order has already been paid.' }, { status: 400 });
-    }
-    if (order.paymentMethod === 'cod') {
-      return NextResponse.json({ success: false, error: 'Order is Cash on Delivery.' }, { status: 400 });
-    }
-    if (order.userId && order.userId.toString() !== userId) {
-      return NextResponse.json({ success: false, error: 'Access denied.' }, { status: 403 });
-    }
-
-    const razorpayOrder = await createRazorpayOrder({
-      amount: order.total,
-      receipt: orderId.slice(0, 40),
-      notes: { orderId, ...(userId && { userId }) },
-    });
-
-    order.razorpayOrderId = razorpayOrder.id;
-    await order.save();
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        razorpayOrderId: razorpayOrder.id,
-        amount: razorpayOrder.amount,
-        currency: razorpayOrder.currency,
-        keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-      },
-    });
-  } catch (error) {
-    console.error('[payment/create]', error);
-    return NextResponse.json({ success: false, error: 'Failed to create payment order.' }, { status: 500 });
-  }
+/**
+ * Razorpay checkout has been retired — Cashfree (/api/payment/cashfree/create) is now the
+ * sole active payment gateway. This route intentionally never calls any Razorpay SDK
+ * method, so it stays safe to deploy even with zero Razorpay credentials configured, and
+ * it never creates a new Razorpay order. Any order that already has a `razorpayOrderId`
+ * from before this retirement can still be confirmed via the existing
+ * /api/payment/verify and /api/payment/webhook routes — only *new* Razorpay payments are
+ * blocked here.
+ */
+export async function POST() {
+  return NextResponse.json(
+    {
+      success: false,
+      error: 'Razorpay checkout has been retired. Please refresh and pay with Cashfree.',
+    },
+    { status: 410 },
+  );
 }

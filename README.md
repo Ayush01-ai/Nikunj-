@@ -79,37 +79,34 @@ After deploying, update `NEXT_PUBLIC_SITE_URL` to your live domain.
 ## Project Structure
 
 ```
-app/
-  page.tsx              # Homepage (server component)
-  products/             # Products listing + detail pages
-  checkout/             # 3-step checkout
-  confirmation/         # Order success page
-  login/                # OTP authentication
-  account/              # User dashboard
-  wishlist/             # Wishlist page
-  studio/               # Embedded Sanity Studio
-  api/
-    auth/               # OTP send & verify
-    orders/             # Order CRUD
-    payment/            # Razorpay create & verify
-    coupon/             # Coupon validation
+src/
+  app/                  # 1. Routes (Next.js App Router)
+    page.tsx            #    Homepage
+    products/ collections/ checkout/ confirmation/
+    login/ account/ wishlist/ track-order/ policies/
+    studio/             #    Embedded Sanity Studio
+    api/                #    Server API
+      auth/             #      OTP send / verify, logout
+      orders/           #      Order create / list / detail
+      payment/          #      Razorpay create, verify, webhook
+      coupon/ feedback/ track-order/
+  backend/              # 2. Server-only code
+    lib/                #    MongoDB, JWT auth, Razorpay, OTP
+    models/             #    Mongoose models (User, Order, Otp)
+  cms/                  # 3. Sanity CMS
+    schemas/            #    Content schemas
+    lib/                #    Client, image builder, GROQ queries
+    actions/ components/
+  frontend/             # 4. Browser UI
+    components/         #    home, layout, products, cart, ui, 3d
+    lib/                #    Product + className helpers
+    providers/          #    React providers
+    store/              #    Zustand stores (cart, auth, wishlist)
+  types/                # 5. Shared TypeScript types
 
-sanity/
-  schemas/              # Sanity content schemas
-  lib/                  # client, image builder, GROQ queries
-
-components/
-  3d/                   # Three.js Scene3D
-  home/                 # Homepage sections
-  layout/               # Navbar, Footer
-  products/             # ProductCard, ProductDetail, Filters
-  cart/                 # CartSidebar
-  ui/                   # WhatsAppFloat, SearchModal
-
-store/                  # Zustand stores (cart, auth, wishlist)
-models/                 # Mongoose models (User, Order, Otp)
-lib/                    # MongoDB, auth utilities, Razorpay
-types/                  # TypeScript interfaces
+public/                 # Static images, icons, manifest
+scripts/                # Operator scripts (seed, import products, migrate taxonomy, sync orders)
+docs/                   # Product requirement documents
 ```
 
 ## Design System

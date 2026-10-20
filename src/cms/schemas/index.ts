@@ -10,6 +10,7 @@ import { testimonial } from './testimonial';
 import { coupon } from './coupon';
 import { siteSettings } from './siteSettings';
 import { adminSettings } from './adminSettings';
+import { lead } from './lead';
 
 export const schema = {
   types: [
@@ -25,5 +26,6 @@ export const schema = {
     coupon,
     siteSettings,
     adminSettings,
+    lead,
   ],
 };

@@ -10,7 +10,7 @@ const whyItems = [
   { icon: Sparkles, title: 'Divine Craftsmanship', desc: 'Every ornament is handcrafted by skilled artisans with generations of sacred expertise.' },
   { icon: Gem, title: 'Pure & Authentic', desc: 'We use only authentic materials — pure silver, gold plated brass, and sacred metals.' },
   { icon: Truck, title: 'Free Delivery', desc: 'Free shipping on orders above ₹999. Fast, secure, and carefully packed.' },
-  { icon: ShieldCheck, title: 'Secure Payments', desc: 'All payments are 100% secure via Razorpay, UPI, and Cash on Delivery.' },
+  { icon: ShieldCheck, title: 'Secure Payments', desc: 'All payments are 100% secure via Cashfree, UPI, and Cash on Delivery.' },
   { icon: HeartHandshake, title: 'Made with Devotion', desc: 'Each piece is crafted with prayers and blessings for your beloved deity.' },
   { icon: RotateCcw, title: 'Easy Returns', desc: 'Hassle-free 7-day return policy. Your satisfaction is our priority.' },
 ];

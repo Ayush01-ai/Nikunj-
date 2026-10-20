@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect } from 'react';
 
 // Replaces the root layout when it fails, so it must render its own <html> and <body>.
@@ -25,7 +26,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
             >
               Try Again
             </button>
-            <a href="/" style={{ color: '#8B6010' }}>Return Home</a>
+            <Link href="/" style={{ color: '#8B6010' }}>Return Home</Link>
           </div>
         </main>
       </body>

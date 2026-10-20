@@ -108,6 +108,23 @@
     filter: blur(28px);
   }
 
+  /* Text in the logo colours: peacock teal flowing into antique gold */
+  .brand-gradient-text {
+    background: linear-gradient(100deg, #0b5f63 0%, #137a74 40%, #5f7a45 62%, #a8812b 82%, #c9922a 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: #0f6d6a;
+    filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.6));
+  }
+
+  .scrollbar-hide {
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
   /* Gold border glow */
   .border-gold-glow {
     border: 1px solid var(--gold);
@@ -146,6 +163,91 @@
     background-position: right center;
     transform: translateY(-2px);
     box-shadow: 0 8px 24px var(--gold-glow);
+  }
+
+  /* Light-brown (Buy-button gold) section heading bar with a slow shimmer sweep */
+  .heading-highlight {
+    @apply relative flex items-center gap-2 overflow-hidden font-cinzel font-bold uppercase text-white;
+    background: linear-gradient(110deg, var(--gold-dark) 0%, #B07D22 45%, #C9922A 55%, var(--gold-dark) 100%);
+    background-color: var(--gold-dark);
+    background-size: 220% 100%;
+    border-bottom: 2px solid #E8C16A;
+    text-shadow: 0 1px 1px rgba(74, 51, 8, 0.45);
+    animation: headingFlow 6s ease-in-out infinite;
+  }
+
+  .heading-highlight::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg, transparent 35%, rgba(255, 243, 204, 0.45) 50%, transparent 65%);
+    transform: translateX(-120%);
+    animation: headingShine 3.5s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  .heading-highlight svg,
+  .heading-highlight .heading-star {
+    color: #FFF3CC;
+    animation: headingTwinkle 2.4s ease-in-out infinite;
+  }
+
+  @keyframes headingFlow {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  @keyframes headingShine {
+    0% { transform: translateX(-120%); }
+    60%, 100% { transform: translateX(120%); }
+  }
+
+  @keyframes headingTwinkle {
+    0%, 100% { opacity: 1; transform: scale(1) rotate(0deg); }
+    50% { opacity: 0.7; transform: scale(1.18) rotate(12deg); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .heading-highlight,
+    .heading-highlight::after,
+    .heading-highlight svg,
+    .heading-highlight .heading-star,
+    .view-all-card,
+    .view-all-card::after,
+    .namaste-hands { animation: none; }
+  }
+
+  /* Home "View All Products" tile — same light-brown shimmer as the section headings */
+  .view-all-card {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(110deg, var(--gold-dark) 0%, #B07D22 45%, #C9922A 55%, var(--gold-dark) 100%);
+    background-color: var(--gold-dark);
+    background-size: 220% 100%;
+    text-shadow: 0 1px 1px rgba(74, 51, 8, 0.45);
+    animation: headingFlow 6s ease-in-out infinite;
+  }
+
+  .view-all-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg, transparent 35%, rgba(255, 243, 204, 0.45) 50%, transparent 65%);
+    transform: translateX(-120%);
+    animation: headingShine 3.5s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  /* Line-art praying hands beside "Namaste" on the login page */
+  .namaste-hands {
+    filter: drop-shadow(0 0 6px rgba(201, 146, 42, 0.25));
+    transform-origin: 50% 90%;
+    animation: namasteBow 3.6s ease-in-out infinite;
+  }
+
+  @keyframes namasteBow {
+    0%, 100% { transform: rotate(0deg) translateY(0); }
+    50% { transform: rotate(-4deg) translateY(1px); }
   }
 
   .btn-outline-gold {

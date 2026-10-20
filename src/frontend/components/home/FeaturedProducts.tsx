@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { CoverFlowCarousel } from '@/frontend/components/ui/3-d-coverflow-carousel';
@@ -36,7 +35,7 @@ export function FeaturedProducts({ allProducts, featured, bestsellers, newArriva
   const currentProducts = productMap[activeTab] || [];
 
   return (
-    <section id="products" className="py-20 px-4 sm:px-6 lg:px-8 bg-cream scroll-mt-24" ref={ref}>
+    <section id="products" className="py-20 px-4 sm:px-6 lg:px-8 bg-cream scroll-mt-16 md:scroll-mt-20" ref={ref}>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-10">
@@ -114,13 +113,6 @@ export function FeaturedProducts({ allProducts, featured, bestsellers, newArriva
             )}
           </motion.div>
         </AnimatePresence>
-
-        {/* View All */}
-        <div className="text-center mt-12">
-          <Link href="/collections" className="btn-outline-gold">
-            View All Products
-          </Link>
-        </div>
       </div>
     </section>
   );

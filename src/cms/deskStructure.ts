@@ -135,10 +135,40 @@ export const deskStructure = (S: StructureBuilder) =>
               ordersByStatus(S, 'ordersShipped', '🚚 Shipped', 'status == "shipped"'),
               ordersByStatus(S, 'ordersDelivered', '✅ Delivered', 'status == "delivered"'),
               ordersByStatus(S, 'ordersCancelled', '❌ Cancelled', 'status == "cancelled"'),
+              ordersByStatus(S, 'ordersReturns', '🔁 Returns in progress', 'status in ["return_requested", "return_approved", "returned"]'),
+              ordersByStatus(S, 'ordersRefunded', '💸 Refunded', 'status == "refunded" || paymentStatus == "refunded"'),
               ordersByStatus(S, 'ordersRefundDue', '💸 Refund due', 'paymentStatus == "refund_due"'),
               S.divider(),
               ordersByStatus(S, 'ordersAll', 'All Orders', 'true'),
             ]),
+        ),
+      S.listItem()
+        .id('leads')
+        .title('📱 Checkout Leads')
+        .child(
+          S.list()
+            .id('leads')
+            .title('Checkout Leads')
+            .items(
+              [
+                ['leadsOpen', '🛒 Did not order', 'converted != true'],
+                ['leadsConverted', '✅ Ordered', 'converted == true'],
+                ['leadsAll', 'All leads', 'true'],
+              ].map(([id, title, filter]) =>
+                S.listItem()
+                  .id(id)
+                  .title(title)
+                  .child(
+                    S.documentList()
+                      .id(id)
+                      .title(title)
+                      .schemaType('lead')
+                      .filter(`_type == "lead" && (${filter})`)
+                      .defaultOrdering([{ field: 'lastSeenAt', direction: 'desc' }])
+                      .initialValueTemplates([]),
+                  ),
+              ),
+            ),
         ),
       S.divider(),
       S.listItem()

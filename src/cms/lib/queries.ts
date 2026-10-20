@@ -41,6 +41,7 @@ const PRODUCT_TYPE_FIELDS = groq`
   displayOrder,
   appliesFacets,
   "image": image{${IMAGE_FIELDS}},
+  icon,
   "category": category->{_id, name, slug}
 `;
 
@@ -60,8 +61,14 @@ const PRODUCT_CARD_FIELDS = groq`
   "productType": productType->{_id, name, slug},
   "fragrance": fragrance->{_id, name, slug},
   shortDescription,
-  "price": coalesce(salePrice, price),
-  "originalPrice": coalesce(originalPrice, select(defined(salePrice) => price, null)),
+  // price = regular price (MRP), salePrice = discounted selling price.
+  // Legacy originalPrice is only used when it is genuinely above the selling price.
+  "price": select(defined(salePrice) && salePrice > 0 && salePrice < price => salePrice, price),
+  "originalPrice": select(
+    defined(salePrice) && salePrice > 0 && salePrice < price => price,
+    defined(originalPrice) && originalPrice > price => originalPrice,
+    null
+  ),
   "stock": coalesce(stockQuantity, stock, 0),
   inStock,
   isFeatured,
@@ -72,14 +79,13 @@ const PRODUCT_CARD_FIELDS = groq`
   "category": category->{_id, name, slug},
   "images": select(
     defined(images) && count(images) > 0 => images[]{${IMAGE_FIELDS}},
-    defined(galleryImages) && count(galleryImages) > 0 => galleryImages[]{${IMAGE_FIELDS}},
-    defined(mainImage) => [mainImage{${IMAGE_FIELDS}}],
-    []
+    [mainImage, ...coalesce(galleryImages[asset._ref != ^.mainImage.asset._ref], [])][defined(asset)]{${IMAGE_FIELDS}}
   ),
   material,
-  "sizes": sizes[defined(label)]{label, "priceModifier": coalesce(priceModifier, 0), stock},
-  "colors": colors[defined(label)]{label, hex},
+  "sizes": sizes[defined(label)]{label, "priceModifier": coalesce(priceModifier, 0), price, mrp, stock},
+  "colors": colors[defined(label)]{label, hex, price, mrp, "image": select(defined(image.asset) => image{${IMAGE_FIELDS}}, null)},
   careInstructions,
+  returnPolicy,
   specifications,
   seoTitle,
   seoDescription
@@ -93,7 +99,21 @@ const PRODUCT_FULL_FIELDS = groq`
 `;
 
 // Fields a shopper might type: "payal", "attar", "laddu gopal", "rose", a SKU…
-const SEARCHABLE = groq`[name, deity->name, productType->name, category->name, fragrance->name, sku]`;
+const SEARCHABLE = groq`[name, deity->name, productType->name, category->name, fragrance->name, sku, shortDescription, material]`;
+
+/**
+ * Turn free text into a GROQ match pattern where every word is a prefix
+ * ("radha haa" -> "radha* haa*"), so partial multi-word queries still match.
+ */
+export function toSearchPattern(input: string): string {
+  const words = input
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s-]/gu, ' ')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 8);
+  return words.map((w) => `${w}*`).join(' ');
+}
 
 // ─── Queries ────────────────────────────────────────────────────────────────
 
@@ -239,7 +259,7 @@ export const PRODUCTS_QUERY = groq`
     && ($deity == "" || deity->slug.current == $deity)
     && ($productType == "" || productType->slug.current == $productType)
     && ($fragrance == "" || fragrance->slug.current == $fragrance)
-    && ($search == "" || ${SEARCHABLE} match ($search + "*"))
+    && ($search == "" || ${SEARCHABLE} match $search)
     && ($minPrice == 0 || coalesce(salePrice, price) >= $minPrice)
     && ($maxPrice == 0 || coalesce(salePrice, price) <= $maxPrice)
     && (!$featuredOnly || isFeatured == true)
@@ -266,7 +286,7 @@ export const PRODUCTS_COUNT_QUERY = groq`
     && ($deity == "" || deity->slug.current == $deity)
     && ($productType == "" || productType->slug.current == $productType)
     && ($fragrance == "" || fragrance->slug.current == $fragrance)
-    && ($search == "" || ${SEARCHABLE} match ($search + "*"))
+    && ($search == "" || ${SEARCHABLE} match $search)
     && ($minPrice == 0 || coalesce(salePrice, price) >= $minPrice)
     && ($maxPrice == 0 || coalesce(salePrice, price) <= $maxPrice)
     && (!$featuredOnly || isFeatured == true)
@@ -311,13 +331,37 @@ export const PRODUCT_BY_SLUG_QUERY = groq`
 `;
 
 /** Related products (same category) */
+/**
+ * "You may also like": same category, product type or deity — best matches first.
+ * Unset references are passed as "" so they never match.
+ */
 export const RELATED_PRODUCTS_QUERY = groq`
   *[
     _type == "product"
     && isActive == true
-    && category._ref == $categoryId
     && _id != $productId
-  ] | order(coalesce(sortOrder, displayOrder, 0) asc, _createdAt desc)[0...4]{
+    && (category._ref == $categoryId || productType._ref == $productTypeId || deity._ref == $deityId)
+  ]
+  | score(
+      boost(category._ref == $categoryId, 3),
+      boost(productType._ref == $productTypeId, 2),
+      boost(deity._ref == $deityId, 2),
+      boost(isBestseller == true, 1),
+      boost(inStock == true, 1)
+    )
+  | order(_score desc, coalesce(sortOrder, displayOrder, 0) asc, _createdAt desc)[0...8]{
+    ${PRODUCT_CARD_FIELDS}
+  }
+`;
+
+/** Candidates for "Explore something different": popular products from other categories. */
+export const DIFFERENT_PRODUCTS_QUERY = groq`
+  *[
+    _type == "product"
+    && isActive == true
+    && _id != $productId
+    && category._ref != $categoryId
+  ] | order(coalesce(isBestseller, false) desc, coalesce(isFeatured, false) desc, _updatedAt desc)[0...40]{
     ${PRODUCT_CARD_FIELDS}
   }
 `;
@@ -399,8 +443,29 @@ export const SEARCH_PRODUCTS_QUERY = groq`
   *[
     _type == "product"
     && isActive == true
-    && ${SEARCHABLE} match ($query + "*")
+    && ${SEARCHABLE} match $query
   ] | order(coalesce(sortOrder, displayOrder, 0) asc, _createdAt desc)[0...20]{
     ${PRODUCT_CARD_FIELDS}
+  }
+`;
+
+/** Lightweight index of every active product, used for instant search suggestions. */
+export const SEARCH_INDEX_QUERY = groq`
+  *[_type == "product" && isActive == true] | order(coalesce(sortOrder, displayOrder, 0) asc, _createdAt desc){
+    _id,
+    name,
+    slug,
+    sku,
+    "deity": deity->name,
+    "productType": productType->name,
+    "category": category->name,
+    "fragrance": fragrance->name,
+    "price": select(defined(salePrice) && salePrice > 0 && salePrice < price => salePrice, price),
+    "originalPrice": select(
+      defined(salePrice) && salePrice > 0 && salePrice < price => price,
+      defined(originalPrice) && originalPrice > price => originalPrice,
+      null
+    ),
+    "image": coalesce(images[0].asset->url, mainImage.asset->url, galleryImages[0].asset->url)
   }
 `;

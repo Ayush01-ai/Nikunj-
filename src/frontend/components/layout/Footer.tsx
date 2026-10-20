@@ -34,7 +34,7 @@ export function Footer({ settings }: FooterProps) {
 
   const trustHighlights = [
     { icon: Truck, title: 'Free Delivery', sub: `On orders above ₹${settings?.freeDeliveryThreshold || 999}` },
-    { icon: ShieldCheck, title: 'Secure Payments', sub: 'Razorpay • UPI • COD' },
+    { icon: ShieldCheck, title: 'Secure Payments', sub: 'Cashfree • UPI • COD' },
     { icon: Sparkles, title: 'Handcrafted', sub: 'With divine precision' },
     { icon: Award, title: '100% Authentic', sub: 'Pure & sacred materials' },
   ];
@@ -61,13 +61,13 @@ export function Footer({ settings }: FooterProps) {
 
       {/* Main footer */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-12">
           {/* Brand */}
-          <div className="sm:col-span-2 lg:col-span-1">
+          <div className="sm:col-span-2 lg:col-span-2">
             <div className="mb-5">
-              <NikunjSakhiLogo className="w-52" variant="dark" />
+              <NikunjSakhiLogo className="w-60 sm:w-64 max-w-full" variant="dark" />
             </div>
-            <p className="text-xs leading-relaxed text-white/50 mb-5">
+            <p className="text-xs leading-relaxed text-white/50 mb-5 max-w-xs">
               Crafting divine ornaments for beloved deities with pure devotion and sacred artistry.
               Each piece is a prayer, each bead a blessing.
             </p>
@@ -99,9 +99,9 @@ export function Footer({ settings }: FooterProps) {
 
           {/* Quick Links */}
           <div>
-            <h3 className="font-cinzel text-xs tracking-[0.2em] uppercase text-gold-light mb-5 font-semibold">
+            <h2 className="font-cinzel text-sm tracking-wide text-gold-light mb-5 font-semibold">
               Collections
-            </h3>
+            </h2>
             <ul className="space-y-3 text-xs">
               {quickLinks.map((link) => (
                 <li key={link.href}>
@@ -118,9 +118,9 @@ export function Footer({ settings }: FooterProps) {
 
           {/* Support */}
           <div>
-            <h3 className="font-cinzel text-xs tracking-[0.2em] uppercase text-gold-light mb-5 font-semibold">
+            <h2 className="font-cinzel text-sm tracking-wide text-gold-light mb-5 font-semibold">
               Help &amp; Info
-            </h3>
+            </h2>
             <ul className="space-y-3 text-xs">
               {supportLinks.map((link) => (
                 <li key={link.href}>
@@ -137,9 +137,9 @@ export function Footer({ settings }: FooterProps) {
 
           {/* Contact */}
           <div>
-            <h3 className="font-cinzel text-xs tracking-[0.2em] uppercase text-gold-light mb-5 font-semibold">
+            <h2 className="font-cinzel text-sm tracking-wide text-gold-light mb-5 font-semibold">
               Contact
-            </h3>
+            </h2>
             <ul className="space-y-3 text-xs">
               <li>
                 <Link href="/#feedback" className="text-xs text-white/50 hover:text-gold-light transition-colors">

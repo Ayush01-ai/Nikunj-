@@ -1,16 +1,20 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ShoppingBag, Zap, ChevronLeft, ChevronRight, Minus, Plus } from 'lucide-react';
+import { X, ShoppingBag, Zap, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { urlFor } from '@/cms/lib/image';
 import { useCartStore } from '@/frontend/store/cartStore';
 import type { Product } from '@/types';
 import { Button } from '@/frontend/components/ui/button';
 import { SacredPlaceholder } from '@/frontend/components/ui/SacredIcon';
-import { toCartItem } from '@/frontend/lib/product';
+import { colourAtImage, colourImageIndex, getProductHref, productGallery, toCartItem } from '@/frontend/lib/product';
+import { defaultVariant, getVariantPricing } from '@/cms/lib/pricing';
+import { ColorSelector, PriceBlock, QuantitySelector, VariantSelector } from '@/frontend/components/products/ProductOptions';
 
 interface ProductQuickModalProps {
   product: Product;
@@ -18,20 +22,53 @@ interface ProductQuickModalProps {
 }
 
 export function ProductQuickModal({ product, onClose }: ProductQuickModalProps) {
-  const [selectedSize, setSelectedSize] = useState<string>(product.sizes?.[0]?.label || '');
+  const router = useRouter();
+  const [selectedSize, setSelectedSize] = useState<string>(defaultVariant(product)?.label || '');
   const [selectedColor, setSelectedColor] = useState<string>(product.colors?.[0]?.label || '');
   const [quantity, setQuantity] = useState(1);
-  const [currentImg, setCurrentImg] = useState(0);
+  const images = useMemo(() => productGallery(product), [product]);
+  const [currentImg, setCurrentImgRaw] = useState(() => Math.max(0, colourImageIndex(images, product, product.colors?.[0]?.label)));
   const { addItem } = useCartStore();
 
-  const images = product.images || [];
-  const currentPrice = product.price + (product.sizes?.find(s => s.label === selectedSize)?.priceModifier || 0);
+  const pricing = getVariantPricing(product, selectedSize || undefined, selectedColor || undefined);
 
-  const handleAddToCart = useCallback(() => {
+  const setCurrentImg = (next: number | ((p: number) => number)) => {
+    const index = typeof next === 'function' ? next(currentImg) : next;
+    setCurrentImgRaw(index);
+    const colour = colourAtImage(images, product, index);
+    if (colour) setSelectedColor(colour);
+  };
+
+  const selectColour = (label: string) => {
+    setSelectedColor(label);
+    const index = colourImageIndex(images, product, label);
+    if (index >= 0) setCurrentImgRaw(index);
+    setQuantity((q) => Math.max(1, Math.min(q, getVariantPricing(product, selectedSize || undefined, label).stock || 1)));
+  };
+  const outOfStock = pricing.stock <= 0;
+
+  const selectSize = (label: string) => {
+    setSelectedSize(label);
+    setQuantity((q) => Math.max(1, Math.min(q, getVariantPricing(product, label, selectedColor || undefined).stock || 1)));
+  };
+
+  const addToCart = useCallback(() => {
+    if (outOfStock) return false;
     addItem(toCartItem(product, { size: selectedSize, color: selectedColor, quantity }));
+    return true;
+  }, [product, selectedSize, selectedColor, quantity, addItem, outOfStock]);
+
+  const handleAddToCart = () => {
+    if (!addToCart()) return;
     toast.success(`${product.name} added to cart 🙏`);
     onClose();
-  }, [product, selectedSize, selectedColor, quantity, addItem, onClose]);
+  };
+
+  const handleBuyNow = () => {
+    if (!addToCart()) return;
+    onClose();
+    router.push('/checkout');
+  };
 
   return (
     <AnimatePresence>
@@ -53,6 +90,7 @@ export function ProductQuickModal({ product, onClose }: ProductQuickModalProps) 
           {/* Close */}
           <button
             onClick={onClose}
+            aria-label="Close quick view"
             className="absolute top-4 right-4 z-10 w-8 h-8 bg-cream flex items-center justify-center text-[var(--text-mid)] hover:text-gold transition-colors"
           >
             <X size={16} />
@@ -115,16 +153,7 @@ export function ProductQuickModal({ product, onClose }: ProductQuickModalProps) 
               </h2>
 
               {/* Price */}
-              <div className="flex items-center gap-3 mb-5">
-                <span className="font-cinzel text-xl font-bold text-gold-dark">
-                  ₹{currentPrice.toLocaleString('en-IN')}
-                </span>
-                {product.originalPrice && (
-                  <span className="text-sm text-gray-400 line-through">
-                    ₹{product.originalPrice.toLocaleString('en-IN')}
-                  </span>
-                )}
-              </div>
+              <PriceBlock price={pricing.price} mrp={pricing.mrp} discount={pricing.discount} quantity={quantity} size="sm" />
 
               {product.shortDescription && (
                 <p className="text-sm text-[var(--text-mid)] mb-5 leading-relaxed">
@@ -132,100 +161,29 @@ export function ProductQuickModal({ product, onClose }: ProductQuickModalProps) 
                 </p>
               )}
 
-              {/* Size Selector */}
-              {product.sizes && product.sizes.length > 0 && (
-                <div className="mb-4">
-                  <p className="font-cinzel text-[10px] tracking-widest uppercase text-[var(--text-mid)] mb-2">
-                    Size
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {product.sizes.map((size) => (
-                      <button
-                        key={size.label}
-                        onClick={() => setSelectedSize(size.label)}
-                        className={`
-                          px-3 py-1.5 border font-cinzel text-[10px] tracking-wider uppercase transition-all
-                          ${selectedSize === size.label
-                            ? 'bg-gold border-gold text-white'
-                            : 'bg-white border-[var(--border)] text-[var(--text-mid)] hover:border-gold'
-                          }
-                          ${size.stock === 0 ? 'opacity-40 cursor-not-allowed line-through' : ''}
-                        `}
-                        disabled={size.stock === 0}
-                      >
-                        {size.label}
-                        {size.priceModifier !== 0 && (
-                          <span className="ml-1 text-[8px]">
-                            {size.priceModifier > 0 ? '+' : ''}₹{size.priceModifier}
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+              <VariantSelector product={product} value={selectedSize} onChange={selectSize} size="sm" />
+              <ColorSelector colors={product.colors} value={selectedColor} onChange={selectColour} size="sm" />
 
-              {/* Color Selector */}
-              {product.colors && product.colors.length > 0 && (
-                <div className="mb-4">
-                  <p className="font-cinzel text-[10px] tracking-widest uppercase text-[var(--text-mid)] mb-2">
-                    Color: <span className="text-gold">{selectedColor}</span>
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {product.colors.map((color) => (
-                      <button
-                        key={color.label}
-                        onClick={() => setSelectedColor(color.label)}
-                        title={color.label}
-                        className={`w-8 h-8 rounded-full border-2 transition-all ${
-                          selectedColor === color.label ? 'border-gold scale-110' : 'border-transparent'
-                        }`}
-                        style={{ background: color.hex }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Quantity */}
               <div className="mb-6">
-                <p className="font-cinzel text-[10px] tracking-widest uppercase text-[var(--text-mid)] mb-2">
-                  Quantity
-                </p>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    className="w-9 h-9 border border-[var(--border)] flex items-center justify-center hover:bg-gold hover:border-gold hover:text-white transition-all"
-                  >
-                    <Minus size={14} />
-                  </button>
-                  <span className="font-cinzel text-sm w-8 text-center">{quantity}</span>
-                  <button
-                    onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))}
-                    className="w-9 h-9 border border-[var(--border)] flex items-center justify-center hover:bg-gold hover:border-gold hover:text-white transition-all"
-                  >
-                    <Plus size={14} />
-                  </button>
-                  <span className="text-[11px] text-[var(--text-mid)]">
-                    {product.stock} available
-                  </span>
-                </div>
+                <QuantitySelector value={quantity} max={pricing.stock} onChange={setQuantity} size="sm" />
+                {outOfStock && <p className="mt-2 text-xs text-red-500 font-cinzel tracking-wider">✗ Out of Stock</p>}
               </div>
 
               {/* Action Buttons */}
               <div className="flex flex-col gap-3 mt-auto">
-                <button onClick={handleAddToCart} className="btn-outline-gold w-full">
+                <button onClick={handleAddToCart} disabled={outOfStock} className="btn-outline-gold w-full disabled:opacity-40 disabled:cursor-not-allowed">
                   <ShoppingBag size={14} /> Add to Cart
                 </button>
-                <Button
-                  onClick={() => {
-                    handleAddToCart();
-                    window.location.href = '/checkout';
-                  }}
-                  className="w-full"
-                >
+                <Button onClick={handleBuyNow} disabled={outOfStock} className="w-full">
                   <Zap size={14} /> Buy Now
                 </Button>
+                <Link
+                  href={getProductHref(product)}
+                  onClick={onClose}
+                  className="flex items-center justify-center gap-1.5 font-cinzel text-[10px] tracking-widest uppercase text-[var(--text-mid)] hover:text-gold transition-colors py-1"
+                >
+                  View Full Details <ExternalLink size={12} />
+                </Link>
               </div>
 
               {/* Trust row */}

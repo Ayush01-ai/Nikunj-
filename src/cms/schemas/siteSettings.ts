@@ -17,7 +17,7 @@ export const siteSettings = defineType({
       name: 'tagline',
       title: 'Brand Tagline',
       type: 'string',
-      initialValue: 'Handcrafted with Perfection',
+      initialValue: 'Serve with Devotion',
     }),
     defineField({
       name: 'logo',
@@ -126,13 +126,13 @@ export const siteSettings = defineType({
       name: 'homeHeroTitle',
       title: 'Hero Main Title',
       type: 'string',
-      initialValue: 'Divine God Ornaments',
+      initialValue: 'Serve with Devotion',
     }),
     defineField({
       name: 'homeHeroSubtitle',
       title: 'Hero Subtitle',
       type: 'string',
-      initialValue: 'Handcrafted with Perfection',
+      initialValue: 'Serve with Devotion',
     }),
     defineField({
       name: 'homeHeroDescription',
@@ -166,7 +166,7 @@ export const siteSettings = defineType({
       name: 'seoTitle',
       title: 'Default SEO Title',
       type: 'string',
-      initialValue: 'Nikunj Sakhi – Divine God Ornaments | Handcrafted Deity Jewellery',
+      initialValue: 'Nikunj Sakhi – Serve with Devotion | Handcrafted Deity Jewellery',
     }),
     defineField({
       name: 'seoDescription',

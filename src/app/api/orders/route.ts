@@ -1,16 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/backend/lib/mongodb';
-import { Order } from '@/backend/models/Order';
-import { requireAuth, AuthError, isValidPhone, sanitizePhone } from '@/backend/lib/auth';
+import { connectDB, isDbConnectionError } from '@/backend/lib/mongodb';
+import { Order, type IOrder } from '@/backend/models/Order';
+import { AuthError, isValidPhone, sanitizePhone, type LoginMethod } from '@/backend/lib/auth';
+import { snapshotForOrder } from '@/backend/lib/orderNotify';
+import { requireAuthHybrid } from '@/backend/lib/clerk';
 import { nanoid } from 'nanoid';
 import sanitizeHtml from 'sanitize-html';
 import { client } from '@/cms/lib/client';
 import { COUPON_BY_CODE_QUERY, SITE_SETTINGS_QUERY } from '@/cms/lib/queries';
-import { getSanityOrderStatuses, pushConfirmedOrderToSanity } from '@/backend/lib/sanityOrders';
-import type { Coupon, SiteSettings } from '@/types';
+import { getAdminSettings, getSanityOrderStatuses, getSanityOrders, pushConfirmedOrderToSanity } from '@/backend/lib/sanityOrders';
+import { refundView } from '@/backend/lib/refundView';
+import { deliveryView, ensureDeliveryCode, OUT_FOR_DELIVERY } from '@/backend/lib/delivery';
+import { refundBreakdown } from '@/cms/lib/refunds';
+import { heldQuantities, holdKey, withStockLock } from '@/backend/lib/stockHold';
+import { deliveryPolicy, getVariantPricing, orderTotals } from '@/cms/lib/pricing';
+import type { Coupon, ProductSize, SiteSettings } from '@/types';
+import { clientIp, createRateLimiter } from '@/backend/lib/rateLimit';
 
 const MAX_LINE_ITEMS = 50;
 const MAX_QTY_PER_ITEM = 99;
+
+// Order creation has no gateway call and no order id to scope by yet, so this is IP-only —
+// a generous ceiling that blocks scripted cart-spam without interfering with a real shopper
+// retrying checkout a few times. See rateLimit.ts for the process-local caveat.
+const isOrderCreateLimited = createRateLimiter(20, 10 * 60 * 1000, 'api/orders:isOrderCreateLimited');
 
 interface IncomingItem {
   productId: string;
@@ -26,7 +39,8 @@ interface VerifiedProduct {
   name: string;
   price: number;
   stock: number;
-  sizes?: { label: string; priceModifier?: number; stock?: number }[];
+  sizes?: { label: string; priceModifier?: number; price?: number; mrp?: number; stock?: number }[];
+  colors?: { label: string; price?: number; mrp?: number }[];
 }
 
 const clean = (v: unknown, max: number) =>
@@ -35,19 +49,29 @@ const clean = (v: unknown, max: number) =>
 // ─── POST: Place a new order ───────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   try {
+    const ip = clientIp(req);
+    if (await isOrderCreateLimited(ip)) {
+      return NextResponse.json(
+        { success: false, error: 'Too many orders placed. Please try again in a few minutes.' },
+        { status: 429, headers: { 'Retry-After': String(isOrderCreateLimited.retryAfterSeconds(ip)) } },
+      );
+    }
+
     const body = await req.json();
 
-    // Optional auth
+    // Optional auth — recognizes either a Clerk session or the legacy `ns_token` cookie.
     let userId: string | undefined;
+    let loginMethod: LoginMethod | undefined;
     try {
-      const payload = requireAuth(req);
+      const payload = await requireAuthHybrid(req);
       userId = payload.userId;
+      loginMethod = payload.method;
     } catch {
       // Guest checkout
     }
 
     // ── Input validation ────────────────────────────────────────────────
-    const { items, shippingAddress, couponCode, paymentMethod } = body ?? {};
+    const { items, shippingAddress, couponCode, paymentMethod, expectedTotal } = body ?? {};
 
     if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ success: false, error: 'Cart is empty.' }, { status: 400 });
@@ -100,15 +124,22 @@ export async function POST(req: NextRequest) {
 
     // ── Server-side verification & price calculation ────────────────────
     const productIds = (items as IncomingItem[]).map((item) => item.productId);
-    // Price must match what the storefront displays (sale price when set).
+    // Price must match what the storefront displays (shared pricing rules).
     const dbProducts = await client.fetch<VerifiedProduct[]>(
-      `*[_type == "product" && isActive == true && _id in $productIds]{_id, name, "price": coalesce(salePrice, price), "stock": coalesce(stockQuantity, stock, 0), sizes[]{label, priceModifier, stock}}`,
+      `*[_type == "product" && isActive == true && _id in $productIds]{
+        _id, name,
+        "price": select(defined(salePrice) && salePrice > 0 && salePrice < price => salePrice, price),
+        "stock": coalesce(stockQuantity, stock, 0),
+        "sizes": sizes[defined(label)]{label, "priceModifier": coalesce(priceModifier, 0), price, mrp, stock},
+        "colors": colors[defined(label)]{label, price, mrp}
+      }`,
       { productIds }
     );
 
     const productMap = new Map(dbProducts.map((p) => [p._id, p]));
     let calculatedSubtotal = 0;
-    const verifiedItems = [];
+    const verifiedItems: IOrder['items'] = [];
+    const stockChecks: { key: string; available: number; label: string }[] = [];
 
     for (const item of items as IncomingItem[]) {
       const dbProduct = productMap.get(item.productId);
@@ -119,15 +150,7 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // Check stock limit
-      if (dbProduct.stock < item.quantity) {
-        return NextResponse.json(
-          { success: false, error: `Insufficient stock for "${dbProduct.name}".` },
-          { status: 400 }
-        );
-      }
-
-      // Use verified price from CMS, including variant adjustment
+      // Use verified price from CMS, including variant price / adjustment
       const variants = dbProduct.sizes ?? [];
       const variant = item.selectedSize ? variants.find((s) => s.label === item.selectedSize) : undefined;
       if (variants.length > 0 && !variant) {
@@ -136,14 +159,26 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       }
-      if (variant?.stock !== undefined && variant.stock !== null && variant.stock < item.quantity) {
+      const colours = dbProduct.colors ?? [];
+      const colour = item.selectedColor ? colours.find((c) => c.label === item.selectedColor) : undefined;
+      const pricing = getVariantPricing(
+        { price: dbProduct.price, stock: dbProduct.stock, sizes: variants as ProductSize[], colors: colours },
+        variant?.label,
+        colour?.label,
+      );
+      if (pricing.stock < item.quantity) {
         return NextResponse.json(
-          { success: false, error: `Insufficient stock for "${dbProduct.name}" (${variant.label}).` },
+          { success: false, error: `Insufficient stock for "${dbProduct.name}"${variant ? ` (${variant.label})` : ''}.` },
           { status: 400 }
         );
       }
-      const verifiedPrice = dbProduct.price + (variant?.priceModifier ?? 0);
+      const verifiedPrice = pricing.price;
       calculatedSubtotal += verifiedPrice * item.quantity;
+      stockChecks.push({
+        key: holdKey(item.productId, typeof variant?.stock === 'number' ? variant.label : undefined),
+        available: pricing.stock,
+        label: `${dbProduct.name}${variant ? ` (${variant.label})` : ''}`,
+      });
 
       verifiedItems.push({
         productId: item.productId,
@@ -156,10 +191,9 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Fetch site settings for delivery fee configuration
-    const settings = await client.fetch<SiteSettings | null>(SITE_SETTINGS_QUERY);
-    const FREE_DELIVERY_THRESHOLD = settings?.freeDeliveryThreshold ?? 999;
-    const DELIVERY_CHARGE = settings?.deliveryCharge ?? 99;
+    // Delivery fee and coupons decide the amount charged, so read them uncached (never a stale CDN copy).
+    const pricingClient = client.withConfig({ useCdn: false });
+    const settings = await pricingClient.fetch<SiteSettings | null>(SITE_SETTINGS_QUERY);
 
     // Validate Coupon if applied
     await connectDB();
@@ -167,7 +201,7 @@ export async function POST(req: NextRequest) {
     let appliedCoupon: string | undefined;
     if (couponCode) {
       const formattedCode = String(couponCode).trim().toUpperCase().slice(0, 20);
-      const coupon = await client.fetch<Coupon | null>(COUPON_BY_CODE_QUERY, { code: formattedCode });
+      const coupon = await pricingClient.fetch<Coupon | null>(COUPON_BY_CODE_QUERY, { code: formattedCode });
       
       if (coupon) {
         const now = new Date();
@@ -193,27 +227,79 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const calculatedDeliveryCharge = calculatedSubtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_CHARGE;
-    const calculatedTotal = calculatedSubtotal + calculatedDeliveryCharge - calculatedDiscount;
+    const totals = orderTotals(calculatedSubtotal, calculatedDiscount, settings);
+    const calculatedDeliveryCharge = totals.deliveryCharge;
+    const calculatedTotal = totals.total;
+
+    // The checkout sends the total it showed. If server pricing differs (settings, price or coupon
+    // changed), refuse before creating the order so the shopper is never charged an unseen amount.
+    if (expectedTotal !== undefined) {
+      const shown = Number(expectedTotal);
+      if (!Number.isFinite(shown) || Math.round(shown) !== calculatedTotal) {
+        return NextResponse.json(
+          {
+            success: false,
+            code: 'TOTAL_CHANGED',
+            error: `The order total is now ₹${calculatedTotal.toLocaleString('en-IN')}. Please review it and place the order again.`,
+            pricing: {
+              subtotal: totals.subtotal,
+              deliveryCharge: totals.deliveryCharge,
+              discount: totals.discount,
+              total: totals.total,
+              freeDeliveryThreshold: totals.freeDeliveryThreshold,
+              deliveryChargeSetting: deliveryPolicy(settings).deliveryCharge,
+            },
+          },
+          { status: 409 },
+        );
+      }
+    }
 
     const orderId = `NS-${nanoid(8).toUpperCase()}`;
 
-    const order = await Order.create({
-      orderId,
-      userId,
-      guestPhone,
-      items: verifiedItems,
-      shippingAddress: sanitized,
-      subtotal: calculatedSubtotal,
-      deliveryCharge: calculatedDeliveryCharge,
-      discount: calculatedDiscount,
-      total: calculatedTotal,
-      couponCode: appliedCoupon,
-      paymentMethod,
-      paymentStatus: 'pending',
-      // COD is confirmed immediately; online orders are confirmed once payment is verified.
-      status: paymentMethod === 'cod' ? 'confirmed' : 'pending',
+    // Re-check stock against pieces already reserved by other unconfirmed orders, under a lock so
+    // two simultaneous checkouts can't both take the last piece.
+    const wanted = new Map<string, number>();
+    for (let i = 0; i < verifiedItems.length; i++) {
+      wanted.set(stockChecks[i].key, (wanted.get(stockChecks[i].key) ?? 0) + verifiedItems[i].quantity);
+    }
+    // Destination for order updates comes from the verified session + account, never from the request body.
+    const notification = await snapshotForOrder(userId, loginMethod, guestPhone);
+    const created = await withStockLock(productIds, async () => {
+      const held = await heldQuantities(productIds);
+      for (const check of stockChecks) {
+        if ((held.get(check.key) ?? 0) + (wanted.get(check.key) ?? 0) > check.available) {
+          return { soldOut: check.label } as const;
+        }
+      }
+      const doc = await Order.create({
+        orderId,
+        userId,
+        guestPhone,
+        notification,
+        items: verifiedItems,
+        shippingAddress: sanitized,
+        subtotal: calculatedSubtotal,
+        deliveryCharge: calculatedDeliveryCharge,
+        discount: totals.discount,
+        total: calculatedTotal,
+        couponCode: appliedCoupon,
+        paymentMethod,
+        paymentStatus: 'pending',
+        // COD is confirmed immediately; online orders are confirmed once payment is verified.
+        status: paymentMethod === 'cod' ? 'confirmed' : 'pending',
+        stockHeld: true,
+      });
+      return { order: doc } as const;
     });
+
+    if ('soldOut' in created) {
+      return NextResponse.json(
+        { success: false, error: `Sorry, "${created.soldOut}" just sold out — other customers are checking out the last pieces. Please reduce the quantity or try again later.` },
+        { status: 409 },
+      );
+    }
+    const order = created.order;
 
     if (paymentMethod === 'cod') {
       await pushConfirmedOrderToSanity(order, 'Cash on Delivery order placed');
@@ -227,6 +313,14 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error('[orders POST]', error);
+    if (isDbConnectionError(error)) {
+      // Be honest: this is a database outage, not a problem with the order itself.
+      // No order was created, so it's safe for the customer to retry shortly.
+      return NextResponse.json(
+        { success: false, error: 'Unable to reach the database right now. Please try again in a few minutes.' },
+        { status: 503 },
+      );
+    }
     return NextResponse.json({ success: false, error: 'Failed to place order.' }, { status: 500 });
   }
 }
@@ -234,7 +328,7 @@ export async function POST(req: NextRequest) {
 // ─── GET: Fetch orders (admin or own orders) ──────────────────────────────
 export async function GET(req: NextRequest) {
   try {
-    const { userId, role } = requireAuth(req);
+    const { userId, role } = await requireAuthHybrid(req);
 
     await connectDB();
 
@@ -254,8 +348,31 @@ export async function GET(req: NextRequest) {
     ]);
 
     // The owner manages status in Sanity; that is the source of truth for customers.
-    const statuses = await getSanityOrderStatuses(orders.map((o) => o.orderId));
-    const data = orders.map((o) => ({ ...o, status: statuses.get(o.orderId) ?? o.status }));
+    let data;
+    if (role === 'admin') {
+      const statuses = await getSanityOrderStatuses(orders.map((o) => o.orderId));
+      data = orders.map((o) => ({ ...o, status: statuses.get(o.orderId) ?? o.status }));
+    } else {
+      // Customers also get their refund status, so "share your UPI / bank details" can be shown up front.
+      const [managed, admin] = await Promise.all([getSanityOrders(orders.map((o) => o.orderId)), getAdminSettings()]);
+      // Shipped orders that never got a doorstep code (status set in Studio, webhook missed) get one now.
+      await Promise.all(orders.map(async (o) => {
+        const s = managed.get(o.orderId)?.status ?? o.status;
+        if (OUT_FOR_DELIVERY.has(s) && !o.delivery?.token) {
+          o.delivery = (await ensureDeliveryCode(o.orderId).catch(() => o.delivery)) ?? o.delivery;
+        }
+      }));
+      data = orders.map((o) => {
+        const m = managed.get(o.orderId) ?? null;
+        return {
+          ...o,
+          delivery: deliveryView(o, m?.status ?? o.status, true),
+          status: m?.status ?? o.status,
+          paymentStatus: m?.paymentStatus ?? o.paymentStatus,
+          refund: refundView(m, 'account', refundBreakdown(o, admin.refundDeliveryCharge)),
+        };
+      });
+    }
 
     return NextResponse.json({
       success: true,

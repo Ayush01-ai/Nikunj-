@@ -56,6 +56,7 @@ export interface ProductType {
   displayOrder: number;
   appliesFacets?: string[];
   image?: SanityImage;
+  icon?: string;
   category?: Pick<Category, '_id' | 'name' | 'slug'>;
   productCount?: number;
 }
@@ -70,12 +71,21 @@ export interface Fragrance {
 export interface ProductSize {
   label: string;
   priceModifier: number;
+  /** Absolute selling price for this option (overrides product price + adjustment). */
+  price?: number;
+  /** Optional MRP for this option, shown struck-through when higher than `price`. */
+  mrp?: number;
   stock?: number;
 }
 
 export interface ProductColor {
   label: string;
   hex?: string;
+  /** Photo of the product in this colour — shown when the colour is selected. */
+  image?: SanityImage;
+  /** Optional selling price for this colour (overrides product / variant price). */
+  price?: number;
+  mrp?: number;
 }
 
 export interface ProductSpec {
@@ -110,6 +120,7 @@ export interface Product {
   images: SanityImage[];
   material?: string;
   careInstructions?: string;
+  returnPolicy?: string;
   specifications?: ProductSpec[];
   seoTitle?: string;
   seoDescription?: string;
@@ -196,6 +207,8 @@ export interface CartItem {
   /** Price before the selected option's adjustment. */
   basePrice?: number;
   originalPrice?: number;
+  /** Product-level MRP, used to recompute the variant MRP when the option changes. */
+  baseOriginalPrice?: number;
   image: string;
   deity: string;
   category?: string;
@@ -218,6 +231,9 @@ export type OrderStatus =
   | 'shipped'
   | 'delivered'
   | 'cancelled'
+  | 'return_requested'
+  | 'return_approved'
+  | 'returned'
   | 'refunded';
 
 export interface OrderItem {
@@ -231,6 +247,7 @@ export interface OrderItem {
 }
 
 export interface ShippingAddress {
+  _id?: string;
   fullName: string;
   phone: string;
   line1: string;
@@ -239,6 +256,7 @@ export interface ShippingAddress {
   state: string;
   pincode: string;
   landmark?: string;
+  isDefault?: boolean;
 }
 
 export interface Order {
@@ -255,8 +273,12 @@ export interface Order {
   couponCode?: string;
   paymentMethod: 'upi' | 'card' | 'netbanking' | 'cod' | 'whatsapp';
   paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
+  paymentGateway?: 'razorpay' | 'cashfree';
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
+  cashfreeOrderId?: string;
+  cashfreePaymentSessionId?: string;
+  cashfreePaymentId?: string;
   status: OrderStatus;
   notes?: string;
   createdAt: string;
@@ -267,9 +289,11 @@ export interface Order {
 
 export interface User {
   _id: string;
-  phone: string;
+  phone?: string;
   name?: string;
   email?: string;
+  avatar?: string;
+  authProviders?: ('phone' | 'email' | 'google' | 'clerk' | 'whatsapp')[];
   role: 'user' | 'admin';
   addresses?: ShippingAddress[];
   wishlist?: string[];

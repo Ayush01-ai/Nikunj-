@@ -17,7 +17,7 @@ export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) 
   // Keep the #testimonials anchor so the "Reviews" nav link always has a target.
   if (!testimonials || testimonials.length === 0) {
     return (
-      <section id="testimonials" className="py-16 px-4 sm:px-6 lg:px-8 bg-cream scroll-mt-24 text-center">
+      <section id="testimonials" className="py-16 px-4 sm:px-6 lg:px-8 bg-cream scroll-mt-16 md:scroll-mt-20 text-center">
         <span className="font-cinzel text-[10px] tracking-[0.4em] uppercase text-gold block mb-3">
           What Our Devotees Say
         </span>
@@ -33,7 +33,7 @@ export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) 
   }
 
   return (
-    <section className="py-20 px-4 sm:px-6 lg:px-8 bg-cream scroll-mt-24" id="testimonials" ref={ref}>
+    <section className="py-20 px-4 sm:px-6 lg:px-8 bg-cream scroll-mt-16 md:scroll-mt-20" id="testimonials" ref={ref}>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
@@ -74,7 +74,7 @@ export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) 
             >
               {/* Quote mark */}
               <span className="absolute top-4 left-5 font-crimson text-6xl text-gold-light/60 leading-none select-none">
-                "
+                &ldquo;
               </span>
 
               {/* Stars */}
@@ -86,7 +86,7 @@ export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) 
 
               {/* Review */}
               <p className="font-crimson italic text-sm text-[var(--text-mid)] leading-7 mb-5 pt-4">
-                "{t.review}"
+                &ldquo;{t.review}&rdquo;
               </p>
 
               {/* Product */}

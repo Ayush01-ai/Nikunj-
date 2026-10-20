@@ -7,7 +7,7 @@ import { ChevronLeft, ChevronRight, Eye, Heart, ShoppingBag } from 'lucide-react
 import toast from 'react-hot-toast';
 import { getImageUrl } from '@/cms/lib/image';
 import { useCartStore } from '@/frontend/store/cartStore';
-import { useWishlistStore } from '@/frontend/store/wishlistStore';
+import { useWishlistStore, useWishlistHydrated } from '@/frontend/store/wishlistStore';
 import { ProductQuickModal } from '@/frontend/components/products/ProductQuickModal';
 import { getProductHref, needsChoice, toCartItem } from '@/frontend/lib/product';
 import type { Product } from '@/types';
@@ -32,6 +32,7 @@ export function CoverFlowCarousel({
   const router = useRouter();
   const { addItem, openCart } = useCartStore();
   const { toggleWishlist, isWishlisted } = useWishlistStore();
+  const wishlistReady = useWishlistHydrated();
   const total = products.length;
 
   const nextSlide = useCallback(() => setCurrentIndex((index) => (index + 1) % total), [total]);
@@ -83,7 +84,9 @@ export function CoverFlowCarousel({
       onTouchStart={(event) => { touchStartX.current = event.touches[0].clientX; }}
       onTouchEnd={(event) => {
         const difference = event.changedTouches[0].clientX - touchStartX.current;
-        if (Math.abs(difference) > 45) difference < 0 ? nextSlide() : prevSlide();
+        if (Math.abs(difference) > 45) {
+          if (difference < 0) nextSlide(); else prevSlide();
+        }
       }}
     >
       <div className="absolute inset-0 -z-10 overflow-hidden">
@@ -100,7 +103,7 @@ export function CoverFlowCarousel({
             // branch, the first item in a 3+ product carousel was positioned off-screen.
             const side = isCenter ? 0 : offset === 1 ? 1 : offset === total - 1 ? -1 : offset === 2 ? 2 : offset === total - 2 ? -2 : 3;
             const image = product.images?.[0]?.asset ? getImageUrl(product.images[0], { width: 700, height: 1000 }) : '';
-            const wished = isWishlisted(product._id);
+            const wished = wishlistReady && isWishlisted(product._id);
             const visible = Math.abs(side) <= 2;
 
             return (
