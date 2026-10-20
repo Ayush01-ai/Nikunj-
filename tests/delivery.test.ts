@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => {
     getSanityOrder: vi.fn(),
     sendDeliveryOtpWhatsApp: vi.fn(),
     sendWhatsAppOtp: vi.fn(),
+    isWhatsAppConfigured: vi.fn(),
     sendEmail: vi.fn(),
     patch,
     writePatch: vi.fn(() => patch),
@@ -30,12 +31,13 @@ vi.mock('@/backend/lib/sanityOrders', () => ({
 vi.mock('@/backend/lib/whatsapp', () => ({
   sendDeliveryOtpWhatsApp: mocks.sendDeliveryOtpWhatsApp,
   sendWhatsAppOtp: mocks.sendWhatsAppOtp,
+  isWhatsAppConfigured: mocks.isWhatsAppConfigured,
 }));
 vi.mock('@/backend/lib/email', () => ({ isEmailConfigured: () => true, sendEmail: mocks.sendEmail }));
 vi.mock('@/cms/lib/orderOps', () => ({ historyEntry: (status: string, note: string) => ({ status, note }) }));
 vi.mock('@/cms/lib/client', () => ({ writeClient: { patch: mocks.writePatch } }));
 
-import { assignDelivery, deliveryView, MAX_ATTEMPTS, resendDeliveryCode, TOKEN_PATTERN, verifyDelivery } from '@/backend/lib/delivery';
+import { assignDelivery, deliveryView, ensureDeliveryCode, MAX_ATTEMPTS, resendDeliveryCode, TOKEN_PATTERN, verifyDelivery } from '@/backend/lib/delivery';
 import { deliveryOtp } from '@/backend/lib/otpHash';
 import { deliveryCodeMessage, deliveryPartnerMessage } from '@/cms/lib/orderMessages';
 
@@ -72,6 +74,7 @@ beforeEach(() => {
   mocks.getSanityOrder.mockResolvedValue({ status: 'confirmed', paymentStatus: 'pending' });
   mocks.sendDeliveryOtpWhatsApp.mockResolvedValue(true);
   mocks.sendWhatsAppOtp.mockResolvedValue(false);
+  mocks.isWhatsAppConfigured.mockReset().mockReturnValue(true);
 });
 
 describe('assignDelivery', () => {
@@ -244,6 +247,61 @@ describe('deliveryView', () => {
     expect(deliveryView(order, 'shipped', false)).not.toHaveProperty('code');
     expect(deliveryView(order, 'confirmed', true)).toBeNull();
     expect(deliveryView({ orderId: ORDER_ID } as never, 'shipped', true)).toBeNull();
+  });
+});
+
+describe('ensureDeliveryCode (order marked shipped outside the Orders Dashboard)', () => {
+  const lean = (value: unknown) => ({ select: () => ({ lean: () => Promise.resolve(value) }) });
+
+  it('persists a token atomically and the owner sees the HMAC code even when WhatsApp is not configured', async () => {
+    mocks.isWhatsAppConfigured.mockReturnValue(false);
+    let saved: Record<string, unknown> = {};
+    mocks.findOneAndUpdate.mockImplementation(async (filter: Record<string, unknown>, update: { $set: Record<string, unknown> }) => {
+      expect(filter).toMatchObject({ orderId: ORDER_ID, 'delivery.token': { $exists: false }, 'delivery.verifiedAt': { $exists: false } });
+      saved = { token: update.$set['delivery.token'], assignedAt: update.$set['delivery.assignedAt'], attempts: 0 };
+      return fakeOrder({ delivery: saved });
+    });
+    mocks.findOne.mockImplementation(() => lean({ delivery: { ...saved, otpStatus: 'skipped' } }));
+
+    const delivery = await ensureDeliveryCode(ORDER_ID);
+    expect(TOKEN_PATTERN.test(String(delivery?.token))).toBe(true);
+    expect(mocks.sendDeliveryOtpWhatsApp).not.toHaveBeenCalled();
+    expect(mocks.sendEmail).not.toHaveBeenCalled();
+    expect(mocks.updateOne).toHaveBeenCalledWith({ orderId: ORDER_ID }, { $set: { 'delivery.otpStatus': 'skipped' } });
+    const view = deliveryView({ orderId: ORDER_ID, delivery } as never, 'shipped', true);
+    expect(view).toMatchObject({ otpRequired: true, otpStatus: 'skipped', code: deliveryOtp(ORDER_ID, String(delivery?.token)) });
+  });
+
+  it('keeps the code and records "failed" when the WhatsApp call fails or throws', async () => {
+    mocks.sendDeliveryOtpWhatsApp.mockRejectedValue(new Error('network down'));
+    mocks.findOneAndUpdate.mockResolvedValue(fakeOrder({ delivery: { token: TOKEN, assignedAt: new Date(), attempts: 0 } }));
+    mocks.findOne.mockImplementation(() => lean({ delivery: { token: TOKEN, otpStatus: 'failed' } }));
+
+    const delivery = await ensureDeliveryCode(ORDER_ID);
+    expect(delivery).toMatchObject({ token: TOKEN, otpStatus: 'failed' });
+    expect(mocks.updateOne).toHaveBeenCalledWith({ orderId: ORDER_ID }, { $set: { 'delivery.otpStatus': 'failed' } });
+    expect(mocks.sendEmail).not.toHaveBeenCalled();
+  });
+
+  it('does not create a second code or re-send when one already exists', async () => {
+    mocks.findOneAndUpdate.mockResolvedValue(null);
+    mocks.findOne.mockImplementation(() => lean({ delivery: { token: TOKEN } }));
+
+    expect(await ensureDeliveryCode(ORDER_ID)).toEqual({ token: TOKEN });
+    expect(mocks.sendDeliveryOtpWhatsApp).not.toHaveBeenCalled();
+    expect(mocks.updateOne).not.toHaveBeenCalled();
+  });
+
+  it('WhatsApps the code to the order delivery phone when configured', async () => {
+    mocks.findOneAndUpdate.mockResolvedValue(fakeOrder({ delivery: { token: TOKEN, assignedAt: new Date(), attempts: 0 } }));
+    mocks.findOne.mockImplementation(() => lean({ delivery: { token: TOKEN, otpStatus: 'accepted' } }));
+
+    await ensureDeliveryCode(ORDER_ID);
+    expect(mocks.sendDeliveryOtpWhatsApp).toHaveBeenCalledWith('9876543210', deliveryOtp(ORDER_ID, TOKEN), ORDER_ID, expect.any(Function));
+  });
+
+  it('treats "out_for_delivery" like "shipped" when showing the code', () => {
+    expect(deliveryView({ orderId: ORDER_ID, delivery: { token: TOKEN } } as never, 'out_for_delivery', true)).toHaveProperty('code');
   });
 });
 

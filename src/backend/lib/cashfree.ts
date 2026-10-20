@@ -4,6 +4,13 @@ import { cashfreeEnvironment, isCashfreeConfigured } from './cashfreeConfig';
 
 let client: Cashfree | null = null;
 
+export const DEFAULT_CASHFREE_API_VERSION = '2023-08-01';
+
+/** `x-api-version` for every PG call; override with CASHFREE_API_VERSION. */
+export function cashfreeApiVersion() {
+  return process.env.CASHFREE_API_VERSION?.trim() || DEFAULT_CASHFREE_API_VERSION;
+}
+
 /**
  * Lazily constructs the Cashfree SDK client so that importing this file never throws when
  * Cashfree isn't configured yet — callers must check `isCashfreeConfigured()` first.
@@ -27,9 +34,8 @@ function getClient(): Cashfree {
       undefined,
       false,
     );
-    // Optional pin of the x-api-version header; defaults to the version the SDK was built for.
-    const apiVersion = process.env.CASHFREE_API_VERSION?.trim();
-    if (apiVersion) client.XApiVersion = apiVersion;
+    // The SDK sends x-client-id / x-client-secret itself; x-api-version is pinned so an SDK upgrade can't silently change it.
+    client.XApiVersion = cashfreeApiVersion();
   }
   return client;
 }

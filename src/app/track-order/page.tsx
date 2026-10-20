@@ -4,8 +4,8 @@ import React, { Suspense, useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Check, KeyRound, Package, Search, Truck, XCircle } from 'lucide-react';
-import { CopyCodeButton, deliveryStatusText, type DeliveryOtpStatus } from '@/frontend/components/orders/DeliveryCode';
+import { Check, Package, Search, Truck, XCircle } from 'lucide-react';
+import { DeliveryCode, type DeliveryCodeView } from '@/frontend/components/orders/DeliveryCode';
 import { Navbar } from '@/frontend/components/layout/Navbar';
 import { Footer } from '@/frontend/components/layout/Footer';
 import { useAuthStore } from '@/frontend/store/authStore';
@@ -29,7 +29,7 @@ interface TrackedOrder extends RequestableOrder {
   paymentStatus: string;
   shipTo: { name?: string; city?: string; state?: string; pincode?: string };
   refund?: RefundView | null;
-  delivery?: { otpRequired: boolean; otpSentAt?: string | null; otpStatus?: DeliveryOtpStatus; code?: string; verifiedAt?: string } | null;
+  delivery?: DeliveryCodeView | null;
 }
 
 const inr = (n?: number) => `₹${(n ?? 0).toLocaleString('en-IN')}`;
@@ -194,6 +194,13 @@ function TrackOrderContent() {
               )}
             </div>
 
+            {/* Doorstep delivery code — directly below the timeline */}
+            <DeliveryCode
+              delivery={order.delivery}
+              status={order.status}
+              amountDue={order.paymentMethod === 'cod' && order.paymentStatus !== 'paid' ? inr(order.total) : undefined}
+            />
+
             {/* Tracking */}
             {order.tracking && (order.tracking.trackingNumber || order.tracking.courier) && (
               <div className="bg-white border border-gold/40 p-6 flex flex-wrap items-center justify-between gap-4">
@@ -211,37 +218,6 @@ function TrackOrderContent() {
                     Track Parcel
                   </a>
                 )}
-              </div>
-            )}
-
-            {/* Doorstep delivery code */}
-            {order.delivery?.otpRequired && !order.delivery.verifiedAt && order.status === 'shipped' && (
-              <div className="bg-[var(--cream,#fdf8ee)] border border-gold/60 p-6" data-testid="delivery-code-notice">
-                <div className="flex items-start gap-3">
-                  <KeyRound size={22} className="text-gold-dark shrink-0" aria-hidden="true" />
-                  <div className="space-y-2">
-                    <p className="font-cinzel text-xs tracking-widest uppercase text-deep">Out for delivery</p>
-                    {order.delivery.code ? (
-                      <div className="font-lato text-sm text-deep space-y-1">
-                        <p>
-                          Your delivery code: <span className="font-semibold text-xl tracking-[0.3em] align-middle" data-testid="delivery-code">{order.delivery.code}</span>{' '}
-                          <CopyCodeButton code={order.delivery.code} />
-                        </p>
-                        <p className="text-xs text-[var(--text-mid)]" data-testid="delivery-otp-status">{deliveryStatusText(order.delivery.otpStatus, order.delivery.otpSentAt)}</p>
-                      </div>
-                    ) : (
-                      <p className="font-lato text-sm text-deep">
-                        {order.delivery.otpStatus === 'failed'
-                          ? 'We could not send the delivery code to WhatsApp. Sign in to your account to see it, or contact the shop.'
-                          : 'We have sent a 6-digit delivery code to the WhatsApp number on this order. Sign in to your account to see it here.'}
-                      </p>
-                    )}
-                    <p className="font-lato text-xs text-[var(--text-mid)] leading-relaxed">
-                      Please share this code with the delivery partner only after you have received your parcel
-                      {order.paymentMethod === 'cod' && order.paymentStatus !== 'paid' ? ` and paid ${inr(order.total)} in cash` : ''}. Our team will never ask for it on a call.
-                    </p>
-                  </div>
-                </div>
               </div>
             )}
 

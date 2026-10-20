@@ -12,7 +12,11 @@ import { ORDER_STATUS_LABEL, orderStatusMessage, trackOrderUrl, type OrderMessag
  */
 const GRAPH_URL = 'https://graph.facebook.com/v21.0';
 
-export const isWhatsAppConfigured = () => Boolean(process.env.WHATSAPP_TOKEN && process.env.WHATSAPP_PHONE_NUMBER_ID);
+export const isWhatsAppConfigured = () => {
+  // Accept WHATSAPP_ACCESS_TOKEN as an alias so a live token is always used, in every NODE_ENV.
+  if (!process.env.WHATSAPP_TOKEN && process.env.WHATSAPP_ACCESS_TOKEN) process.env.WHATSAPP_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
+  return Boolean(process.env.WHATSAPP_TOKEN && process.env.WHATSAPP_PHONE_NUMBER_ID);
+};
 
 const origin = () => (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
 

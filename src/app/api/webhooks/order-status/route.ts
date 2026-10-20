@@ -2,6 +2,7 @@ import { timingSafeEqual } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { notifyOrder } from '@/backend/lib/orderNotify';
 import { ORDER_ID_PATTERN } from '@/backend/lib/orderAccess';
+import { ensureDeliveryCode, OUT_FOR_DELIVERY } from '@/backend/lib/delivery';
 
 /**
  * Sanity GROQ webhook: notifies the customer (on the channel chosen at order time) whenever the owner changes an order's status in Studio.
@@ -29,6 +30,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, skipped: true });
   }
   if (!ORDER_ID_PATTERN.test(String(order.orderNumber))) return NextResponse.json({ success: true, skipped: true });
+  if (OUT_FOR_DELIVERY.has(order.status)) {
+    // Generate the doorstep code before the "shipped" message; a WhatsApp/Sanity hiccup must not block notifications.
+    await ensureDeliveryCode(String(order.orderNumber)).catch((err: unknown) =>
+      console.error('[order-status] delivery code', order.orderNumber, err instanceof Error ? err.message : err));
+  }
   // Destination is the verified contact snapshotted on the order, not the phone in the Sanity payload.
   const result = await notifyOrder(String(order.orderNumber), { ...order, orderNumber: String(order.orderNumber), phone: undefined });
   if (!result.sent && result.reason === 'duplicate') return NextResponse.json({ success: true, duplicate: true });

@@ -10,10 +10,10 @@ import { client } from '@/cms/lib/client';
 import { COUPON_BY_CODE_QUERY, SITE_SETTINGS_QUERY } from '@/cms/lib/queries';
 import { getAdminSettings, getSanityOrderStatuses, getSanityOrders, pushConfirmedOrderToSanity } from '@/backend/lib/sanityOrders';
 import { refundView } from '@/backend/lib/refundView';
-import { deliveryView } from '@/backend/lib/delivery';
+import { deliveryView, ensureDeliveryCode, OUT_FOR_DELIVERY } from '@/backend/lib/delivery';
 import { refundBreakdown } from '@/cms/lib/refunds';
 import { heldQuantities, holdKey, withStockLock } from '@/backend/lib/stockHold';
-import { getVariantPricing } from '@/cms/lib/pricing';
+import { deliveryPolicy, getVariantPricing, orderTotals } from '@/cms/lib/pricing';
 import type { Coupon, ProductSize, SiteSettings } from '@/types';
 import { clientIp, createRateLimiter } from '@/backend/lib/rateLimit';
 
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Input validation ────────────────────────────────────────────────
-    const { items, shippingAddress, couponCode, paymentMethod } = body ?? {};
+    const { items, shippingAddress, couponCode, paymentMethod, expectedTotal } = body ?? {};
 
     if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ success: false, error: 'Cart is empty.' }, { status: 400 });
@@ -191,10 +191,9 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Fetch site settings for delivery fee configuration
-    const settings = await client.fetch<SiteSettings | null>(SITE_SETTINGS_QUERY);
-    const FREE_DELIVERY_THRESHOLD = settings?.freeDeliveryThreshold ?? 999;
-    const DELIVERY_CHARGE = settings?.deliveryCharge ?? 99;
+    // Delivery fee and coupons decide the amount charged, so read them uncached (never a stale CDN copy).
+    const pricingClient = client.withConfig({ useCdn: false });
+    const settings = await pricingClient.fetch<SiteSettings | null>(SITE_SETTINGS_QUERY);
 
     // Validate Coupon if applied
     await connectDB();
@@ -202,7 +201,7 @@ export async function POST(req: NextRequest) {
     let appliedCoupon: string | undefined;
     if (couponCode) {
       const formattedCode = String(couponCode).trim().toUpperCase().slice(0, 20);
-      const coupon = await client.fetch<Coupon | null>(COUPON_BY_CODE_QUERY, { code: formattedCode });
+      const coupon = await pricingClient.fetch<Coupon | null>(COUPON_BY_CODE_QUERY, { code: formattedCode });
       
       if (coupon) {
         const now = new Date();
@@ -228,8 +227,33 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const calculatedDeliveryCharge = calculatedSubtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_CHARGE;
-    const calculatedTotal = calculatedSubtotal + calculatedDeliveryCharge - calculatedDiscount;
+    const totals = orderTotals(calculatedSubtotal, calculatedDiscount, settings);
+    const calculatedDeliveryCharge = totals.deliveryCharge;
+    const calculatedTotal = totals.total;
+
+    // The checkout sends the total it showed. If server pricing differs (settings, price or coupon
+    // changed), refuse before creating the order so the shopper is never charged an unseen amount.
+    if (expectedTotal !== undefined) {
+      const shown = Number(expectedTotal);
+      if (!Number.isFinite(shown) || Math.round(shown) !== calculatedTotal) {
+        return NextResponse.json(
+          {
+            success: false,
+            code: 'TOTAL_CHANGED',
+            error: `The order total is now ₹${calculatedTotal.toLocaleString('en-IN')}. Please review it and place the order again.`,
+            pricing: {
+              subtotal: totals.subtotal,
+              deliveryCharge: totals.deliveryCharge,
+              discount: totals.discount,
+              total: totals.total,
+              freeDeliveryThreshold: totals.freeDeliveryThreshold,
+              deliveryChargeSetting: deliveryPolicy(settings).deliveryCharge,
+            },
+          },
+          { status: 409 },
+        );
+      }
+    }
 
     const orderId = `NS-${nanoid(8).toUpperCase()}`;
 
@@ -257,7 +281,7 @@ export async function POST(req: NextRequest) {
         shippingAddress: sanitized,
         subtotal: calculatedSubtotal,
         deliveryCharge: calculatedDeliveryCharge,
-        discount: calculatedDiscount,
+        discount: totals.discount,
         total: calculatedTotal,
         couponCode: appliedCoupon,
         paymentMethod,
@@ -331,6 +355,13 @@ export async function GET(req: NextRequest) {
     } else {
       // Customers also get their refund status, so "share your UPI / bank details" can be shown up front.
       const [managed, admin] = await Promise.all([getSanityOrders(orders.map((o) => o.orderId)), getAdminSettings()]);
+      // Shipped orders that never got a doorstep code (status set in Studio, webhook missed) get one now.
+      await Promise.all(orders.map(async (o) => {
+        const s = managed.get(o.orderId)?.status ?? o.status;
+        if (OUT_FOR_DELIVERY.has(s) && !o.delivery?.token) {
+          o.delivery = (await ensureDeliveryCode(o.orderId).catch(() => o.delivery)) ?? o.delivery;
+        }
+      }));
       data = orders.map((o) => {
         const m = managed.get(o.orderId) ?? null;
         return {

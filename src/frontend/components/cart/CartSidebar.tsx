@@ -8,6 +8,8 @@ import { X, ShoppingBag, Minus, Plus, Trash2, ArrowRight } from 'lucide-react';
 import { useCartStore } from '@/frontend/store/cartStore';
 import { Button } from '@/frontend/components/ui/button';
 import { SacredIcon } from '@/frontend/components/ui/SacredIcon';
+import { useSiteSettings } from '@/frontend/providers/Providers';
+import { orderTotals } from '@/cms/lib/pricing';
 
 export function CartSidebar() {
   const {
@@ -44,8 +46,8 @@ export function CartSidebar() {
   const selectedCount = safeSelectedItems.length;
   const allSelected = safeItems.length > 0 && selectedCount === safeItems.length;
   const total = mounted ? selectedSubtotal() : 0;
-  const FREE_THRESHOLD = 999;
-  const deliveryCharge = total >= FREE_THRESHOLD ? 0 : 80;
+  const { settings } = useSiteSettings();
+  const { freeDeliveryThreshold: FREE_THRESHOLD, deliveryCharge } = orderTotals(total, 0, settings);
   const remaining = FREE_THRESHOLD - total;
 
   return (

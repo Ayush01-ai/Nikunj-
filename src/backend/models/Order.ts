@@ -62,7 +62,8 @@ export interface IOrder extends Document {
     otpSentAt?: Date;
     /** Meta WhatsApp message id of the delivery OTP and its last provider-reported status. */
     otpMessageId?: string;
-    otpStatus?: 'accepted' | 'sent' | 'delivered' | 'read' | 'failed';
+    /** "skipped" = WhatsApp not configured, nothing was sent. */
+    otpStatus?: 'accepted' | 'sent' | 'delivered' | 'read' | 'failed' | 'skipped';
     attempts?: number;
     verifiedAt?: Date;
   };
@@ -141,7 +142,7 @@ const OrderSchema = new Schema<IOrder>(
       assignedAt:  { type: Date },
       otpSentAt:   { type: Date },
       otpMessageId: { type: String },
-      otpStatus:   { type: String, enum: ['accepted', 'sent', 'delivered', 'read', 'failed'] },
+      otpStatus:   { type: String, enum: ['accepted', 'sent', 'delivered', 'read', 'failed', 'skipped'] },
       attempts:    { type: Number, default: 0 },
       verifiedAt:  { type: Date },
     },

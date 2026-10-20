@@ -66,14 +66,28 @@ interface GatewayOutcome {
 export const refundReferenceId = (orderNumber: string, attempt: number) =>
   `${orderNumber.replace(/[^A-Za-z0-9]/g, '')}_R${attempt}`.slice(0, 40);
 
-function gatewayErrorMessage(error: unknown): { message: string; uncertain: boolean } {
+function gatewayErrorMessage(error: unknown, source?: RefundSource): { message: string; uncertain: boolean; status?: number } {
   if (error instanceof PayoutRequestError) return { message: error.message, uncertain: error.uncertain };
-  const e = error as { response?: { status?: number; data?: { message?: string; error?: { description?: string } } }; statusCode?: number; error?: { description?: string }; message?: string };
+  const e = error as {
+    isAxiosError?: boolean;
+    request?: unknown;
+    response?: { status?: number; data?: { message?: string; code?: string; error?: { description?: string } } };
+    statusCode?: number;
+    error?: { description?: string };
+    message?: string;
+  };
   const status = e.response?.status ?? e.statusCode;
-  const message =
+  let message =
     e.response?.data?.message ?? e.response?.data?.error?.description ?? e.error?.description ?? e.message ?? 'Gateway error';
-  // No HTTP status (network) or a 5xx: the request may have gone through.
-  return { message, uncertain: !status || status >= 500 };
+  if (source === 'cashfree' && status === 404) {
+    message = `Cashfree: ${message}. This order is not on the Cashfree account/environment configured on the server (it may have been paid with older or different API keys). Refund it from that Cashfree dashboard, then use "Mark refunded".`;
+  } else if (source === 'cashfree' && (status === 401 || status === 403)) {
+    message = `Cashfree rejected the server's API keys (${status}): ${message}`;
+  }
+  // Only a request that actually left the server can have gone through: a network error (no response) or a 5xx.
+  // Errors raised before sending (missing config, missing order id) are certain failures.
+  const sent = Boolean(e.isAxiosError || e.request || e.response || e.statusCode);
+  return { message, uncertain: sent && (!status || status >= 500), status };
 }
 
 const mapCashfreeRefund = (r: { cf_refund_id?: string; refund_status?: string; refund_arn?: string; status_description?: string }): GatewayOutcome => {
@@ -200,9 +214,24 @@ async function syncProcessing(doc: RefundOrderDoc): Promise<RefundRunResult> {
   try {
     result = await lookupAtGateway(doc, source, refund);
   } catch (error) {
-    return { ok: true, state: 'processing', message: `Could not check status yet: ${gatewayErrorMessage(error).message}` };
+    return { ok: true, state: 'processing', message: `Could not check status yet: ${gatewayErrorMessage(error, source).message}` };
   }
   return recordOutcome(doc, doc._rev, { ...refund, source }, result);
+}
+
+/**
+ * An approved refund that can't be sent is recorded as `failed` (with the reason) so the dashboard
+ * never sits on "Approved — sending"; the owner can fix the cause and approve again.
+ */
+async function failApproved(doc: RefundOrderDoc, status: number, reason: string): Promise<RefundRunResult> {
+  console.error('[refunds] approved refund not sent', doc.orderNumber, reason);
+  await writeClient
+    .patch(doc._id)
+    .ifRevisionId(doc._rev)
+    .set({ 'refund.state': 'failed', 'refund.failureReason': reason.slice(0, 300), 'refund.completedAt': new Date().toISOString() })
+    .commit()
+    .catch((err: unknown) => console.error('[refunds] could not record failure', doc.orderNumber, err instanceof Error ? err.message : err));
+  return { ok: false, status, message: reason };
 }
 
 /** Perform an approved refund, or (for one already sent) refresh its status from the gateway. */
@@ -215,18 +244,27 @@ export async function processRefund(orderId: string): Promise<RefundRunResult> {
   if (refund.state === 'processing') return syncProcessing(doc);
   if (refund.state === 'success') return { ok: true, state: 'success', message: 'Refund already completed.' };
   if (refund.state !== 'approved') return { ok: false, status: 409, message: 'Approve the refund in the Orders dashboard first.' };
-  if (!refundExpected(doc)) return { ok: false, status: 409, message: 'This order has no refund due.' };
+  try {
+    return await sendApproved(doc);
+  } catch (error) {
+    // Unexpected error before the refund was locked: nothing reached the gateway.
+    return failApproved(doc, 500, `Refund could not be started: ${error instanceof Error ? error.message : 'unexpected error'}`);
+  }
+}
+
+async function sendApproved(doc: RefundOrderDoc): Promise<RefundRunResult> {
+  const refund = doc.refund ?? {};
+  if (!refundExpected(doc)) return failApproved(doc, 409, 'This order has no refund due.');
 
   const source = refundSource(doc);
   const total = doc.total ?? 0;
   const amount = clampRefundAmount(refund.amount, total);
-  if (!(amount > 0)) return { ok: false, status: 400, message: 'Refund amount must be more than ₹0.' };
+  if (!(amount > 0)) return failApproved(doc, 400, 'Refund amount must be more than ₹0.');
 
   const dest = refund.approvedDestination;
   if (source === 'payout') {
     if (!dest?.mode || (dest.mode === 'upi' ? !dest.upiId : !dest.accountNumber || !dest.ifsc)) {
-      await writeClient.patch(doc._id).set({ 'refund.state': 'failed', 'refund.failureReason': 'No approved UPI / bank details.' }).commit();
-      return { ok: false, status: 400, message: 'No approved UPI / bank details for this refund.' };
+      return failApproved(doc, 400, 'No approved UPI / bank details for this refund.');
     }
     if (!isPayoutsConfigured()) {
       await writeClient.patch(doc._id).ifRevisionId(doc._rev).set({ 'refund.state': 'manual', 'refund.source': source, 'refund.amount': amount }).commit();
@@ -263,8 +301,8 @@ export async function processRefund(orderId: string): Promise<RefundRunResult> {
   try {
     result = await sendToGateway(current, source, referenceId, amount, dest);
   } catch (error) {
-    const { message, uncertain } = gatewayErrorMessage(error);
-    console.error('[refunds] gateway error', doc.orderNumber, message);
+    const { message, uncertain, status } = gatewayErrorMessage(error, source);
+    console.error('[refunds] gateway error', doc.orderNumber, source, status ?? 'no-status', message);
     if (uncertain) return { ok: true, state: 'processing', message: `Refund sent; waiting for confirmation (${message}). Use "Check status" shortly.` };
     result = { outcome: 'failed', message };
   }

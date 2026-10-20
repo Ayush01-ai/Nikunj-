@@ -41,6 +41,11 @@ Plain-language guide for running the store. For technical detail see
   can still be refunded. Once those are settled, the keys can be removed.
 - An order is marked *paid* only after the server confirms the payment with Cashfree (never
   just because the customer's browser says so).
+- **Delivery charge**: set *Delivery charge* and *Free delivery threshold* in Studio → Site
+  Settings (currently ₹40, free from ₹499). The cart, the checkout summary, the saved order and
+  the Cashfree charge all use these values (subtotal + delivery − coupon). If the website's
+  total ever differs from what the customer was shown (e.g. you change a setting while they are
+  checking out), the order is not placed; the customer sees the new total and confirms again.
 
 ## 4. Cancellations, returns and refunds
 
@@ -61,6 +66,13 @@ Plain-language guide for running the store. For technical detail see
      payment type. Customers are told politely before they cancel or return that the delivery
      charge is non-refundable. To refund delivery charges by default, turn on *Refund delivery
      charge* in Studio → Admin Access.
+   - **If a refund can't be sent** (e.g. Cashfree says "Order not found" because the order was
+     paid with older/different Cashfree keys, the keys are rejected, or the website can't be
+     reached), the refund changes to **Refund failed** with the reason — it never stays stuck on
+     *Approved — sending*. For orders paid under old keys, refund from that Cashfree dashboard,
+     then click **Mark refunded**; otherwise fix the cause and click **Retry refund**. A refund
+     Cashfree has accepted but put *on hold* (e.g. low account balance) stays *Processing* and
+     updates automatically once Cashfree releases it.
 4. **New this release:** Studio now uses **token login**. Everyone who uses Studio must log in
    once more. This lets the website confirm that a refund request really came from a Studio
    editor; anonymous requests are refused.

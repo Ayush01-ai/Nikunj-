@@ -260,7 +260,11 @@ export default function LoginPage() {
                       role="tab"
                       type="button"
                       aria-selected={method === m}
-                      onClick={() => { setMethod(m); setShowPassword(false); }}
+                      onClick={() => {
+                        if (m === 'phone') { router.push(`/login/whatsapp?next=${encodeURIComponent(next)}`); return; }
+                        setMethod(m);
+                        setShowPassword(false);
+                      }}
                       className={`flex items-center justify-center gap-2 py-2.5 font-cinzel text-[11px] tracking-widest uppercase transition-colors ${
                         method === m ? 'bg-teal text-white' : 'text-[var(--text-mid)] hover:text-gold'
                       }`}
@@ -393,21 +397,10 @@ export default function LoginPage() {
                   )}
                   <div className="mt-5 flex flex-col items-center gap-2">
                     <button type="button" onClick={() => switchEmailMode('signin')} className={linkBtnCls}>Back to sign in</button>
-                    <button type="button" onClick={() => { setMethod('phone'); switchEmailMode('signin'); }} className={linkBtnCls}>
+                    <button type="button" onClick={() => router.push(`/login/whatsapp?next=${encodeURIComponent(next)}`)} className={linkBtnCls}>
                       Signed up with phone? Log in with WhatsApp instead
                     </button>
                   </div>
-                </motion.div>
-              )}
-
-              {method === 'phone' && (
-                <motion.div key="phone" initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 16 }}>
-                  <p className="font-lato text-sm text-[var(--text-mid)] mb-4">
-                    We send a 6-digit code to your WhatsApp number. No password needed.
-                  </p>
-                  <Link href={`/login/whatsapp?next=${encodeURIComponent(next)}`} className="btn-gold w-full flex items-center justify-center gap-2">
-                    <Phone size={14} /> Continue with WhatsApp <ArrowRight size={14} />
-                  </Link>
                 </motion.div>
               )}
             </AnimatePresence>

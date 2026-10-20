@@ -5,7 +5,7 @@ import { getAdminSettings, getSanityOrder } from '@/backend/lib/sanityOrders';
 import { requestEligibility } from '@/cms/lib/orderRequests';
 import { refundBreakdown } from '@/cms/lib/refunds';
 import { refundView } from '@/backend/lib/refundView';
-import { deliveryView } from '@/backend/lib/delivery';
+import { deliveryView, ensureDeliveryCode, OUT_FOR_DELIVERY } from '@/backend/lib/delivery';
 
 const isRateLimited = createRateLimiter(10, 10 * 60 * 1000, 'api/track-order:isRateLimited');
 
@@ -32,6 +32,11 @@ export async function POST(req: NextRequest) {
   const ri = managed?.returnInfo;
   const addr = mongoOrder.shippingAddress;
   const policy = refundBreakdown(mongoOrder, admin.refundDeliveryCharge);
+  // Shipped in Studio but the status webhook never reached us (e.g. local dev): create the code now.
+  let delivery = mongoOrder.delivery;
+  if (OUT_FOR_DELIVERY.has(status) && !delivery?.token) {
+    delivery = await ensureDeliveryCode(orderId).catch(() => delivery);
+  }
   const data = {
     orderId,
     status,
@@ -65,7 +70,8 @@ export async function POST(req: NextRequest) {
     refund: refundView(managed, mongoOrder.userId ? 'account' : 'otp', policy),
     // What a cancellation / return would refund, so the customer is told before they ask.
     refundPolicy: { deliveryCharge: policy.deliveryCharge, refundable: policy.expected, deducted: policy.deducted },
-    delivery: deliveryView(mongoOrder, status, viaAccount),
+    // Owner-only: the code is included only for the signed-in owner (viaAccount); phone-number lookups get status only.
+    delivery: deliveryView({ orderId, delivery }, status, viaAccount),
   };
 
   return NextResponse.json({ success: true, data }, { headers: { 'Cache-Control': 'no-store' } });

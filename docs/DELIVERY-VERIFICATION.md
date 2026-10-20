@@ -13,7 +13,12 @@ Independent of login method (Google, email/password, WhatsApp, or guest).
 4. **If WhatsApp fails:** `delivery.otpStatus = failed`; the owner still sees the code on the site with the message
    "We could not send the code to your WhatsApp". The UI never claims delivery unless the provider confirmed it.
    (The admin assign response includes the code only when the send failed, so the shop can relay it by phone.)
-5. **Verification:** delivery partner opens `/deliver/<token>`; timing-safe compare, max 5 wrong tries (atomic), atomic one-time claim
+   If WhatsApp is not configured (no `WHATSAPP_ACCESS_TOKEN`/`WHATSAPP_TOKEN`, e.g. local dev), nothing is sent,
+   `otpStatus = skipped`, and the code is still shown to the owner.
+5. **Created when:** the Orders Dashboard hands the order to delivery (`assignDelivery`), **or** the status becomes `shipped`
+   in Sanity Studio (`/api/webhooks/order-status` → `ensureDeliveryCode`). If that webhook never arrives (e.g. localhost),
+   the next `GET /api/orders` or Track Order lookup creates it (the code is still returned only to the signed-in owner). Creation is atomic, so only one code/WhatsApp is produced.
+6. **Verification:** delivery partner opens `/deliver/<token>`; timing-safe compare, max 5 wrong tries (atomic), atomic one-time claim
    (replay returns 409), PIN expiry `DELIVERY_PIN_TTL_HOURS` (default 72h, HTTP 410).
 
 ## Delivery status webhook (Meta Cloud API)

@@ -56,6 +56,8 @@ export async function POST(req: NextRequest) {
     await Otp.deleteMany({ phone, ...loginOtpScope });
     await Otp.create({ phone, otp, expiresAt, channel: 'whatsapp', purpose: 'login' });
 
+    // Live sending always wins when credentials exist, even in development; the dev code is only a no-credentials fallback.
+    let sentLive = false;
     if (isWhatsAppConfigured() && process.env.WHATSAPP_OTP_TEMPLATE) {
       const sent = await sendWhatsAppOtp(phone, otp);
       if (!sent) {
@@ -65,6 +67,7 @@ export async function POST(req: NextRequest) {
           { status: 502 },
         );
       }
+      sentLive = true;
     } else if (process.env.NODE_ENV !== 'production') {
       console.log(`[DEV] WhatsApp OTP for ${phone}: ${otp}`);
     } else {
@@ -75,7 +78,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       message: `OTP sent via WhatsApp to +91-${phone.slice(0, 2)}XXXXXX${phone.slice(-2)}`,
-      ...(process.env.NODE_ENV === 'development' && { _devOtp: otp }),
+      ...(process.env.NODE_ENV === 'development' && !sentLive && { _devOtp: otp }),
     });
   } catch (error) {
     console.error('[whatsapp send-otp]', error);

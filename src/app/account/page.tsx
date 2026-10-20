@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
-  Package, MapPin, Heart, LogOut, ChevronRight, ShoppingBag, Truck, CheckCircle2, Clock, User as UserIcon, Mail, Phone, Trash2, Pencil, Plus, X, Star, KeyRound,
+  Package, MapPin, Heart, LogOut, ChevronRight, ShoppingBag, Truck, CheckCircle2, Clock, User as UserIcon, Mail, Phone, Trash2, Pencil, Plus, X, Star,
 } from 'lucide-react';
 import { useAuthStore } from '@/frontend/store/authStore';
 import { useWishlistStore } from '@/frontend/store/wishlistStore';
@@ -24,9 +24,9 @@ import type { Order, Product, ShippingAddress } from '@/types';
 import { ORDER_STATUS_LABEL, ORDER_STEPS, isReturnStatus } from '@/cms/lib/orderMessages';
 import toast from 'react-hot-toast';
 import { RefundPanel, type RefundView } from '@/frontend/components/orders/RefundPanel';
-import { CopyCodeButton, deliveryStatusText, type DeliveryOtpStatus } from '@/frontend/components/orders/DeliveryCode';
+import { DeliveryCode, type DeliveryCodeView } from '@/frontend/components/orders/DeliveryCode';
 
-type AccountOrder = Order & { refund?: RefundView | null; delivery?: { otpRequired?: boolean; code?: string; verifiedAt?: string; otpStatus?: DeliveryOtpStatus; otpSentAt?: string | null } | null };
+type AccountOrder = Order & { refund?: RefundView | null; delivery?: DeliveryCodeView | null };
 
 // Same build-time pattern used elsewhere (e.g. login/whatsapp/page.tsx) — only render the
 // Clerk sign-out bridge when a <ClerkProvider> ancestor is guaranteed to exist.
@@ -451,14 +451,9 @@ export default function AccountPage() {
                         </div>
                       </div>
                       <OrderProgress status={order.status} />
-                      {order.status === 'shipped' && order.delivery?.code && !order.delivery.verifiedAt && (
-                        <p className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 bg-cream border border-gold/50 px-3 py-2 font-lato text-xs text-deep" data-testid="account-delivery-code">
-                          <KeyRound size={13} className="text-gold-dark" aria-hidden="true" />
-                          Out for delivery · Delivery code <span className="font-semibold text-sm tracking-[0.25em]">{order.delivery.code}</span>
-                          <CopyCodeButton code={order.delivery.code} />
-                          <span className="text-[var(--text-mid)]">— {deliveryStatusText(order.delivery.otpStatus, order.delivery.otpSentAt)} Share it with the delivery partner only after you receive the parcel.</span>
-                        </p>
-                      )}
+                      <div data-testid="account-delivery-code">
+                        <DeliveryCode delivery={order.delivery} status={order.status} className="mt-3" />
+                      </div>
                     </Link>
                   </motion.div>
                 ))}

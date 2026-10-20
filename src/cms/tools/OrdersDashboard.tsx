@@ -337,16 +337,33 @@ export function OrdersDashboard() {
   /** Runs (or re-checks) an approved refund on the server, which holds the gateway keys. */
   const callRefundApi = useCallback(async (o: DashOrder, quiet = false) => {
     const token = studioToken(client.config());
-    const res = await fetch(`${siteOrigin()}/api/refunds/process`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json', ...(token && { Authorization: `Bearer ${token}` }) },
-      body: JSON.stringify({ orderId: o.orderNumber }),
-    });
-    const json = (await res.json().catch(() => ({}))) as { success?: boolean; message?: string };
-    if (!res.ok || !json.success) {
+    let res: Response | null = null;
+    let json: { success?: boolean; message?: string } = {};
+    try {
+      res = await fetch(`${siteOrigin()}/api/refunds/process`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...(token && { Authorization: `Bearer ${token}` }) },
+        body: JSON.stringify({ orderId: o.orderNumber }),
+      });
+      json = (await res.json().catch(() => ({}))) as typeof json;
+    } catch (e) {
+      json = { message: `Could not reach the website server (${e instanceof Error ? e.message : 'network error'}).` };
+    }
+    if (!res?.ok || !json.success) {
+      const message = json.message || `Refund request failed (${res?.status ?? 'network'})`;
+      // If the server never picked the refund up (unreachable, not authorised, crashed), don't leave it on "Approved — sending".
+      const fresh = await client.fetch<{ _rev: string; refund?: RefundInfo | null } | null>(`*[_id == $id][0]{_rev, refund}`, { id: o._id }).catch(() => null);
+      if (fresh?.refund?.state === 'approved') {
+        await client
+          .patch(o._id)
+          .ifRevisionId(fresh._rev)
+          .set({ 'refund.state': 'failed', 'refund.failureReason': message.slice(0, 300), 'refund.completedAt': new Date().toISOString() })
+          .commit()
+          .catch(() => undefined);
+      }
       if (quiet) return;
-      throw new Error(`${o.orderNumber}: ${json.message || `Refund request failed (${res.status})`}`);
+      throw new Error(`${o.orderNumber}: ${message}`);
     }
     if (!quiet) setNotice(`${o.orderNumber}: ${json.message ?? 'Done'}`);
   }, [client]);

@@ -3,7 +3,7 @@ import { Order, type IOrder } from '@/backend/models/Order';
 import { connectDB } from '@/backend/lib/mongodb';
 import { deliveryOtp } from '@/backend/lib/otpHash';
 import { getSanityOrder, sanityOrderId } from '@/backend/lib/sanityOrders';
-import { sendWhatsAppOtp, sendDeliveryOtpWhatsApp } from '@/backend/lib/whatsapp';
+import { isWhatsAppConfigured, sendWhatsAppOtp, sendDeliveryOtpWhatsApp } from '@/backend/lib/whatsapp';
 import { historyEntry } from '@/cms/lib/orderOps';
 import { writeClient } from '@/cms/lib/client';
 
@@ -45,9 +45,19 @@ export async function sendDeliveryCode(order: Pick<IOrder, 'orderId' | 'shipping
   const token = order.delivery?.token;
   const phone = order.shippingAddress?.phone;
   if (!token || !phone) return false;
+  if (!isWhatsAppConfigured()) {
+    // No credentials (e.g. local dev): nothing is sent, the code is still on the owner's order page.
+    await Order.updateOne({ orderId: order.orderId }, { $set: { 'delivery.otpStatus': 'skipped' } });
+    return false;
+  }
   const otp = deliveryOtp(order.orderId, token);
   let messageId: string | undefined;
-  const sent = (await sendDeliveryOtpWhatsApp(phone, otp, order.orderId, (id) => { messageId = id; })) || (await sendWhatsAppOtp(phone, otp));
+  let sent = false;
+  try {
+    sent = (await sendDeliveryOtpWhatsApp(phone, otp, order.orderId, (id) => { messageId = id; })) || (await sendWhatsAppOtp(phone, otp));
+  } catch (err) {
+    console.error('[delivery] WhatsApp send threw', order.orderId, err instanceof Error ? err.message : err);
+  }
   await Order.updateOne(
     { orderId: order.orderId },
     sent
@@ -55,6 +65,45 @@ export async function sendDeliveryCode(order: Pick<IOrder, 'orderId' | 'shipping
       : { $set: { 'delivery.otpStatus': 'failed' } },
   );
   return sent;
+}
+
+/** Order statuses in which the customer's doorstep code is live and shown. */
+export const OUT_FOR_DELIVERY = new Set(['shipped', 'out_for_delivery']);
+
+/**
+ * Makes sure a shipped order has a delivery code, however it became "shipped" (Orders Dashboard hand-off,
+ * a status change in Sanity Studio, or a webhook that never reached this server, e.g. in local dev).
+ * The token is created atomically, so concurrent callers create — and WhatsApp — exactly one code. The code
+ * itself is HMAC-derived from the token, never stored. WhatsApp failure never undoes the code.
+ */
+export async function ensureDeliveryCode(orderId: string): Promise<IOrder['delivery'] | undefined> {
+  await connectDB();
+  const now = new Date();
+  const created = await Order.findOneAndUpdate(
+    { orderId, 'delivery.token': { $exists: false }, 'delivery.verifiedAt': { $exists: false } },
+    { $set: { 'delivery.token': newDeliveryToken(), 'delivery.assignedAt': now, 'delivery.attempts': 0 } },
+    { new: true },
+  );
+  if (!created) {
+    const existing = await Order.findOne({ orderId }).select('delivery').lean<Pick<IOrder, 'delivery'>>();
+    return existing?.delivery;
+  }
+
+  if (process.env.SANITY_API_TOKEN) {
+    await writeClient
+      .patch(sanityOrderId(orderId))
+      .setIfMissing({ delivery: {} })
+      .set({ 'delivery.assignedAt': now.toISOString(), 'delivery.otpRequired': true, 'delivery.attempts': 0 })
+      .commit()
+      .catch((err: unknown) => console.error('[delivery] sanity sync failed', orderId, err instanceof Error ? err.message : err));
+  }
+
+  const sent = await sendDeliveryCode(created).catch(() => false);
+  if (sent && process.env.SANITY_API_TOKEN) {
+    await writeClient.patch(sanityOrderId(orderId)).set({ 'delivery.otpSentAt': new Date().toISOString() }).commit().catch(() => undefined);
+  }
+  const fresh = await Order.findOne({ orderId }).select('delivery').lean<Pick<IOrder, 'delivery'>>();
+  return fresh?.delivery ?? created.delivery;
 }
 
 /** Delivery PINs stop working (and stop being shown) this long after the delivery was assigned. */
@@ -76,7 +125,7 @@ export function deliveryView(order: Pick<IOrder, 'orderId' | 'delivery'>, status
   const d = order.delivery;
   if (!d?.token) return null;
   if (d.verifiedAt) return { otpRequired: true, verifiedAt: new Date(d.verifiedAt).toISOString() };
-  if (status !== 'shipped') return null;
+  if (!OUT_FOR_DELIVERY.has(status)) return null;
   const expired = pinExpired(d);
   return {
     otpRequired: true,

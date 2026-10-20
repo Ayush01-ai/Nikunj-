@@ -7,7 +7,8 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Minus, Plus, Trash2, Tag, ShieldCheck, Truck, Banknote, Smartphone, CreditCard, Building2 } from 'lucide-react';
 import { useCartStore } from '@/frontend/store/cartStore';
-import { getVariantPricing } from '@/cms/lib/pricing';
+import { getVariantPricing, orderTotals } from '@/cms/lib/pricing';
+import { useSiteSettings } from '@/frontend/providers/Providers';
 import { useAuthStore } from '@/frontend/store/authStore';
 import { Navbar } from '@/frontend/components/layout/Navbar';
 import { Footer } from '@/frontend/components/layout/Footer';
@@ -20,8 +21,6 @@ import toast from 'react-hot-toast';
 const STEPS = ['Cart', 'Address', 'Payment'] as const;
 type Step = typeof STEPS[number];
 
-const FREE_DELIVERY_THRESHOLD = 999;
-const DELIVERY_CHARGE = 99;
 const CASHFREE_SRC = 'https://sdk.cashfree.com/js/v3/cashfree.js';
 
 type CashfreeCheckoutResult = { error?: { message?: string }; paymentDetails?: { paymentMessage?: string } };
@@ -84,9 +83,19 @@ export default function CheckoutPage() {
     if (checkoutItems.length === items.length) clearCart();
     else removeItems(checkoutItems.map((item) => item.id));
   };
-  const delivery = sub >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_CHARGE;
-  const discount = couponData?.discountAmount || 0;
-  const total = sub + delivery - discount;
+  const { settings } = useSiteSettings();
+  // Set when the server's pricing differed from what was shown; its figures replace ours until the cart changes.
+  const [serverPricing, setServerPricing] = useState<{ subtotal: number; deliveryCharge: number; discount: number; total: number } | null>(null);
+  const shownTotals = orderTotals(sub, couponData?.discountAmount || 0, settings);
+  const FREE_DELIVERY_THRESHOLD = shownTotals.freeDeliveryThreshold;
+  const summarySub = serverPricing?.subtotal ?? sub;
+  const delivery = serverPricing?.deliveryCharge ?? shownTotals.deliveryCharge;
+  const discount = serverPricing?.discount ?? shownTotals.discount;
+  const total = serverPricing?.total ?? shownTotals.total;
+
+  useEffect(() => {
+    setServerPricing(null);
+  }, [sub, couponData]);
 
   // Steps are client state on one URL, so the global ScrollReset never fires. Without this the
   // previous step's scroll position is kept and a shorter next step (e.g. Address after a long
@@ -255,6 +264,7 @@ export default function CheckoutPage() {
         shippingAddress: address,
         couponCode: couponData?.code,
         paymentMethod,
+        expectedTotal: total,
       };
 
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -265,6 +275,9 @@ export default function CheckoutPage() {
         body: JSON.stringify(orderPayload),
       });
       const json = await res.json();
+      if (res.status === 409 && json?.code === 'TOTAL_CHANGED' && json.pricing) {
+        setServerPricing(json.pricing);
+      }
       if (!res.ok) throw new Error(json.error);
 
       if (paymentMethod === 'cod') {
@@ -678,7 +691,7 @@ export default function CheckoutPage() {
               <h3 className="font-cinzel text-sm font-semibold text-deep mb-4">Order Summary</h3>
               <div className="space-y-2 text-sm font-lato text-[var(--text-mid)] divide-y divide-[var(--border)]">
                 <div className="pb-2 space-y-1">
-                  <div className="flex justify-between"><span>Subtotal</span><span>₹{sub.toLocaleString('en-IN')}</span></div>
+                  <div className="flex justify-between"><span>Subtotal</span><span>₹{summarySub.toLocaleString('en-IN')}</span></div>
                   <div className="flex justify-between"><span>Delivery</span><span className={delivery === 0 ? 'text-green-600' : ''}>{delivery === 0 ? 'FREE' : `₹${delivery}`}</span></div>
                   {discount > 0 && <div className="flex justify-between text-green-600"><span>Discount</span><span>-₹{discount}</span></div>}
                 </div>
@@ -686,7 +699,7 @@ export default function CheckoutPage() {
                   <span>Total</span><span>₹{total.toLocaleString('en-IN')}</span>
                 </div>
               </div>
-              {sub < FREE_DELIVERY_THRESHOLD && (
+              {FREE_DELIVERY_THRESHOLD > 0 && sub < FREE_DELIVERY_THRESHOLD && (
                 <div className="mt-4 p-3 bg-gold/5 border border-gold/20">
                   <div className="flex items-center gap-2 mb-1">
                     <Truck size={13} className="text-gold" />

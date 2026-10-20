@@ -96,3 +96,33 @@ export function lowestPricing(product: PricedProduct): VariantPricing & { hasRan
 }
 
 export const formatINR = (amount: number) => `₹${Math.round(amount).toLocaleString('en-IN')}`;
+
+/** Used only when Site Settings leaves the delivery fields empty. */
+export const DEFAULT_FREE_DELIVERY_THRESHOLD = 999;
+export const DEFAULT_DELIVERY_CHARGE = 99;
+
+export type DeliverySettings = { freeDeliveryThreshold?: number | null; deliveryCharge?: number | null } | null | undefined;
+
+const nonNegative = (value: unknown, fallback: number) =>
+  typeof value === 'number' && Number.isFinite(value) && value >= 0 ? Math.round(value) : fallback;
+
+/** Delivery rules from Site Settings (Studio), with safe defaults. */
+export function deliveryPolicy(settings: DeliverySettings) {
+  return {
+    freeDeliveryThreshold: nonNegative(settings?.freeDeliveryThreshold, DEFAULT_FREE_DELIVERY_THRESHOLD),
+    deliveryCharge: nonNegative(settings?.deliveryCharge, DEFAULT_DELIVERY_CHARGE),
+  };
+}
+
+/**
+ * Single source of truth for an order's delivery charge and payable total, used by the checkout
+ * summary, the cart and the order API, so what the shopper sees is exactly what is charged.
+ * Free delivery is decided on the item subtotal (before any coupon).
+ */
+export function orderTotals(subtotal: number, discount: number, settings: DeliverySettings) {
+  const { freeDeliveryThreshold, deliveryCharge: charge } = deliveryPolicy(settings);
+  const sub = Math.max(0, Math.round(subtotal));
+  const off = Math.min(Math.max(0, Math.round(discount)), sub);
+  const deliveryCharge = sub >= freeDeliveryThreshold ? 0 : charge;
+  return { subtotal: sub, discount: off, deliveryCharge, freeDeliveryThreshold, total: sub + deliveryCharge - off };
+}

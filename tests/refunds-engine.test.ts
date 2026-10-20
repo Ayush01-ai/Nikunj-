@@ -143,10 +143,60 @@ describe('processRefund', () => {
   });
 
   it('keeps the refund processing (no retry) when the gateway result is uncertain', async () => {
-    cashfree.createCashfreeRefund.mockRejectedValue(Object.assign(new Error('socket hang up'), {}));
+    // Axios network error: the request left the server but no response came back.
+    cashfree.createCashfreeRefund.mockRejectedValue(Object.assign(new Error('socket hang up'), { isAxiosError: true, request: {} }));
     state.currentDoc = { ...baseDoc, status: 'cancelled', paymentMethod: 'upi', paymentStatus: 'refund_due', cashfreeOrderId: 'o', cashfreePaymentId: 'p', refund: { state: 'approved' } };
     expect(await processRefund('NS-AB12CD34')).toMatchObject({ ok: true, state: 'processing' });
     expect(lastState()).toBe('processing');
+  });
+
+  it('treats a Cashfree 5xx as uncertain too', async () => {
+    cashfree.createCashfreeRefund.mockRejectedValue({ isAxiosError: true, response: { status: 502, data: { message: 'bad gateway' } } });
+    state.currentDoc = { ...baseDoc, status: 'cancelled', paymentMethod: 'upi', paymentStatus: 'refund_due', cashfreeOrderId: 'o', cashfreePaymentId: 'p', refund: { state: 'approved' } };
+    expect(await processRefund('NS-AB12CD34')).toMatchObject({ ok: true, state: 'processing' });
+  });
+
+  it('marks the refund failed (not stuck) when Cashfree says the order does not exist under the current keys', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    cashfree.createCashfreeRefund.mockRejectedValue({
+      isAxiosError: true,
+      response: { status: 404, data: { message: 'order not found', code: 'order_not_found', type: 'invalid_request_error' } },
+    });
+    state.currentDoc = { ...baseDoc, status: 'cancelled', paymentMethod: 'upi', paymentStatus: 'refund_due', cashfreeOrderId: 'old_cf_order', cashfreePaymentId: 'p', refund: { state: 'approved' } };
+    const result = await processRefund('NS-AB12CD34');
+    expect(result).toMatchObject({ ok: true, state: 'failed' });
+    expect(result.message).toMatch(/order not found[\s\S]*different API keys|older or different API keys/);
+    expect(lastState()).toBe('failed');
+    expect(allSets().at(-1)?.['refund.failureReason']).toContain('order not found');
+    expect(allSets().at(-1)).not.toHaveProperty('paymentStatus'); // still refund_due, so it can be retried / marked refunded
+    expect(log).toHaveBeenCalledWith('[refunds] gateway error', 'NS-AB12CD34', 'cashfree', 404, expect.stringContaining('order not found'));
+    log.mockRestore();
+  });
+
+  it('marks the refund failed when Cashfree rejects the API keys', async () => {
+    cashfree.createCashfreeRefund.mockRejectedValue({ isAxiosError: true, response: { status: 401, data: { message: 'authentication Failed' } } });
+    state.currentDoc = { ...baseDoc, status: 'cancelled', paymentMethod: 'upi', paymentStatus: 'refund_due', cashfreeOrderId: 'o', cashfreePaymentId: 'p', refund: { state: 'approved' } };
+    expect(await processRefund('NS-AB12CD34')).toMatchObject({ ok: true, state: 'failed', message: expect.stringContaining('API keys (401)') });
+  });
+
+  it('fails (instead of waiting forever) when the request never left the server', async () => {
+    cashfree.createCashfreeRefund.mockRejectedValue(new Error('Cashfree is not configured (CASHFREE_APP_ID / CASHFREE_SECRET_KEY missing).'));
+    state.currentDoc = { ...baseDoc, status: 'cancelled', paymentMethod: 'upi', paymentStatus: 'refund_due', cashfreeOrderId: 'o', cashfreePaymentId: 'p', refund: { state: 'approved' } };
+    expect(await processRefund('NS-AB12CD34')).toMatchObject({ ok: true, state: 'failed' });
+    expect(lastState()).toBe('failed');
+  });
+
+  it('records an approved refund as failed when it cannot be sent at all', async () => {
+    state.currentDoc = { ...baseDoc, status: 'cancelled', paymentMethod: 'upi', paymentStatus: 'refund_due', refund: { state: 'approved' } };
+    expect(await processRefund('NS-AB12CD34')).toMatchObject({ ok: false, status: 400, message: expect.stringContaining('No approved UPI / bank details') });
+    expect(cashfree.createCashfreeRefund).not.toHaveBeenCalled();
+    expect(lastState()).toBe('failed');
+
+    committed.length = 0;
+    state.currentDoc = { ...baseDoc, status: 'delivered', paymentMethod: 'upi', paymentStatus: 'paid', cashfreeOrderId: 'o', refund: { state: 'approved' } };
+    expect(await processRefund('NS-AB12CD34')).toMatchObject({ ok: false, status: 409 });
+    expect(lastState()).toBe('failed');
+    expect(committed[0].ops).toContainEqual({ ifRevisionId: 'rev-0' }); // never overwrites a newer state
   });
 
   it('marks the refund failed when the gateway rejects it', async () => {

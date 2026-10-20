@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -31,6 +31,7 @@ const labelCls = 'font-cinzel text-[10px] tracking-widest uppercase text-[var(--
 const inputWrapCls = 'flex items-center border border-[var(--border)] bg-white focus-within:border-gold transition-colors';
 const inputCls = 'flex-1 min-w-0 py-3 pr-3 font-lato text-sm text-deep outline-none bg-transparent';
 
+const RESEND_SECONDS = 60;
 const errMsg = (err: unknown, fallback: string) => (err instanceof Error ? err.message : fallback);
 
 async function postJSON(url: string, body: unknown) {
@@ -59,15 +60,18 @@ export default function WhatsAppLoginPage() {
   const phoneForm = useForm<PhoneForm>({ resolver: zodResolver(phoneSchema) });
   const otpForm = useForm<OtpForm>({ resolver: zodResolver(otpSchema) });
 
-  const sendOtp = async (data: PhoneForm) => {
+  const sendOtp = async (data: PhoneForm): Promise<boolean> => {
     try {
       const json = await postJSON('/api/auth/whatsapp/send-otp', { phone: data.phone });
       setPhone(data.phone);
       setStep('otp');
       toast.success('OTP sent via WhatsApp!');
+      // Only present when the server could not send live (no credentials, development).
       if (json._devOtp) toast(`Dev OTP: ${json._devOtp}`, { duration: 10000 });
+      return true;
     } catch (err) {
       toast.error(errMsg(err, 'Error sending OTP'));
+      return false;
     }
   };
 
@@ -174,11 +178,27 @@ function OtpStep({
   phone: string;
   otpForm: ReturnType<typeof useForm<OtpForm>>;
   onBack: () => void;
-  onResend: () => void;
+  onResend: () => Promise<boolean>;
   resending: boolean;
   onLoggedIn: (user: User) => void;
 }) {
   const [pendingTicket, setPendingTicket] = useState<string | null>(null);
+  const [cooldown, setCooldown] = useState(RESEND_SECONDS);
+  const [resendBusy, setResendBusy] = useState(false);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const id = setTimeout(() => setCooldown((s) => s - 1), 1000);
+    return () => clearTimeout(id);
+  }, [cooldown]);
+
+  const resend = async () => {
+    if (cooldown > 0 || resendBusy) return;
+    setResendBusy(true);
+    const ok = await onResend();
+    setResendBusy(false);
+    if (ok) setCooldown(RESEND_SECONDS);
+  };
 
   const finishLogin = async () => {
     const me = await fetch('/api/auth/me', { cache: 'no-store' }).then((r) => r.json());
@@ -248,11 +268,11 @@ function OtpStep({
         </button>
         <button
           type="button"
-          disabled={resending}
-          onClick={onResend}
+          disabled={resending || resendBusy || cooldown > 0}
+          onClick={resend}
           className="font-cinzel text-[10px] tracking-widest uppercase text-teal hover:text-gold transition-colors disabled:opacity-50"
         >
-          Resend OTP
+          {cooldown > 0 ? `Resend OTP in ${cooldown}s` : 'Resend OTP'}
         </button>
       </div>
     </motion.div>

@@ -29,21 +29,24 @@ vi.mock('@/backend/lib/mongodb', async () => {
 });
 vi.mock('@/backend/models/Order', () => ({ Order: { findOne: vi.fn(), create: vi.fn(), countDocuments: vi.fn() } }));
 vi.mock('@/backend/lib/clerk', () => ({ requireAuthHybrid: vi.fn().mockRejectedValue(new Error('no session')) }));
-vi.mock('@/cms/lib/client', () => ({
-  client: {
+vi.mock('@/cms/lib/client', () => {
+  const client = {
     fetch: vi.fn(async (query: string) => {
       if (String(query).includes('_type == "product"')) {
         return [{ _id: 'prod-1', name: 'Test Product', price: 499, stock: 10, sizes: [], colors: [] }];
       }
       return null; // site settings
     }),
-  },
-}));
+    withConfig: () => client,
+  };
+  return { client };
+});
 vi.mock('@/backend/lib/sanityOrders', () => ({
   getSanityOrderStatuses: vi.fn(),
   pushConfirmedOrderToSanity: vi.fn(),
 }));
-vi.mock('@/cms/lib/pricing', () => ({
+vi.mock('@/cms/lib/pricing', async () => ({
+  ...(await vi.importActual<typeof import('@/cms/lib/pricing')>('@/cms/lib/pricing')),
   getVariantPricing: vi.fn(() => ({ price: 499, stock: 10 })),
 }));
 
