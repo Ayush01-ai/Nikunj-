@@ -62,6 +62,11 @@ export async function GET(req: NextRequest) {
     // Link by Google id first, then by verified email (merges with an existing email account).
     let user = (await User.findOne({ googleId: profile.sub })) ?? (await User.findOne({ email }));
     if (user) {
+      // Drop any password planted on an unverified account (pre-hijacking).
+      if (!user.emailVerified && !user.googleId) {
+        user.passwordHash = undefined;
+        user.authProviders = (user.authProviders ?? []).filter((p) => p !== 'email');
+      }
       user.googleId = profile.sub;
       user.emailVerified = true;
       if (!user.name && profile.name) user.name = profile.name;

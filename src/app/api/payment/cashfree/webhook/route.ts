@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     const timestamp = req.headers.get('x-webhook-timestamp');
 
     if (!signature || !timestamp) {
-      return NextResponse.json({ success: false, error: 'Missing signature headers.' }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'Missing signature headers.' }, { status: 401 });
     }
 
     let verified;
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
       verified = verifyCashfreeWebhookSignature(signature, rawBody, timestamp);
     } catch (err) {
       console.warn('[payment/cashfree/webhook] Invalid webhook signature:', err instanceof Error ? err.message : 'unknown');
-      return NextResponse.json({ success: false, error: 'Invalid signature.' }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'Invalid signature.' }, { status: 401 });
     }
 
     const event = verified.object as CashfreeWebhookPayload;

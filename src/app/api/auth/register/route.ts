@@ -27,7 +27,8 @@ export async function POST(req: NextRequest) {
     await ensureUserIndexes();
 
     const existing = await User.findOne({ email }).select('+passwordHash');
-    if (existing?.passwordHash) {
+    // Never attach a password to an existing account: the email is not verified here.
+    if (existing) {
       return NextResponse.json(
         { success: false, error: 'An account with this email already exists. Please sign in.' },
         { status: 409 },
@@ -35,16 +36,7 @@ export async function POST(req: NextRequest) {
     }
 
     const passwordHash = await hashPassword(password);
-    let user = existing;
-    if (user) {
-      // Account created earlier via Google: attach a password to it.
-      user.passwordHash = passwordHash;
-      if (!user.name && name) user.name = name;
-      user.authProviders = Array.from(new Set([...(user.authProviders ?? []), 'email' as const]));
-      await user.save();
-    } else {
-      user = await User.create({ email, name: name || undefined, passwordHash, authProviders: ['email'], role: 'user' });
-    }
+    const user = await User.create({ email, name: name || undefined, passwordHash, authProviders: ['email'], role: 'user' });
 
     return sessionResponse(user, 'Account created', 'email');
   } catch (error) {

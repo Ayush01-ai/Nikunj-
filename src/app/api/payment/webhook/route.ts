@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     const signature = req.headers.get('x-razorpay-signature');
 
     if (!signature) {
-      return NextResponse.json({ success: false, error: 'Missing signature.' }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'Missing signature.' }, { status: 401 });
     }
 
     const expectedSignature = crypto.createHmac('sha256', WEBHOOK_SECRET).update(rawBody).digest('hex');
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
 
     if (!isValid) {
       console.warn('[payment/webhook] Invalid webhook signature');
-      return NextResponse.json({ success: false, error: 'Invalid signature.' }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'Invalid signature.' }, { status: 401 });
     }
 
     const event = JSON.parse(rawBody);

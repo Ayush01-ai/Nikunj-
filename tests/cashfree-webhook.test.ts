@@ -48,7 +48,7 @@ describe('POST /api/payment/cashfree/webhook', () => {
   it('rejects when the signature/timestamp headers are missing', async () => {
     const { POST } = await import('@/app/api/payment/cashfree/webhook/route');
     const res = await POST(makeRequest('{}', {}));
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(401);
     expect(verifyCashfreeWebhookSignature).not.toHaveBeenCalled();
   });
 
@@ -58,7 +58,7 @@ describe('POST /api/payment/cashfree/webhook', () => {
     });
     const { POST } = await import('@/app/api/payment/cashfree/webhook/route');
     const res = await POST(makeRequest('{"type":"PAYMENT_SUCCESS_WEBHOOK"}', VALID_HEADERS));
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(401);
     expect(findOneAndUpdate).not.toHaveBeenCalled();
   });
 
