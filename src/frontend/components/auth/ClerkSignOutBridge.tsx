@@ -2,6 +2,7 @@
 
 import { useClerk } from '@clerk/nextjs';
 import { useEffect, useRef } from 'react';
+import { useClerkEnabled } from '@/frontend/providers/ClerkEnabledContext';
 
 /**
  * Only ever rendered when `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` is set (see
@@ -15,6 +16,12 @@ import { useEffect, useRef } from 'react';
  * user straight back in on next load via the still-active Clerk session).
  */
 export function ClerkSignOutBridge({ trigger }: { trigger: number }) {
+  // Only mount the inner component when ClerkProvider really exists (it needs both Clerk keys).
+  const enabled = useClerkEnabled();
+  return enabled ? <ClerkSignOutInner trigger={trigger} /> : null;
+}
+
+function ClerkSignOutInner({ trigger }: { trigger: number }) {
   const { signOut } = useClerk();
   const lastRef = useRef(0);
 

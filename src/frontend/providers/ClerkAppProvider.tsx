@@ -1,5 +1,6 @@
 import { ClerkProvider } from '@clerk/nextjs';
 import { isClerkConfigured } from '@/backend/lib/clerkConfig';
+import { ClerkEnabledProvider } from './ClerkEnabledContext';
 
 /**
  * Wraps children in `<ClerkProvider>` only when Clerk is actually configured, so
@@ -9,5 +10,9 @@ import { isClerkConfigured } from '@/backend/lib/clerkConfig';
  */
 export function ClerkAppProvider({ children }: { children: React.ReactNode }) {
   if (!isClerkConfigured()) return <>{children}</>;
-  return <ClerkProvider>{children}</ClerkProvider>;
+  return (
+    <ClerkProvider>
+      <ClerkEnabledProvider value={true}>{children}</ClerkEnabledProvider>
+    </ClerkProvider>
+  );
 }
