@@ -113,8 +113,13 @@ export async function sendOrderWhatsApp(order: OrderMessageInput & { phone?: str
  *  - WHATSAPP_OTP_BUTTON — set to "false" if the approved template has no copy-code
  *    button (zero-tap/no-button templates); defaults to including the button component.
  */
+export let lastOtpFailure = '';
 export async function sendWhatsAppOtp(phone: string, otp: string): Promise<boolean> {
-  if (!isWhatsAppConfigured()) return false;
+  lastOtpFailure = '';
+  if (!isWhatsAppConfigured()) {
+    lastOtpFailure = 'not_configured';
+    return false;
+  }
   const template = whatsappOtpTemplate();
   if (!template) {
     console.error('[whatsapp] WHATSAPP_OTP_TEMPLATE is not configured');
@@ -131,8 +136,8 @@ export async function sendWhatsAppOtp(phone: string, otp: string): Promise<boole
     { type: 'button', sub_type: 'url', index: '0', parameters: [{ type: 'text', text: otp }] },
   ];
   const buttonPref = process.env.WHATSAPP_OTP_BUTTON;
-  const shapes = buttonPref === 'false' ? [bodyOnly] : buttonPref === 'true' ? [withButton] : [bodyOnly, withButton];
-  const langs = process.env.WHATSAPP_OTP_TEMPLATE_LANG ? [process.env.WHATSAPP_OTP_TEMPLATE_LANG] : ['en_US', 'en'];
+  const shapes = buttonPref === 'false' ? [bodyOnly] : buttonPref === 'true' ? [withButton] : [withButton, bodyOnly];
+  const langs = process.env.WHATSAPP_OTP_TEMPLATE_LANG ? [process.env.WHATSAPP_OTP_TEMPLATE_LANG] : ['en', 'en_US'];
 
   const tokens = whatsappTokens();
   tokenLoop: for (const token of tokens) {
@@ -156,10 +161,14 @@ export async function sendWhatsAppOtp(phone: string, otp: string): Promise<boole
       signal: AbortSignal.timeout(8000),
     });
     if (res.ok) return true;
-    console.error('[whatsapp-otp] send failed', res.status, lang, components.length, (await res.text()).slice(0, 300));
+    const errText = await res.text();
+    const meta = /\"code\":\s*(\d+)/.exec(errText)?.[1] ?? '';
+    lastOtpFailure = `meta_${res.status}_${meta}`;
+    console.error('[whatsapp-otp] send failed', res.status, lang, components.length, errText.slice(0, 300));
     if (res.status === 401) continue tokenLoop;
     if (res.status !== 400 && res.status !== 404) return false;
   } catch (error) {
+    lastOtpFailure = 'network_error';
     console.error('[whatsapp-otp] send error', error instanceof Error ? error.message : error);
     return false;
   }

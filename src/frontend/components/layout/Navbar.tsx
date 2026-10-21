@@ -234,7 +234,7 @@ export function Navbar({ settings }: NavbarProps) {
               <Link
                 href={user ? '/account' : '/login'}
                 aria-label="Account"
-                className="hidden sm:flex p-2 text-[var(--text-mid)] hover:text-gold transition-colors cursor-pointer rounded-xs focus-visible:ring-2 focus-visible:ring-gold/50"
+                className="flex p-2 text-[var(--text-mid)] hover:text-gold transition-colors cursor-pointer rounded-xs focus-visible:ring-2 focus-visible:ring-gold/50"
               >
                 <User size={18} />
               </Link>
