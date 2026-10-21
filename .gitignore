@@ -68,6 +68,7 @@ audit/
 
 # Local env variants
 .env*.local
+.dev.vars
 
 # Stray command output
 /-w
