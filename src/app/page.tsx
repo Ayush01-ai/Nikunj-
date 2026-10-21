@@ -24,7 +24,7 @@ import { WhatsAppFloat } from '@/frontend/components/ui/WhatsAppFloat';
 import { CartSidebar } from '@/frontend/components/cart/CartSidebar';
 import type { HeroSlide, Category, Product, Testimonial, SiteSettings } from '@/types';
 
-export const revalidate = 3600;
+export const revalidate = false; // on-demand only (see /api/revalidate); no queue for time-based ISR
 
 async function getHomeData() {
   const [heroSlides, categories, allProducts, featuredProducts, bestsellers, newArrivals, testimonials, settings] =

@@ -23,7 +23,7 @@ export default function middleware(req: NextRequest, event: Parameters<typeof cl
 }
 
 export const config = {
-  // Clerk's server-side auth() is only used by API routes, so public storefront pages
-  // (home, collections, products) skip middleware entirely to save CPU on the edge.
-  matcher: ['/api/(.*)', '/trpc/(.*)', '/login(.*)', '/sign-in(.*)', '/sign-up(.*)', '/account(.*)', '/checkout(.*)'],
+  // Clerk's server-side auth() is only used by API routes. Page routes (including /sign-in
+  // and /login) render Clerk UI client-side, so they skip middleware to avoid cold-boot CPU cost.
+  matcher: ['/api/(.*)', '/trpc/(.*)'],
 };

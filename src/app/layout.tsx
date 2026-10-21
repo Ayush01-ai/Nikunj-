@@ -8,7 +8,7 @@ import { CookieConsent } from '@/frontend/components/ui/CookieConsent';
 import { ClerkAppProvider } from '@/frontend/providers/ClerkAppProvider';
 import type { NavMenuCategory, SiteSettings } from '@/types';
 
-export const revalidate = 3600; // Revalidate hourly
+export const revalidate = false; // on-demand only (see /api/revalidate); no queue for time-based ISR
 
 const getSiteSettings = () => sanityFetch<SiteSettings>('layout:settings', SITE_SETTINGS_QUERY);
 const getNavMenu = () => sanityFetch<NavMenuCategory[]>('layout:nav', NAV_MENU_QUERY);

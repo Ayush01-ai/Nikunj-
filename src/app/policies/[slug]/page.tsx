@@ -59,7 +59,7 @@ const policies: Record<string, { title: string; content: string[] }> = {
   },
 };
 
-export const revalidate = 300;
+export const revalidate = false; // on-demand only (see /api/revalidate); no queue for time-based ISR
 
 export function generateStaticParams() {
   return Object.keys(policies).map((slug) => ({ slug }));

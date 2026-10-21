@@ -10,7 +10,7 @@ const MAX_RESEND_INTERVAL_SECONDS = 60;
 
 // Per-IP guard in addition to the per-phone cooldown below: WhatsApp template sends are
 // billed per-message, so this limits abuse/enumeration beyond the existing SMS flow.
-const isIpLimited = createRateLimiter(10, 60 * 60 * 1000, 'api/auth/whatsapp/send-otp:isIpLimited'); // 10 requests / hour / IP
+const isIpLimited = createRateLimiter(20, 60 * 60 * 1000, 'api/auth/whatsapp/send-otp:isIpLimited'); // 20 requests / hour / IP (shared carrier NAT)
 const loginOtpScope = { purpose: { $ne: 'guest_payment' }, channel: 'whatsapp' };
 
 /**
@@ -20,7 +20,10 @@ const loginOtpScope = { purpose: { $ne: 'guest_payment' }, channel: 'whatsapp' }
  */
 export async function POST(req: NextRequest) {
   try {
-    if (await isIpLimited(clientIp(req))) {
+    // Skip the IP bucket when the IP is unknown so all visitors never share one global limit;
+    // the per-phone cooldown below still applies.
+    const ip = clientIp(req);
+    if (ip !== 'unknown' && (await isIpLimited(ip))) {
       return NextResponse.json({ success: false, error: 'Too many requests. Please try again later.' }, { status: 429 });
     }
 

@@ -3,7 +3,7 @@ import { client } from '@/cms/lib/client';
 import { ALL_TYPE_PATHS_QUERY } from '@/cms/lib/queries';
 import { CatalogPage, generateCatalogMetadata } from '@/frontend/components/products/CatalogPage';
 
-export const revalidate = 3600;
+export const revalidate = false; // on-demand only (see /api/revalidate); no queue for time-based ISR
 
 interface PageProps {
   params: Promise<{ collection: string; type: string }>;
@@ -11,7 +11,7 @@ interface PageProps {
 
 export async function generateStaticParams() {
   try {
-    const rows = await client.fetch<{ slug: string; category: string }[]>(ALL_TYPE_PATHS_QUERY, {}, { next: { revalidate: 3600 } });
+    const rows = await client.fetch<{ slug: string; category: string }[]>(ALL_TYPE_PATHS_QUERY, {}, { next: { revalidate: false, tags: ['sanity'] } });
     return rows.map(({ slug, category }) => ({ collection: category, type: slug }));
   } catch {
     return [];

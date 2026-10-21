@@ -11,13 +11,13 @@ export async function sanityFetch<T>(
   label: string,
   query: string,
   params: Record<string, string | number | boolean> = {},
-  revalidate = 3600,
+  revalidate: number | false = false,
 ): Promise<T> {
   if (!process.env.NEXT_PUBLIC_SANITY_PROJECT_ID) {
     console.error(`[sanity] ${label}: NEXT_PUBLIC_SANITY_PROJECT_ID is not set (build and runtime)`);
   }
   try {
-    return await client.fetch<T>(query, params, { next: { revalidate } });
+    return await client.fetch<T>(query, params, { next: { revalidate, tags: ['sanity'] } });
   } catch (err) {
     console.error(`[sanity] ${label} failed:`, err instanceof Error ? err.message : err);
     throw err;

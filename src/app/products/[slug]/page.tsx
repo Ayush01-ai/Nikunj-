@@ -24,7 +24,7 @@ import { PortableText, type PortableTextBlock } from '@portabletext/react';
 import type { Product, SiteSettings, Testimonial } from '@/types';
 import { pickDiverse, seedFrom } from '@/cms/lib/suggestions';
 
-export const revalidate = 3600;
+export const revalidate = false; // on-demand only (see /api/revalidate); no queue for time-based ISR
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
@@ -32,7 +32,7 @@ interface ProductPageProps {
 
 export async function generateStaticParams() {
   try {
-    const slugs = await client.fetch<{ slug: string }[]>(ALL_PRODUCT_SLUGS_QUERY, {}, { next: { revalidate: 3600 } });
+    const slugs = await client.fetch<{ slug: string }[]>(ALL_PRODUCT_SLUGS_QUERY, {}, { next: { revalidate: false, tags: ['sanity'] } });
     return slugs.map(({ slug }) => ({ slug }));
   } catch {
     return [];
@@ -41,7 +41,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = await client.fetch<Product>(PRODUCT_BY_SLUG_QUERY, { slug }, { next: { revalidate: 3600 } });
+  const product = await client.fetch<Product>(PRODUCT_BY_SLUG_QUERY, { slug }, { next: { revalidate: false, tags: ['sanity'] } });
   if (!product) return {};
 
   const imageUrl = product.images?.find((img) => img?.asset?.url)?.asset.url ?? '/og-default.jpg';
@@ -77,12 +77,12 @@ async function getData(slug: string) {
         productTypeId: product.productType?._id ?? '',
         deityId: product.deityRef?._id ?? '',
         productId: product._id,
-      }, { next: { revalidate: 3600 } }),
+      }, { next: { revalidate: false, tags: ['sanity'] } }),
       [],
     ),
-    safe(client.fetch<Product[]>(DIFFERENT_PRODUCTS_QUERY, { categoryId: product.category?._id ?? '', productId: product._id }, { next: { revalidate: 3600 } }), []),
-    safe(client.fetch<Testimonial[]>(PRODUCT_REVIEWS_QUERY, { productId: product._id }, { next: { revalidate: 3600 } }), []),
-    safe(client.fetch<SiteSettings | null>(SITE_SETTINGS_QUERY, {}, { next: { revalidate: 3600 } }), null),
+    safe(client.fetch<Product[]>(DIFFERENT_PRODUCTS_QUERY, { categoryId: product.category?._id ?? '', productId: product._id }, { next: { revalidate: false, tags: ['sanity'] } }), []),
+    safe(client.fetch<Testimonial[]>(PRODUCT_REVIEWS_QUERY, { productId: product._id }, { next: { revalidate: false, tags: ['sanity'] } }), []),
+    safe(client.fetch<SiteSettings | null>(SITE_SETTINGS_QUERY, {}, { next: { revalidate: false, tags: ['sanity'] } }), null),
   ]);
   const seed = seedFrom(product._id);
   relatedProducts = (relatedProducts ?? []).slice(0, 4);

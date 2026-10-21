@@ -37,7 +37,9 @@ const SIGN_IN_TOKEN_TTL_SECONDS = 120;
  */
 export async function POST(req: NextRequest) {
   try {
-    if (await isIpLimited(clientIp(req))) {
+    const ip = clientIp(req);
+    if (ip !== 'unknown' && (await isIpLimited(ip))) {
+      console.error('[whatsapp verify-otp] IP rate limited', ip);
       return NextResponse.json({ success: false, error: 'Too many requests. Please try again later.' }, { status: 429 });
     }
 
