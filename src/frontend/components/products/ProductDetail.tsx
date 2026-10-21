@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, Zap, Heart, Share2, ChevronLeft, ChevronRight, ZoomIn, Check, Truck, Shield, RotateCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import SafeImage from '@/frontend/components/ui/SafeImage';
 import { safeImageUrl, IMAGE_PLACEHOLDER } from '@/cms/lib/image';
 import { useCartStore } from '@/frontend/store/cartStore';
 import { useWishlistStore, useWishlistHydrated } from '@/frontend/store/wishlistStore';
@@ -106,7 +107,7 @@ export function ProductDetail({ product, settings }: ProductDetailProps) {
             onClick={() => setZoomed(true)}
           >
             {images[currentImg]?.asset ? (
-              <Image
+              <SafeImage
                 src={safeImageUrl(images[currentImg], 800, 800, 90) || IMAGE_PLACEHOLDER}
                 alt={images[currentImg].alt || product.name}
                 fill
@@ -175,7 +176,7 @@ export function ProductDetail({ product, settings }: ProductDetailProps) {
                   }`}
                 >
                   {img.asset && (
-                    <Image
+                    <SafeImage
                       src={safeImageUrl(img, 120, 120, 75) || IMAGE_PLACEHOLDER}
                       alt={img.alt || `View ${i + 1}`}
                       fill
@@ -305,7 +306,7 @@ export function ProductDetail({ product, settings }: ProductDetailProps) {
           >
             <div className="relative w-full max-w-3xl aspect-square mx-4">
               {images[currentImg]?.asset && (
-                <Image
+                <SafeImage
                   src={safeImageUrl(images[currentImg], 1200, 1200, 95) || IMAGE_PLACEHOLDER}
                   alt={product.name}
                   fill

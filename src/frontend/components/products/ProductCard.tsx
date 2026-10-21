@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Heart, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
+import SafeImage from '@/frontend/components/ui/SafeImage';
 import { safeImageUrl, IMAGE_PLACEHOLDER } from '@/cms/lib/image';
 import { useCartStore } from '@/frontend/store/cartStore';
 import { useWishlistStore, useWishlistHydrated } from '@/frontend/store/wishlistStore';
@@ -86,7 +87,7 @@ export function ProductCard({ product, index = 0, inView = true }: ProductCardPr
           {activeImage ? (
             <>
               {images.map((img, i) => (
-                <Image
+                <SafeImage
                   key={img.asset?._id || i}
                   src={safeImageUrl(img, 500, 625) || IMAGE_PLACEHOLDER}
                   alt={img.alt || product.name}

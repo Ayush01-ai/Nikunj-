@@ -90,7 +90,7 @@ export function CoverFlowCarousel({
       }}
     >
       <div className="absolute inset-0 -z-10 overflow-hidden">
-        {backgroundImage && <img src={backgroundImage} alt="" className="h-full w-full scale-110 object-cover opacity-40 blur-3xl" />}
+        {backgroundImage && <img src={backgroundImage} alt="" onError={(e) => { e.currentTarget.style.display = 'none'; }} className="h-full w-full scale-110 object-cover opacity-40 blur-3xl" />}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(69,54,25,0.38),rgba(25,20,18,0.96)_72%)]" />
       </div>
 
@@ -119,7 +119,7 @@ export function CoverFlowCarousel({
                   boxShadow: isCenter ? '0 25px 60px rgba(0,0,0,.8), 0 0 35px rgba(201,164,89,.25)' : '0 15px 35px rgba(0,0,0,.45)',
                 }}
               >
-                {image ? <img src={image} alt={product.images[0]?.alt || product.name} className="absolute inset-0 h-full w-full object-cover object-center" /> : <div className="absolute inset-0 bg-gradient-to-br from-gold-dark to-deep" />}
+                {image ? <img src={image} alt={product.images[0]?.alt || product.name} onError={(e) => { e.currentTarget.style.display = 'none'; }} className="absolute inset-0 h-full w-full object-cover object-center" /> : <div className="absolute inset-0 bg-gradient-to-br from-gold-dark to-deep" />}
                 <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/90" />
 
                 {!isCenter && visible && (

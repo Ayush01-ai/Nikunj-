@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { ArrowRight, LayoutGrid } from 'lucide-react';
 import { useInView } from 'react-intersection-observer';
+import SafeImage from '@/frontend/components/ui/SafeImage';
 import { safeImageUrl, IMAGE_PLACEHOLDER } from '@/cms/lib/image';
 import { SacredIcon } from '@/frontend/components/ui/SacredIcon';
 import type { Category } from '@/types';
@@ -123,7 +124,7 @@ function CategoryCard({
         {/* Icon / Image */}
         <div className="relative w-16 h-16 mx-auto mb-3 rounded-full overflow-hidden bg-gold/10 flex items-center justify-center">
           {category.image?.asset ? (
-            <Image
+            <SafeImage
               src={safeImageUrl(category.image, 128, 128) || IMAGE_PLACEHOLDER}
               alt=""
               fill

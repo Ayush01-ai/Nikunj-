@@ -4,6 +4,7 @@ import React from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
+import SafeImage from '@/frontend/components/ui/SafeImage';
 import { safeImageUrl, IMAGE_PLACEHOLDER } from '@/cms/lib/image';
 import type { Testimonial } from '@/types';
 
@@ -100,7 +101,7 @@ export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) 
               <div className="flex items-center gap-3 border-t border-[var(--border)] pt-4">
                 {t.avatar?.asset ? (
                   <div className="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                    <Image
+                    <SafeImage
                       src={safeImageUrl(t.avatar, 80, 80) || IMAGE_PLACEHOLDER}
                       alt={t.customerName}
                       fill

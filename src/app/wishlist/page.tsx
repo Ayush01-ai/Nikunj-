@@ -9,6 +9,7 @@ import { Eye, Heart, ShoppingBag, Trash2, Zap } from 'lucide-react';
 import { useWishlistStore, useWishlistHydrated } from '@/frontend/store/wishlistStore';
 import { useCartStore } from '@/frontend/store/cartStore';
 import { client } from '@/cms/lib/client';
+import SafeImage from '@/frontend/components/ui/SafeImage';
 import { safeImageUrl, IMAGE_PLACEHOLDER } from '@/cms/lib/image';
 import { WISHLIST_PRODUCTS_QUERY } from '@/cms/lib/queries';
 import { getProductHref, needsChoice, toCartItem } from '@/frontend/lib/product';
@@ -105,7 +106,7 @@ export default function WishlistPage() {
                   <Link href={getProductHref(product)} className="block">
                     <div className="product-image-ratio relative bg-cream overflow-hidden">
                       {product.images?.[0]?.asset ? (
-                        <Image
+                        <SafeImage
                           src={safeImageUrl(product.images[0], 400, 500) || IMAGE_PLACEHOLDER}
                           alt={product.name}
                           fill

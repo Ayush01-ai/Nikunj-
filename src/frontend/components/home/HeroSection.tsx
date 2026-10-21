@@ -9,6 +9,7 @@ import { Autoplay, Pagination, EffectFade } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/effect-fade';
+import SafeImage from '@/frontend/components/ui/SafeImage';
 import { safeImageUrl, IMAGE_PLACEHOLDER } from '@/cms/lib/image';
 import type { HeroSlide, SiteSettings } from '@/types';
 import dynamic from 'next/dynamic';
@@ -56,7 +57,7 @@ export function HeroSection({ slides, settings }: HeroSectionProps) {
           {slides.map((slide) => (
             <SwiperSlide key={slide._id}>
               {slide.image?.asset && (
-                <Image
+                <SafeImage
                   src={safeImageUrl(slide.image, 1600, undefined, 85) || IMAGE_PLACEHOLDER}
                   alt={slide.image.alt || slide.title}
                   fill

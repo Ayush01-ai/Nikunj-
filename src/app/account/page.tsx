@@ -16,6 +16,7 @@ import { Navbar } from '@/frontend/components/layout/Navbar';
 import { Footer } from '@/frontend/components/layout/Footer';
 import { SacredPlaceholder } from '@/frontend/components/ui/SacredIcon';
 import { client } from '@/cms/lib/client';
+import SafeImage from '@/frontend/components/ui/SafeImage';
 import { safeImageUrl, IMAGE_PLACEHOLDER } from '@/cms/lib/image';
 import { WISHLIST_PRODUCTS_QUERY } from '@/cms/lib/queries';
 import { getProductHref } from '@/frontend/lib/product';
@@ -485,7 +486,7 @@ export default function AccountPage() {
                       <div key={p._id} className="group bg-white border border-[var(--border)] hover:border-gold transition-colors">
                         <Link href={getProductHref(p)} className="block relative aspect-[4/5] bg-cream overflow-hidden">
                           {p.images?.[0]?.asset ? (
-                            <Image src={safeImageUrl(p.images[0], 400, 500) || IMAGE_PLACEHOLDER} alt={p.name} fill sizes="(max-width:640px) 50vw, 25vw" className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                            <SafeImage src={safeImageUrl(p.images[0], 400, 500) || IMAGE_PLACEHOLDER} alt={p.name} fill sizes="(max-width:640px) 50vw, 25vw" className="object-cover group-hover:scale-105 transition-transform duration-500" />
                           ) : (
                             <SacredPlaceholder className="w-full h-full" />
                           )}

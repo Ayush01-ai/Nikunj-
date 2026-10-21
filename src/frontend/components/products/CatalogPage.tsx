@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { client } from '@/cms/lib/client';
+import SafeImage from '@/frontend/components/ui/SafeImage';
 import { safeImageUrl, IMAGE_PLACEHOLDER } from '@/cms/lib/image';
 import {
   PRODUCTS_QUERY,
@@ -207,7 +208,7 @@ export async function CatalogPage({ categorySlug, typeSlug, searchParams }: Cata
         {/* Page Header */}
         <div className="relative bg-white border-b border-[var(--border)] py-10 px-4 sm:px-6 lg:px-8 text-center overflow-hidden">
           {category?.bannerImage?.asset && !type && (
-            <Image
+            <SafeImage
               src={safeImageUrl(category.bannerImage, 1600, 400, 75) || IMAGE_PLACEHOLDER}
               alt=""
               fill
@@ -260,7 +261,7 @@ export async function CatalogPage({ categorySlug, typeSlug, searchParams }: Cata
                       }`}
                     >
                       {tile.image?.asset ? (
-                        <Image
+                        <SafeImage
                           src={safeImageUrl(tile.image, 128, 128) || IMAGE_PLACEHOLDER}
                           alt=""
                           fill
