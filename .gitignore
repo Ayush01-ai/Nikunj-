@@ -72,3 +72,6 @@ audit/
 
 # Stray command output
 /-w
+
+/test-results/
+/playwright-report/

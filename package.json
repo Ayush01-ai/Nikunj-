@@ -21,7 +21,8 @@
     "migrate:taxonomy": "node ./scripts/migrate-taxonomy.mjs",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
-    "audit": "npm run dev & npx wait-on http://localhost:3000 && lighthouse http://localhost:3000 --output=html --output-path=./audit/report.html"
+    "audit": "npm run dev & npx wait-on http://localhost:3000 && lighthouse http://localhost:3000 --output=html --output-path=./audit/report.html",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.9.14",
@@ -87,6 +88,7 @@
   },
   "devDependencies": {
     "@opennextjs/cloudflare": "^1.20.12",
+    "@playwright/test": "^1.64.1",
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/typography": "^0.5.15",
     "@types/bcryptjs": "^2.4.6",
