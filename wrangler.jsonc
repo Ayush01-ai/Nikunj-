@@ -24,11 +24,6 @@
   "images": {
     "binding": "IMAGES"
   },
-  // Same namespace serves the page cache and the tag cache (distinct key prefixes).
-  "kv_namespaces": [
-    { "binding": "NEXT_INC_CACHE_KV", "id": "4cc79da97baf44d48b45dc71a787a6ee" },
-    { "binding": "NEXT_TAG_CACHE_KV", "id": "4cc79da97baf44d48b45dc71a787a6ee" }
-  ],
   "observability": {
     "enabled": true
   }

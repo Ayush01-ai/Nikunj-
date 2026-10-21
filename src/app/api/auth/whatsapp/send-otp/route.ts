@@ -75,9 +75,7 @@ export async function POST(req: NextRequest) {
       console.log(`[DEV] WhatsApp OTP for ${phone}: ${otp}`);
     } else {
       console.error('[whatsapp send-otp] WhatsApp OTP is not configured in production');
-      // TEMP-DIAG: names only, never values.
-      const missing = ['WHATSAPP_TOKEN', 'WHATSAPP_PHONE_NUMBER_ID'].filter((k) => !process.env[k]);
-      return NextResponse.json({ success: false, error: 'WhatsApp OTP service unavailable.', missing, build: '45dd8d2+' }, { status: 503 });
+      return NextResponse.json({ success: false, error: 'WhatsApp OTP service unavailable.' }, { status: 503 });
     }
 
     return NextResponse.json({

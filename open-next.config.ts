@@ -1,14 +1,13 @@
 import { defineCloudflareConfig } from '@opennextjs/cloudflare';
-import kvIncrementalCache from '@opennextjs/cloudflare/overrides/incremental-cache/kv-incremental-cache';
-import kvNextTagCache from '@opennextjs/cloudflare/overrides/tag-cache/kv-next-tag-cache';
+import staticAssetsIncrementalCache from '@opennextjs/cloudflare/overrides/incremental-cache/static-assets-incremental-cache';
 import memoryQueue from '@opennextjs/cloudflare/overrides/queue/memory-queue';
 
-// Workers KV (free tier) backs both the page cache and the tag cache, so
-// revalidatePath()/revalidateTag() in /api/revalidate can invalidate pages on the edge.
-// Bindings: NEXT_INC_CACHE_KV and NEXT_TAG_CACHE_KV (see wrangler.jsonc).
+// Prerendered pages are served straight from the Worker's static assets. This performs no
+// Workers KV writes (the free tier allows only 1,000/day, which repeated deploys exhausted and
+// which made every request re-render on the Worker). The cache is read-only, so content
+// changes go live via a rebuild: /api/revalidate triggers CLOUDFLARE_DEPLOY_HOOK_URL.
 export default defineCloudflareConfig({
-  incrementalCache: kvIncrementalCache,
-  tagCache: kvNextTagCache,
+  incrementalCache: staticAssetsIncrementalCache,
   // No Cloudflare Queue is bound; an in-memory queue means a stale-page refresh can never crash.
   queue: memoryQueue,
 });
