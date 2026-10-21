@@ -9,7 +9,7 @@ import { Autoplay, Pagination, EffectFade } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/effect-fade';
-import { urlFor } from '@/cms/lib/image';
+import { safeImageUrl, IMAGE_PLACEHOLDER } from '@/cms/lib/image';
 import type { HeroSlide, SiteSettings } from '@/types';
 import dynamic from 'next/dynamic';
 import { NikunjSakhiLogo } from '@/frontend/components/ui/NikunjSakhiLogo';
@@ -57,7 +57,7 @@ export function HeroSection({ slides, settings }: HeroSectionProps) {
             <SwiperSlide key={slide._id}>
               {slide.image?.asset && (
                 <Image
-                  src={urlFor(slide.image).width(1600).quality(85).url()}
+                  src={safeImageUrl(slide.image, 1600, undefined, 85) || IMAGE_PLACEHOLDER}
                   alt={slide.image.alt || slide.title}
                   fill
                   className="object-cover"

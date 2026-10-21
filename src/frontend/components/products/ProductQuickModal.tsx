@@ -7,7 +7,7 @@ import { X, ShoppingBag, Zap, ChevronLeft, ChevronRight, ExternalLink } from 'lu
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { urlFor } from '@/cms/lib/image';
+import { safeImageUrl, IMAGE_PLACEHOLDER } from '@/cms/lib/image';
 import { useCartStore } from '@/frontend/store/cartStore';
 import type { Product } from '@/types';
 import { Button } from '@/frontend/components/ui/button';
@@ -101,7 +101,7 @@ export function ProductQuickModal({ product, onClose }: ProductQuickModalProps) 
             <div className="relative aspect-square bg-cream">
               {images[currentImg]?.asset ? (
                 <Image
-                  src={urlFor(images[currentImg]).width(600).height(600).quality(85).url()}
+                  src={safeImageUrl(images[currentImg], 600, 600, 85) || IMAGE_PLACEHOLDER}
                   alt={images[currentImg].alt || product.name}
                   fill
                   sizes="(max-width: 768px) 100vw, 50vw"

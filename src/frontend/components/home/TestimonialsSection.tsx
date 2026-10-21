@@ -4,7 +4,7 @@ import React from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
-import { urlFor } from '@/cms/lib/image';
+import { safeImageUrl, IMAGE_PLACEHOLDER } from '@/cms/lib/image';
 import type { Testimonial } from '@/types';
 
 interface TestimonialsSectionProps {
@@ -101,7 +101,7 @@ export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) 
                 {t.avatar?.asset ? (
                   <div className="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
                     <Image
-                      src={urlFor(t.avatar).width(80).height(80).quality(80).url()}
+                      src={safeImageUrl(t.avatar, 80, 80) || IMAGE_PLACEHOLDER}
                       alt={t.customerName}
                       fill
                       sizes="40px"

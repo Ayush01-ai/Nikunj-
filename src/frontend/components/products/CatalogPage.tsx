@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { client } from '@/cms/lib/client';
-import { urlFor } from '@/cms/lib/image';
+import { safeImageUrl, IMAGE_PLACEHOLDER } from '@/cms/lib/image';
 import {
   PRODUCTS_QUERY,
   PRODUCTS_COUNT_QUERY,
@@ -208,7 +208,7 @@ export async function CatalogPage({ categorySlug, typeSlug, searchParams }: Cata
         <div className="relative bg-white border-b border-[var(--border)] py-10 px-4 sm:px-6 lg:px-8 text-center overflow-hidden">
           {category?.bannerImage?.asset && !type && (
             <Image
-              src={urlFor(category.bannerImage).width(1600).height(400).quality(75).url()}
+              src={safeImageUrl(category.bannerImage, 1600, 400, 75) || IMAGE_PLACEHOLDER}
               alt=""
               fill
               priority
@@ -261,7 +261,7 @@ export async function CatalogPage({ categorySlug, typeSlug, searchParams }: Cata
                     >
                       {tile.image?.asset ? (
                         <Image
-                          src={urlFor(tile.image).width(128).height(128).quality(80).url()}
+                          src={safeImageUrl(tile.image, 128, 128) || IMAGE_PLACEHOLDER}
                           alt=""
                           fill
                           sizes="64px"

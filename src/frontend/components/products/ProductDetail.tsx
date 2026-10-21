@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, Zap, Heart, Share2, ChevronLeft, ChevronRight, ZoomIn, Check, Truck, Shield, RotateCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
-import { urlFor } from '@/cms/lib/image';
+import { safeImageUrl, IMAGE_PLACEHOLDER } from '@/cms/lib/image';
 import { useCartStore } from '@/frontend/store/cartStore';
 import { useWishlistStore, useWishlistHydrated } from '@/frontend/store/wishlistStore';
 import { Button } from '@/frontend/components/ui/button';
@@ -107,7 +107,7 @@ export function ProductDetail({ product, settings }: ProductDetailProps) {
           >
             {images[currentImg]?.asset ? (
               <Image
-                src={urlFor(images[currentImg]).width(800).height(800).quality(90).url()}
+                src={safeImageUrl(images[currentImg], 800, 800, 90) || IMAGE_PLACEHOLDER}
                 alt={images[currentImg].alt || product.name}
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -176,7 +176,7 @@ export function ProductDetail({ product, settings }: ProductDetailProps) {
                 >
                   {img.asset && (
                     <Image
-                      src={urlFor(img).width(120).height(120).quality(75).url()}
+                      src={safeImageUrl(img, 120, 120, 75) || IMAGE_PLACEHOLDER}
                       alt={img.alt || `View ${i + 1}`}
                       fill
                       sizes="20vw"
@@ -306,7 +306,7 @@ export function ProductDetail({ product, settings }: ProductDetailProps) {
             <div className="relative w-full max-w-3xl aspect-square mx-4">
               {images[currentImg]?.asset && (
                 <Image
-                  src={urlFor(images[currentImg]).width(1200).height(1200).quality(95).url()}
+                  src={safeImageUrl(images[currentImg], 1200, 1200, 95) || IMAGE_PLACEHOLDER}
                   alt={product.name}
                   fill
                   className="object-contain"

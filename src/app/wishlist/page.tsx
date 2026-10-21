@@ -9,7 +9,7 @@ import { Eye, Heart, ShoppingBag, Trash2, Zap } from 'lucide-react';
 import { useWishlistStore, useWishlistHydrated } from '@/frontend/store/wishlistStore';
 import { useCartStore } from '@/frontend/store/cartStore';
 import { client } from '@/cms/lib/client';
-import { urlFor } from '@/cms/lib/image';
+import { safeImageUrl, IMAGE_PLACEHOLDER } from '@/cms/lib/image';
 import { WISHLIST_PRODUCTS_QUERY } from '@/cms/lib/queries';
 import { getProductHref, needsChoice, toCartItem } from '@/frontend/lib/product';
 import { formatINR, lowestPricing } from '@/cms/lib/pricing';
@@ -106,7 +106,7 @@ export default function WishlistPage() {
                     <div className="product-image-ratio relative bg-cream overflow-hidden">
                       {product.images?.[0]?.asset ? (
                         <Image
-                          src={urlFor(product.images[0]).width(400).height(500).quality(80).url()}
+                          src={safeImageUrl(product.images[0], 400, 500) || IMAGE_PLACEHOLDER}
                           alt={product.name}
                           fill
                           sizes="(max-width: 768px) 50vw, 25vw"
