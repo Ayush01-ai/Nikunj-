@@ -10,11 +10,13 @@ export class AuthError extends Error {
   }
 }
 
-const JWT_SECRET = process.env.JWT_SECRET as string;
 const JWT_EXPIRES_IN_SECONDS = parseInt(process.env.JWT_EXPIRES_IN_SECONDS || '604800', 10); // 7 days default
 
-if (!JWT_SECRET) {
-  throw new Error('JWT_SECRET is not defined in environment variables');
+// Resolved at call time so `next build` can evaluate routes without the secret.
+function jwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error('JWT_SECRET is not defined in environment variables');
+  return secret;
 }
 
 // ─── Token helpers ────────────────────────────────────────────────────────
@@ -23,11 +25,11 @@ export type LoginMethod = 'google' | 'email' | 'whatsapp';
 const LOGIN_METHODS: readonly string[] = ['google', 'email', 'whatsapp'];
 
 export function signToken(payload: { userId: string; phone: string; role: string; method?: LoginMethod }): string {
-  return jwt.sign(payload as object, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN_SECONDS });
+  return jwt.sign(payload as object, jwtSecret(), { expiresIn: JWT_EXPIRES_IN_SECONDS });
 }
 
 export function verifyToken(token: string): jwt.JwtPayload & { userId: string; phone: string; role: string; method?: string } {
-  return jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] }) as jwt.JwtPayload & {
+  return jwt.verify(token, jwtSecret(), { algorithms: ['HS256'] }) as jwt.JwtPayload & {
     userId: string;
     phone: string;
     role: string;

@@ -11,14 +11,13 @@ import { sanitizePhone } from '@/backend/lib/auth';
  * detection and expiry enforcement for free.
  */
 
-const JWT_SECRET = process.env.JWT_SECRET as string;
 const PROOF_PURPOSE = 'guest_payment' as const;
 const PROOF_TTL_SECONDS = 15 * 60; // 15 minutes — enough to finish checkout after OTP verification
 
 export function createGuestPaymentProof(orderId: string, phone: string): string {
   return jwt.sign(
     { orderId, phone: sanitizePhone(phone), purpose: PROOF_PURPOSE },
-    JWT_SECRET,
+    process.env.JWT_SECRET as string,
     { expiresIn: PROOF_TTL_SECONDS },
   );
 }
@@ -31,7 +30,7 @@ export function createGuestPaymentProof(orderId: string, phone: string): string 
 export function verifyGuestPaymentProof(token: unknown, orderId: string, phone: string): boolean {
   if (typeof token !== 'string' || !token) return false;
   try {
-    const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] }) as jwt.JwtPayload;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET as string, { algorithms: ['HS256'] }) as jwt.JwtPayload;
     return (
       decoded.purpose === PROOF_PURPOSE &&
       decoded.orderId === orderId &&
