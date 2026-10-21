@@ -103,19 +103,19 @@ export async function sendWhatsAppOtp(phone: string, otp: string): Promise<boole
   const to = toE164India(phone);
   if (!to) return false;
 
-  const includeButton = process.env.WHATSAPP_OTP_BUTTON !== 'false';
-  const components: Record<string, unknown>[] = [
-    { type: 'body', parameters: [{ type: 'text', text: otp }] },
+  // The approved template's exact shape (copy-code button or not, "en" vs "en_US") isn't known
+  // here, so try the likely variants; Meta rejects a mismatch with a 400 and sends nothing.
+  const bodyOnly: Record<string, unknown>[] = [{ type: 'body', parameters: [{ type: 'text', text: otp }] }];
+  const withButton: Record<string, unknown>[] = [
+    ...bodyOnly,
+    { type: 'button', sub_type: 'url', index: '0', parameters: [{ type: 'text', text: otp }] },
   ];
-  if (includeButton) {
-    components.push({
-      type: 'button',
-      sub_type: 'url',
-      index: '0',
-      parameters: [{ type: 'text', text: otp }],
-    });
-  }
+  const buttonPref = process.env.WHATSAPP_OTP_BUTTON;
+  const shapes = buttonPref === 'false' ? [bodyOnly] : buttonPref === 'true' ? [withButton] : [bodyOnly, withButton];
+  const langs = process.env.WHATSAPP_OTP_TEMPLATE_LANG ? [process.env.WHATSAPP_OTP_TEMPLATE_LANG] : ['en_US', 'en'];
 
+  for (const components of shapes) {
+    for (const lang of langs) {
   try {
     const res = await fetch(`${GRAPH_URL}/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
       method: 'POST',
@@ -127,21 +127,22 @@ export async function sendWhatsAppOtp(phone: string, otp: string): Promise<boole
         type: 'template',
         template: {
           name: template,
-          language: { code: process.env.WHATSAPP_OTP_TEMPLATE_LANG || 'en_US' },
+          language: { code: lang },
           components,
         },
       }),
       signal: AbortSignal.timeout(8000),
     });
-    if (!res.ok) {
-      console.error('[whatsapp-otp] send failed', res.status, (await res.text()).slice(0, 300));
-      return false;
-    }
-    return true;
+    if (res.ok) return true;
+    console.error('[whatsapp-otp] send failed', res.status, lang, components.length, (await res.text()).slice(0, 300));
+    if (res.status !== 400 && res.status !== 404) return false;
   } catch (error) {
     console.error('[whatsapp-otp] send error', error instanceof Error ? error.message : error);
     return false;
   }
+    }
+  }
+  return false;
 }
 
 /**
