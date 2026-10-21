@@ -88,6 +88,8 @@ export async function POST(req: NextRequest) {
     if (isDbConnectionError(error) || (error instanceof Error && /MONGODB_URI/.test(error.message))) {
       return NextResponse.json({ success: false, error: 'Service temporarily unavailable. Please try again shortly.' }, { status: 503 });
     }
-    return NextResponse.json({ success: false, error: 'Failed to send OTP. Try again.' }, { status: 500 });
+    // TEMP-DIAG: remove after production root cause is confirmed.
+    const detail = error instanceof Error ? `${error.name}: ${error.message}`.slice(0, 160) : 'unknown';
+    return NextResponse.json({ success: false, error: 'Failed to send OTP. Try again.', detail }, { status: 500 });
   }
 }
