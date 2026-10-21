@@ -1,6 +1,6 @@
 /** Clerk's Frontend API host is encoded in the publishable key (pk_live_<base64("host$")>). */
 function clerkFrontendHost() {
-  const key = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || '';
+  const key = (process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || '').trim().replace(/^NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=/, '');
   try {
     const host = Buffer.from(key.split('_')[2] || '', 'base64').toString('utf8').replace(/\$$/, '');
     return /^[a-z0-9.-]+$/i.test(host) ? `https://${host}` : '';
@@ -23,7 +23,7 @@ function contentSecurityPolicy() {
   const directives = [
     "default-src 'self'",
     // Next.js inlines bootstrap scripts; dev mode additionally needs eval for fast refresh.
-    `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} ${clerk} ${cashfree} ${google}`,
+    `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} ${clerk} ${cashfree} ${google} https://static.cloudflareinsights.com`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",

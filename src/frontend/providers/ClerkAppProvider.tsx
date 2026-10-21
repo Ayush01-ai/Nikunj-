@@ -1,4 +1,5 @@
 import { ClerkProvider } from '@clerk/nextjs';
+import { clerkPublishableKey } from '@/backend/lib/clerkConfig';
 import { ClerkEnabledProvider } from './ClerkEnabledContext';
 
 /**
@@ -10,9 +11,10 @@ import { ClerkEnabledProvider } from './ClerkEnabledContext';
 export function ClerkAppProvider({ children }: { children: React.ReactNode }) {
   // The layout is prerendered at build time, where only NEXT_PUBLIC_* values exist; the secret
   // key is a runtime-only secret, so gating on it here would leave Clerk unmounted in production.
-  if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) return <>{children}</>;
+  const publishableKey = clerkPublishableKey();
+  if (!publishableKey) return <>{children}</>;
   return (
-    <ClerkProvider>
+    <ClerkProvider publishableKey={publishableKey}>
       <ClerkEnabledProvider value={true}>{children}</ClerkEnabledProvider>
     </ClerkProvider>
   );

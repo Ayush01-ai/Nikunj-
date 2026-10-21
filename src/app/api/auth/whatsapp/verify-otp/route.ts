@@ -104,8 +104,8 @@ export async function POST(req: NextRequest) {
 
     if (isClerkConfigured()) {
       try {
-        const { clerkClient } = await import('@clerk/nextjs/server');
-        const client = await clerkClient();
+        const { getClerkServerClient } = await import('@/backend/lib/clerkServer');
+        const client = getClerkServerClient();
         const e164 = `+91${phone}`;
 
         let clerkUserId = user.clerkUserId;

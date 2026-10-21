@@ -1,4 +1,5 @@
-import { clerkClient } from '@clerk/nextjs/server';
+import { getClerkServerClient } from '@/backend/lib/clerkServer';
+import { clerkPublishableKey, clerkSecretKey } from '@/backend/lib/clerkConfig';
 import type { NextRequest } from 'next/server';
 import { connectDB } from '@/backend/lib/mongodb';
 import { User, type IUser } from '@/backend/models/User';
@@ -23,7 +24,7 @@ async function getOrLinkMongoUser(clerkUserId: string): Promise<IUser> {
   const existing = await User.findOne({ clerkUserId });
   if (existing) return existing;
 
-  const client = await clerkClient();
+  const client = getClerkServerClient();
   const clerkUser = await client.users.getUser(clerkUserId);
 
   const verifiedEmail = clerkUser.emailAddresses.find(
@@ -88,7 +89,7 @@ export async function clerkSessionMethod(
 ): Promise<LoginMethod | undefined> {
   if (user.whatsappLoginAt && sessionId) {
     try {
-      const client = await clerkClient();
+      const client = getClerkServerClient();
       const session = await client.sessions.getSession(sessionId);
       if (Math.abs(session.createdAt - user.whatsappLoginAt.getTime()) <= WHATSAPP_SESSION_WINDOW_MS) return 'whatsapp';
     } catch {
@@ -103,8 +104,12 @@ export async function requireAuthHybrid(req: NextRequest): Promise<AuthPayload> 
     try {
       // Verify the Clerk session straight from the request (no clerkMiddleware needed, which
       // keeps API routes independent of middleware on the Cloudflare edge).
-      const client = await clerkClient();
-      const requestState = await client.authenticateRequest(req, { acceptsToken: 'session_token' });
+      const client = getClerkServerClient();
+      const requestState = await client.authenticateRequest(req, {
+        acceptsToken: 'session_token',
+        publishableKey: clerkPublishableKey(),
+        secretKey: clerkSecretKey(),
+      });
       const authObj = requestState.isAuthenticated ? requestState.toAuth() : null;
       const clerkUserId = authObj?.userId;
       const sessionId = authObj?.sessionId;
