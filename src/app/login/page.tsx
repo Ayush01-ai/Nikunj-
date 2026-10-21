@@ -14,6 +14,8 @@ import { Navbar } from '@/frontend/components/layout/Navbar';
 import { Footer } from '@/frontend/components/layout/Footer';
 import { signInSchema, signUpSchema, forgotSchema } from '@/frontend/lib/formSchemas';
 import toast from 'react-hot-toast';
+import { ClerkGoogleButton } from '@/frontend/components/auth/ClerkGoogleButton';
+import { useClerkEnabled } from '@/frontend/providers/ClerkEnabledContext';
 
 
 type SignInForm = z.infer<typeof signInSchema>;
@@ -73,8 +75,8 @@ export default function LoginPage() {
   const [resetSentTo, setResetSentTo] = useState('');
   const [devResetUrl, setDevResetUrl] = useState('');
   const [next, setNext] = useState('/account');
-  const [googleEnabled, setGoogleEnabled] = useState(true);
-  const [clerkEnabled, setClerkEnabled] = useState(false);
+  // True only when <ClerkProvider> is mounted, so Clerk hooks are safe to use.
+  const clerkEnabled = useClerkEnabled();
 
   const signInForm = useForm<SignInForm>({ resolver: zodResolver(signInSchema) });
   const signUpForm = useForm<SignUpForm>({ resolver: zodResolver(signUpSchema) });
@@ -106,14 +108,6 @@ export default function LoginPage() {
     } else if (useAuthStore.getState().isAuthenticated) {
       router.replace(dest);
     }
-
-    fetch('/api/auth/providers')
-      .then((r) => r.json())
-      .then((p) => {
-        setGoogleEnabled(Boolean(p?.google));
-        setClerkEnabled(Boolean(p?.clerk));
-      })
-      .catch(() => {});
   }, [router, setUser]);
 
   const finishLogin = (user: Parameters<typeof setUser>[0], message: string) => {
@@ -157,12 +151,6 @@ export default function LoginPage() {
     setDevResetUrl('');
     setShowPassword(false);
   };
-
-  // Prefer the built-in Google OAuth when its env vars exist; otherwise use Clerk's Google.
-  const googleViaClerk = !googleEnabled && clerkEnabled;
-  const googleHref = googleViaClerk
-    ? `/sign-in?redirect_url=${encodeURIComponent(next)}`
-    : `/api/auth/google?next=${encodeURIComponent(next)}`;
 
   const heading =
     method === 'phone'
@@ -228,13 +216,14 @@ export default function LoginPage() {
             {/* Google */}
             {!(method === 'email' && emailMode === 'forgot') && (
               <>
-                {googleEnabled || googleViaClerk ? (
-                  <a
-                    href={googleHref}
+                {clerkEnabled ? (
+                  <ClerkGoogleButton
+                    next={next}
+                    onError={(m) => toast.error(m)}
                     className="w-full flex items-center justify-center gap-3 border border-[var(--border)] bg-white py-3 font-lato text-sm text-deep hover:border-gold hover:shadow-gold-sm transition-all"
                   >
                     <GoogleIcon /> Continue with Google
-                  </a>
+                  </ClerkGoogleButton>
                 ) : (
                   <button
                     type="button"

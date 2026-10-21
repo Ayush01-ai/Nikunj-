@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/backend/lib/mongodb';
+import { connectDB, isDbConnectionError } from '@/backend/lib/mongodb';
 import { Otp } from '@/backend/models/Otp';
 import { generateOTP, isValidPhone, sanitizePhone } from '@/backend/lib/auth';
 import { createRateLimiter, clientIp } from '@/backend/lib/rateLimit';
@@ -85,6 +85,9 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error('[whatsapp send-otp]', error);
+    if (isDbConnectionError(error) || (error instanceof Error && /MONGODB_URI/.test(error.message))) {
+      return NextResponse.json({ success: false, error: 'Service temporarily unavailable. Please try again shortly.' }, { status: 503 });
+    }
     return NextResponse.json({ success: false, error: 'Failed to send OTP. Try again.' }, { status: 500 });
   }
 }

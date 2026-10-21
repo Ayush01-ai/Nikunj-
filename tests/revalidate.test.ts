@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const revalidatePath = vi.fn();
 vi.mock('next/cache', () => ({ revalidatePath: (...a: unknown[]) => revalidatePath(...a) }));
 
-import { POST } from '@/app/api/revalidate/route';
+import { GET, POST } from '@/app/api/revalidate/route';
 import { NextRequest } from 'next/server';
 
 const req = (headers: Record<string, string> = {}, qs = '') =>
@@ -14,6 +14,13 @@ describe('/api/revalidate', () => {
     revalidatePath.mockClear();
     process.env.SANITY_WEBHOOK_SECRET = 'top-secret';
     delete process.env.CLOUDFLARE_DEPLOY_HOOK_URL;
+  });
+
+  it('answers GET with 405 instead of crashing', async () => {
+    const res = GET();
+    expect(res.status).toBe(405);
+    expect(res.headers.get('allow')).toBe('POST');
+    expect(revalidatePath).not.toHaveBeenCalled();
   });
 
   it('fails closed when the secret is not configured', async () => {

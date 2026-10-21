@@ -12,8 +12,32 @@ declare global {
 const cached: MongooseCache = global.mongooseCache ?? { conn: null, promise: null };
 global.mongooseCache = cached;
 
+const isWorkersRuntime = () =>
+  typeof navigator !== 'undefined' && navigator.userAgent === 'Cloudflare-Workers';
+
+async function pingOk(m: typeof mongoose): Promise<boolean> {
+  try {
+    const admin = m.connection.db?.admin();
+    if (!admin) return false;
+    await Promise.race([
+      admin.ping(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('ping timeout')), 3000)),
+    ]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function connectDB(): Promise<typeof mongoose> {
-  if (cached.conn) return cached.conn;
+  if (cached.conn) {
+    if (!isWorkersRuntime()) return cached.conn;
+    // Workers forbid reusing sockets opened by a previous request; verify, else reconnect.
+    if (await pingOk(cached.conn)) return cached.conn;
+    cached.conn = null;
+    cached.promise = null;
+    await mongoose.disconnect().catch(() => {});
+  }
 
   // Checked at call time (not module load) so `next build` can evaluate routes without the variable.
   const MONGODB_URI = process.env.MONGODB_URI;

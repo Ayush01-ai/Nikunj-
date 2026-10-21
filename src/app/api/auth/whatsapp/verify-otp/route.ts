@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/backend/lib/mongodb';
+import { connectDB, isDbConnectionError } from '@/backend/lib/mongodb';
 import { Otp } from '@/backend/models/Otp';
 import { User, ensureUserIndexes } from '@/backend/models/User';
 import { isValidPhone, sanitizePhone } from '@/backend/lib/auth';
@@ -141,6 +141,9 @@ export async function POST(req: NextRequest) {
     return sessionResponse(user, 'Login successful', 'whatsapp');
   } catch (error) {
     console.error('[whatsapp verify-otp]', error);
+    if (isDbConnectionError(error) || (error instanceof Error && /MONGODB_URI/.test(error.message))) {
+      return NextResponse.json({ success: false, error: 'Service temporarily unavailable. Please try again shortly.' }, { status: 503 });
+    }
     return NextResponse.json({ success: false, error: 'Verification failed. Try again.' }, { status: 500 });
   }
 }

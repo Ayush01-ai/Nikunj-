@@ -18,6 +18,13 @@ function providedSecret(req: NextRequest): string {
 }
 
 /** Sanity webhook: clears the Next.js cache so published content shows up without a manual redeploy. */
+export function GET() {
+  return NextResponse.json(
+    { error: 'Method Not Allowed. Use POST.' },
+    { status: 405, headers: { Allow: 'POST' } },
+  );
+}
+
 export async function POST(req: NextRequest) {
   const expected = process.env.SANITY_WEBHOOK_SECRET;
   if (!expected) {
