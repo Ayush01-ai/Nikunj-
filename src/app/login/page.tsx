@@ -15,6 +15,7 @@ import { Footer } from '@/frontend/components/layout/Footer';
 import { signInSchema, signUpSchema, forgotSchema } from '@/frontend/lib/formSchemas';
 import toast from 'react-hot-toast';
 import { ClerkGoogleButton } from '@/frontend/components/auth/ClerkGoogleButton';
+import { ClerkEmailAuth } from '@/frontend/components/auth/ClerkEmailAuth';
 import { useClerkEnabled } from '@/frontend/providers/ClerkEnabledContext';
 
 
@@ -265,8 +266,12 @@ export default function LoginPage() {
               </>
             )}
 
+            {clerkEnabled && method === 'email' && (
+              <ClerkEmailAuth mode={emailMode} onModeChange={switchEmailMode} next={next} />
+            )}
+
             <AnimatePresence mode="wait">
-              {method === 'email' && emailMode === 'signin' && (
+              {!clerkEnabled && method === 'email' && emailMode === 'signin' && (
                 <motion.form
                   key="signin"
                   initial={{ opacity: 0, x: -16 }}
@@ -308,7 +313,7 @@ export default function LoginPage() {
                 </motion.form>
               )}
 
-              {method === 'email' && emailMode === 'signup' && (
+              {!clerkEnabled && method === 'email' && emailMode === 'signup' && (
                 <motion.form
                   key="signup"
                   initial={{ opacity: 0, x: 16 }}
@@ -353,7 +358,7 @@ export default function LoginPage() {
                 </motion.form>
               )}
 
-              {method === 'email' && emailMode === 'forgot' && (
+              {!clerkEnabled && method === 'email' && emailMode === 'forgot' && (
                 <motion.div key="forgot" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
                   {resetSentTo ? (
                     <div className="text-center space-y-3">

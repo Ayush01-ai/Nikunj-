@@ -1,5 +1,4 @@
 import { ClerkProvider } from '@clerk/nextjs';
-import { isClerkConfigured } from '@/backend/lib/clerkConfig';
 import { ClerkEnabledProvider } from './ClerkEnabledContext';
 
 /**
@@ -9,7 +8,9 @@ import { ClerkEnabledProvider } from './ClerkEnabledContext';
  * `ClerkProvider` itself handles the client/server split internally.
  */
 export function ClerkAppProvider({ children }: { children: React.ReactNode }) {
-  if (!isClerkConfigured()) return <>{children}</>;
+  // The layout is prerendered at build time, where only NEXT_PUBLIC_* values exist; the secret
+  // key is a runtime-only secret, so gating on it here would leave Clerk unmounted in production.
+  if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) return <>{children}</>;
   return (
     <ClerkProvider>
       <ClerkEnabledProvider value={true}>{children}</ClerkEnabledProvider>

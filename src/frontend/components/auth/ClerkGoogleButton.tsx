@@ -24,7 +24,9 @@ export function ClerkGoogleButton({
       const { error } = await signIn.sso({
         strategy: 'oauth_google',
         redirectUrl: next,
-        redirectCallbackUrl: '/sso-callback',
+        redirectCallbackUrl: `/sso-callback?next=${encodeURIComponent(next)}`,
+        // Always show Google's account chooser instead of silently reusing one session.
+        oidcPrompt: 'select_account',
       });
       if (error) onError('Google sign-in failed. Please try again.');
     } catch (err) {

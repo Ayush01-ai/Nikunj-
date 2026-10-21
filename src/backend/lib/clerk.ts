@@ -1,4 +1,4 @@
-import { auth, clerkClient } from '@clerk/nextjs/server';
+import { clerkClient } from '@clerk/nextjs/server';
 import type { NextRequest } from 'next/server';
 import { connectDB } from '@/backend/lib/mongodb';
 import { User, type IUser } from '@/backend/models/User';
@@ -101,7 +101,13 @@ export async function clerkSessionMethod(
 export async function requireAuthHybrid(req: NextRequest): Promise<AuthPayload> {
   if (isClerkConfigured()) {
     try {
-      const { userId: clerkUserId, sessionId } = await auth();
+      // Verify the Clerk session straight from the request (no clerkMiddleware needed, which
+      // keeps API routes independent of middleware on the Cloudflare edge).
+      const client = await clerkClient();
+      const requestState = await client.authenticateRequest(req, { acceptsToken: 'session_token' });
+      const authObj = requestState.isAuthenticated ? requestState.toAuth() : null;
+      const clerkUserId = authObj?.userId;
+      const sessionId = authObj?.sessionId;
       if (clerkUserId) {
         const mongoUser = await getOrLinkMongoUser(clerkUserId);
         await syncAdminRole(mongoUser);
