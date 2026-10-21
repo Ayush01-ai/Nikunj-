@@ -13,10 +13,15 @@ import { ORDER_STATUS_LABEL, orderStatusMessage, trackOrderUrl, type OrderMessag
 const GRAPH_URL = 'https://graph.facebook.com/v21.0';
 
 export const isWhatsAppConfigured = () => {
-  // Accept WHATSAPP_ACCESS_TOKEN as an alias so a live token is always used, in every NODE_ENV.
-  if (!process.env.WHATSAPP_TOKEN && process.env.WHATSAPP_ACCESS_TOKEN) process.env.WHATSAPP_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
-  return Boolean(process.env.WHATSAPP_TOKEN && process.env.WHATSAPP_PHONE_NUMBER_ID);
+  // Accept alias names so a live token/phone id is always used, in every NODE_ENV.
+  const env = process.env;
+  if (!env.WHATSAPP_TOKEN) env.WHATSAPP_TOKEN = env.WHATSAPP_ACCESS_TOKEN || env.META_WA_ACCESS_TOKEN;
+  if (!env.WHATSAPP_PHONE_NUMBER_ID) env.WHATSAPP_PHONE_NUMBER_ID = env.META_WA_PHONE_NUMBER_ID;
+  return Boolean(env.WHATSAPP_TOKEN && env.WHATSAPP_PHONE_NUMBER_ID);
 };
+
+/** Approved Meta template for login codes; defaults to the `login_otp` template. */
+export const whatsappOtpTemplate = () => process.env.WHATSAPP_OTP_TEMPLATE || 'login_otp';
 
 const origin = () => (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
 
@@ -90,7 +95,7 @@ export async function sendOrderWhatsApp(order: OrderMessageInput & { phone?: str
  */
 export async function sendWhatsAppOtp(phone: string, otp: string): Promise<boolean> {
   if (!isWhatsAppConfigured()) return false;
-  const template = process.env.WHATSAPP_OTP_TEMPLATE;
+  const template = whatsappOtpTemplate();
   if (!template) {
     console.error('[whatsapp] WHATSAPP_OTP_TEMPLATE is not configured');
     return false;

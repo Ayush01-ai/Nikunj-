@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
 
     // Live sending always wins when credentials exist, even in development; the dev code is only a no-credentials fallback.
     let sentLive = false;
-    if (isWhatsAppConfigured() && process.env.WHATSAPP_OTP_TEMPLATE) {
+    if (isWhatsAppConfigured()) {
       const sent = await sendWhatsAppOtp(phone, otp);
       if (!sent) {
         await Otp.deleteMany({ phone, ...loginOtpScope });
@@ -88,8 +88,6 @@ export async function POST(req: NextRequest) {
     if (isDbConnectionError(error) || (error instanceof Error && /MONGODB_URI/.test(error.message))) {
       return NextResponse.json({ success: false, error: 'Service temporarily unavailable. Please try again shortly.' }, { status: 503 });
     }
-    // TEMP-DIAG: remove after production root cause is confirmed.
-    const detail = error instanceof Error ? `${error.name}: ${error.message}`.slice(0, 160) : 'unknown';
-    return NextResponse.json({ success: false, error: 'Failed to send OTP. Try again.', detail }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to send OTP. Try again.' }, { status: 500 });
   }
 }
