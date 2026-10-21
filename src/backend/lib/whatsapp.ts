@@ -40,8 +40,6 @@ function whatsappTokens(): string[] {
   return out;
 }
 
-export let lastOtpSendError = ''; // TEMP-DIAG
-
 /** Approved Meta template for login codes; defaults to the `login_otp` template. */
 export const whatsappOtpTemplate = () => process.env.WHATSAPP_OTP_TEMPLATE || 'login_otp';
 
@@ -158,13 +156,10 @@ export async function sendWhatsAppOtp(phone: string, otp: string): Promise<boole
       signal: AbortSignal.timeout(8000),
     });
     if (res.ok) return true;
-    const errText = (await res.text()).slice(0, 300);
-    console.error('[whatsapp-otp] send failed', res.status, lang, components.length, errText);
-    lastOtpSendError = `${res.status} ${lang}/${components.length}: ${errText} [tokens=${tokens.map((t) => t.length).join(',')} phoneIdLen=${(process.env.WHATSAPP_PHONE_NUMBER_ID ?? '').length}]`; // TEMP-DIAG
+    console.error('[whatsapp-otp] send failed', res.status, lang, components.length, (await res.text()).slice(0, 300));
     if (res.status === 401) continue tokenLoop;
     if (res.status !== 400 && res.status !== 404) return false;
   } catch (error) {
-    lastOtpSendError = `exception: ${error instanceof Error ? error.message : String(error)}`; // TEMP-DIAG
     console.error('[whatsapp-otp] send error', error instanceof Error ? error.message : error);
     return false;
   }

@@ -3,7 +3,7 @@ import { connectDB, isDbConnectionError } from '@/backend/lib/mongodb';
 import { Otp } from '@/backend/models/Otp';
 import { generateOTP, isValidPhone, sanitizePhone } from '@/backend/lib/auth';
 import { createRateLimiter, clientIp } from '@/backend/lib/rateLimit';
-import { isWhatsAppConfigured, sendWhatsAppOtp, lastOtpSendError } from '@/backend/lib/whatsapp';
+import { isWhatsAppConfigured, sendWhatsAppOtp } from '@/backend/lib/whatsapp';
 
 const OTP_EXPIRY_MINUTES = 10;
 const MAX_RESEND_INTERVAL_SECONDS = 60;
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
       if (!sent) {
         await Otp.deleteMany({ phone, ...loginOtpScope });
         return NextResponse.json(
-          { success: false, error: 'Could not send WhatsApp OTP right now. Please try again.', diag: lastOtpSendError }, // TEMP-DIAG
+          { success: false, error: 'Could not send WhatsApp OTP right now. Please try again.' },
           { status: 502 },
         );
       }
