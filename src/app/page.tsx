@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { client } from '@/cms/lib/client';
+import { sanityFetch } from '@/cms/lib/sanityFetch';
 import {
   HERO_SLIDES_QUERY,
   CATEGORIES_QUERY,
@@ -26,25 +26,17 @@ import type { HeroSlide, Category, Product, Testimonial, SiteSettings } from '@/
 
 export const revalidate = 3600;
 
-async function safeClientFetch<T>(query: string, fallback: T): Promise<T> {
-  try {
-    return await client.fetch<T>(query, {}, { next: { revalidate: 3600 } });
-  } catch {
-    return fallback;
-  }
-}
-
 async function getHomeData() {
   const [heroSlides, categories, allProducts, featuredProducts, bestsellers, newArrivals, testimonials, settings] =
     await Promise.all([
-      safeClientFetch<HeroSlide[]>(HERO_SLIDES_QUERY, []),
-      safeClientFetch<Category[]>(CATEGORIES_QUERY, []),
-      safeClientFetch<Product[]>(HOME_PRODUCTS_QUERY, []),
-      safeClientFetch<Product[]>(FEATURED_PRODUCTS_QUERY, []),
-      safeClientFetch<Product[]>(BESTSELLERS_QUERY, []),
-      safeClientFetch<Product[]>(NEW_ARRIVALS_QUERY, []),
-      safeClientFetch<Testimonial[]>(TESTIMONIALS_QUERY, []),
-      safeClientFetch<SiteSettings>(SITE_SETTINGS_QUERY, null as unknown as SiteSettings),
+      sanityFetch<HeroSlide[]>('home', HERO_SLIDES_QUERY),
+      sanityFetch<Category[]>('home', CATEGORIES_QUERY),
+      sanityFetch<Product[]>('home', HOME_PRODUCTS_QUERY),
+      sanityFetch<Product[]>('home', FEATURED_PRODUCTS_QUERY),
+      sanityFetch<Product[]>('home', BESTSELLERS_QUERY),
+      sanityFetch<Product[]>('home', NEW_ARRIVALS_QUERY),
+      sanityFetch<Testimonial[]>('home', TESTIMONIALS_QUERY),
+      sanityFetch<SiteSettings>('home', SITE_SETTINGS_QUERY),
     ]);
 
   return { heroSlides, categories, allProducts, featuredProducts, bestsellers, newArrivals, testimonials, settings };

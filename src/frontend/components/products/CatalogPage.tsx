@@ -3,7 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { client } from '@/cms/lib/client';
+import { sanityFetch } from '@/cms/lib/sanityFetch';
 import SafeImage from '@/frontend/components/ui/SafeImage';
 import { safeImageUrl, IMAGE_PLACEHOLDER } from '@/cms/lib/image';
 import {
@@ -33,18 +33,11 @@ interface CatalogPageProps {
 const MAX_PRODUCTS = 500;
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://nikunjsakhi.com';
 
-async function safeFetch<T>(query: string, params: Record<string, string | number | boolean>, fallback: T): Promise<T> {
-  try {
-    return await client.fetch<T>(query, params, { next: { revalidate: 3600 } });
-  } catch {
-    return fallback;
-  }
-}
 
 async function getCatalogContext(categorySlug?: string, typeSlug?: string) {
   const [categories, types] = await Promise.all([
-    safeFetch<Category[]>(CATALOG_CATEGORIES_QUERY, {}, []),
-    safeFetch<ProductType[]>(CATALOG_TYPES_QUERY, { category: categorySlug ?? '' }, []),
+    sanityFetch<Category[]>('catalog', CATALOG_CATEGORIES_QUERY, {}),
+    sanityFetch<ProductType[]>('catalog', CATALOG_TYPES_QUERY, { category: categorySlug ?? '' }),
   ]);
   const category = categorySlug ? categories.find((c) => c.slug.current === categorySlug) : undefined;
   const type = typeSlug ? types.find((t) => t.slug.current === typeSlug) : undefined;
@@ -100,10 +93,10 @@ export async function CatalogPage({ categorySlug, typeSlug }: CatalogPageProps) 
   };
 
   const [products, deities, fragrances, settings] = await Promise.all([
-    safeFetch<Product[]>(PRODUCTS_QUERY, params, []),
-    safeFetch<Deity[]>(DEITIES_QUERY, {}, []),
-    safeFetch<Fragrance[]>(FRAGRANCES_QUERY, {}, []),
-    safeFetch<SiteSettings | null>(SITE_SETTINGS_QUERY, {}, null),
+    sanityFetch<Product[]>('catalog', PRODUCTS_QUERY, params),
+    sanityFetch<Deity[]>('catalog', DEITIES_QUERY, {}),
+    sanityFetch<Fragrance[]>('catalog', FRAGRANCES_QUERY, {}),
+    sanityFetch<SiteSettings | null>('catalog', SITE_SETTINGS_QUERY, {}),
   ]);
   // Show only filters relevant to the current type (or any type in the category).
   const facets = new Set((type ? [type] : types).flatMap((t) => t.appliesFacets ?? []));

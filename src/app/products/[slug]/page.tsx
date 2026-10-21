@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { client } from '@/cms/lib/client';
+import { sanityFetch } from '@/cms/lib/sanityFetch';
 import {
   PRODUCT_BY_SLUG_QUERY,
   RELATED_PRODUCTS_QUERY,
@@ -58,10 +59,8 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 }
 
 async function getData(slug: string) {
-  let product: Product | null = null;
-  try {
-    product = await client.fetch<Product>(PRODUCT_BY_SLUG_QUERY, { slug }, { next: { revalidate: 3600 } });
-  } catch { return null; }
+  // A fetch error propagates (not null) so a Sanity outage can't be cached as a 404.
+  const product = await sanityFetch<Product | null>('product', PRODUCT_BY_SLUG_QUERY, { slug });
   if (!product) return null;
 
   let relatedProducts: Product[] = [];

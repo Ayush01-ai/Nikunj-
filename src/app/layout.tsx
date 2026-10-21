@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Providers } from '@/frontend/providers/Providers';
-import { client } from '@/cms/lib/client';
+import { sanityFetch } from '@/cms/lib/sanityFetch';
 import { SITE_SETTINGS_QUERY, NAV_MENU_QUERY } from '@/cms/lib/queries';
 import { urlFor } from '@/cms/lib/image';
 import { CookieConsent } from '@/frontend/components/ui/CookieConsent';
@@ -10,21 +10,8 @@ import type { NavMenuCategory, SiteSettings } from '@/types';
 
 export const revalidate = 3600; // Revalidate hourly
 
-async function getSiteSettings(): Promise<SiteSettings | null> {
-  try {
-    return await client.fetch<SiteSettings>(SITE_SETTINGS_QUERY, {}, { next: { revalidate: 3600 } });
-  } catch {
-    return null;
-  }
-}
-
-async function getNavMenu(): Promise<NavMenuCategory[]> {
-  try {
-    return await client.fetch<NavMenuCategory[]>(NAV_MENU_QUERY, {}, { next: { revalidate: 3600 } });
-  } catch {
-    return [];
-  }
-}
+const getSiteSettings = () => sanityFetch<SiteSettings>('layout:settings', SITE_SETTINGS_QUERY);
+const getNavMenu = () => sanityFetch<NavMenuCategory[]>('layout:nav', NAV_MENU_QUERY);
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings();
