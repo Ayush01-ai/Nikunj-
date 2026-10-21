@@ -23,7 +23,7 @@ import { PortableText, type PortableTextBlock } from '@portabletext/react';
 import type { Product, SiteSettings, Testimonial } from '@/types';
 import { pickDiverse, seedFrom } from '@/cms/lib/suggestions';
 
-export const revalidate = 60;
+export const revalidate = 3600;
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
@@ -31,7 +31,7 @@ interface ProductPageProps {
 
 export async function generateStaticParams() {
   try {
-    const slugs = await client.fetch<{ slug: string }[]>(ALL_PRODUCT_SLUGS_QUERY);
+    const slugs = await client.fetch<{ slug: string }[]>(ALL_PRODUCT_SLUGS_QUERY, {}, { next: { revalidate: 3600 } });
     return slugs.map(({ slug }) => ({ slug }));
   } catch {
     return [];
@@ -40,7 +40,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = await client.fetch<Product>(PRODUCT_BY_SLUG_QUERY, { slug });
+  const product = await client.fetch<Product>(PRODUCT_BY_SLUG_QUERY, { slug }, { next: { revalidate: 3600 } });
   if (!product) return {};
 
   const imageUrl = product.images?.find((img) => img?.asset?.url)?.asset.url ?? '/og-default.jpg';
@@ -60,7 +60,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 async function getData(slug: string) {
   let product: Product | null = null;
   try {
-    product = await client.fetch<Product>(PRODUCT_BY_SLUG_QUERY, { slug });
+    product = await client.fetch<Product>(PRODUCT_BY_SLUG_QUERY, { slug }, { next: { revalidate: 3600 } });
   } catch { return null; }
   if (!product) return null;
 
@@ -78,12 +78,12 @@ async function getData(slug: string) {
         productTypeId: product.productType?._id ?? '',
         deityId: product.deityRef?._id ?? '',
         productId: product._id,
-      }),
+      }, { next: { revalidate: 3600 } }),
       [],
     ),
-    safe(client.fetch<Product[]>(DIFFERENT_PRODUCTS_QUERY, { categoryId: product.category?._id ?? '', productId: product._id }), []),
-    safe(client.fetch<Testimonial[]>(PRODUCT_REVIEWS_QUERY, { productId: product._id }), []),
-    safe(client.fetch<SiteSettings | null>(SITE_SETTINGS_QUERY), null),
+    safe(client.fetch<Product[]>(DIFFERENT_PRODUCTS_QUERY, { categoryId: product.category?._id ?? '', productId: product._id }, { next: { revalidate: 3600 } }), []),
+    safe(client.fetch<Testimonial[]>(PRODUCT_REVIEWS_QUERY, { productId: product._id }, { next: { revalidate: 3600 } }), []),
+    safe(client.fetch<SiteSettings | null>(SITE_SETTINGS_QUERY, {}, { next: { revalidate: 3600 } }), null),
   ]);
   const seed = seedFrom(product._id);
   relatedProducts = (relatedProducts ?? []).slice(0, 4);

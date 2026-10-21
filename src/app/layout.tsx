@@ -12,7 +12,7 @@ export const revalidate = 3600; // Revalidate hourly
 
 async function getSiteSettings(): Promise<SiteSettings | null> {
   try {
-    return await client.fetch<SiteSettings>(SITE_SETTINGS_QUERY);
+    return await client.fetch<SiteSettings>(SITE_SETTINGS_QUERY, {}, { next: { revalidate: 3600 } });
   } catch {
     return null;
   }
@@ -20,7 +20,7 @@ async function getSiteSettings(): Promise<SiteSettings | null> {
 
 async function getNavMenu(): Promise<NavMenuCategory[]> {
   try {
-    return await client.fetch<NavMenuCategory[]>(NAV_MENU_QUERY);
+    return await client.fetch<NavMenuCategory[]>(NAV_MENU_QUERY, {}, { next: { revalidate: 3600 } });
   } catch {
     return [];
   }

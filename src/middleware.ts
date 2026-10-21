@@ -23,8 +23,7 @@ export default function middleware(req: NextRequest, event: Parameters<typeof cl
 }
 
 export const config = {
-  matcher: [
-    // Skip static files and Next.js internals; run on everything else, including API routes.
-    '/((?!_next/static|_next/image|favicon|.*\\.(?:svg|png|jpg|jpeg|webp|gif|ico|css|js|map)$).*)',
-  ],
+  // Clerk's server-side auth() is only used by API routes, so public storefront pages
+  // (home, collections, products) skip middleware entirely to save CPU on the edge.
+  matcher: ['/api/(.*)', '/trpc/(.*)', '/login(.*)', '/sign-in(.*)', '/sign-up(.*)', '/account(.*)', '/checkout(.*)'],
 };

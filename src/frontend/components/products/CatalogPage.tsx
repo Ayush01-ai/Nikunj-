@@ -52,7 +52,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://nikunjsakhi.com';
 
 async function safeFetch<T>(query: string, params: Record<string, string | number | boolean>, fallback: T): Promise<T> {
   try {
-    return await client.fetch<T>(query, params);
+    return await client.fetch<T>(query, params, { next: { revalidate: 3600 } });
   } catch {
     return fallback;
   }

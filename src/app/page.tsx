@@ -24,11 +24,11 @@ import { WhatsAppFloat } from '@/frontend/components/ui/WhatsAppFloat';
 import { CartSidebar } from '@/frontend/components/cart/CartSidebar';
 import type { HeroSlide, Category, Product, Testimonial, SiteSettings } from '@/types';
 
-export const revalidate = 60;
+export const revalidate = 3600;
 
 async function safeClientFetch<T>(query: string, fallback: T): Promise<T> {
   try {
-    return await client.fetch<T>(query);
+    return await client.fetch<T>(query, {}, { next: { revalidate: 3600 } });
   } catch {
     return fallback;
   }
