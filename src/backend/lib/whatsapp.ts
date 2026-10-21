@@ -23,13 +23,22 @@ function cleanSecret(name: string, raw: string | undefined): string | undefined 
 export const isWhatsAppConfigured = () => {
   // Accept alias names so a live token/phone id is always used, in every NODE_ENV.
   const env = process.env;
-  env.WHATSAPP_TOKEN = cleanSecret('WHATSAPP_TOKEN', env.WHATSAPP_TOKEN)
-    || cleanSecret('WHATSAPP_ACCESS_TOKEN', env.WHATSAPP_ACCESS_TOKEN)
-    || cleanSecret('META_WA_ACCESS_TOKEN', env.META_WA_ACCESS_TOKEN);
+  env.WHATSAPP_TOKEN = whatsappTokens()[0];
   env.WHATSAPP_PHONE_NUMBER_ID = cleanSecret('WHATSAPP_PHONE_NUMBER_ID', env.WHATSAPP_PHONE_NUMBER_ID)
     || cleanSecret('META_WA_PHONE_NUMBER_ID', env.META_WA_PHONE_NUMBER_ID);
   return Boolean(env.WHATSAPP_TOKEN && env.WHATSAPP_PHONE_NUMBER_ID);
 };
+
+/** Every distinct token alias that is set, most likely-current first, so a stale alias can't mask a good one. */
+const TOKEN_NAMES = ['WHATSAPP_ACCESS_TOKEN', 'META_WA_ACCESS_TOKEN', 'WHATSAPP_TOKEN'] as const;
+function whatsappTokens(): string[] {
+  const out: string[] = [];
+  for (const n of TOKEN_NAMES) {
+    const v = cleanSecret(n, process.env[n]);
+    if (v && !out.includes(v)) out.push(v);
+  }
+  return out;
+}
 
 export let lastOtpSendError = ''; // TEMP-DIAG
 
@@ -127,12 +136,14 @@ export async function sendWhatsAppOtp(phone: string, otp: string): Promise<boole
   const shapes = buttonPref === 'false' ? [bodyOnly] : buttonPref === 'true' ? [withButton] : [bodyOnly, withButton];
   const langs = process.env.WHATSAPP_OTP_TEMPLATE_LANG ? [process.env.WHATSAPP_OTP_TEMPLATE_LANG] : ['en_US', 'en'];
 
+  const tokens = whatsappTokens();
+  tokenLoop: for (const token of tokens) {
   for (const components of shapes) {
     for (const lang of langs) {
   try {
     const res = await fetch(`${GRAPH_URL}/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`, 'Content-Type': 'application/json' },
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         messaging_product: 'whatsapp',
         recipient_type: 'individual',
@@ -149,7 +160,8 @@ export async function sendWhatsAppOtp(phone: string, otp: string): Promise<boole
     if (res.ok) return true;
     const errText = (await res.text()).slice(0, 300);
     console.error('[whatsapp-otp] send failed', res.status, lang, components.length, errText);
-    lastOtpSendError = `${res.status} ${lang}/${components.length}: ${errText} [tokenLen=${(process.env.WHATSAPP_TOKEN ?? '').length} pre=${(process.env.WHATSAPP_TOKEN ?? '').slice(0, 2)} phoneIdLen=${(process.env.WHATSAPP_PHONE_NUMBER_ID ?? '').length}]`; // TEMP-DIAG
+    lastOtpSendError = `${res.status} ${lang}/${components.length}: ${errText} [tokens=${tokens.map((t) => t.length).join(',')} phoneIdLen=${(process.env.WHATSAPP_PHONE_NUMBER_ID ?? '').length}]`; // TEMP-DIAG
+    if (res.status === 401) continue tokenLoop;
     if (res.status !== 400 && res.status !== 404) return false;
   } catch (error) {
     lastOtpSendError = `exception: ${error instanceof Error ? error.message : String(error)}`; // TEMP-DIAG
@@ -157,6 +169,7 @@ export async function sendWhatsAppOtp(phone: string, otp: string): Promise<boole
     return false;
   }
     }
+  }
   }
   return false;
 }
