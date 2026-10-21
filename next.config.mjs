@@ -43,14 +43,14 @@ function contentSecurityPolicy() {
 /** @type {import('next').NextConfig} */const nextConfig = {
   allowedDevOrigins: ['localhost', '127.0.0.1', '192.168.1.4'],
   images: {
+    // Sanity's CDN already serves optimized images; the Node optimizer isn't available on Cloudflare Workers.
+    unoptimized: true,
     remotePatterns: [
       { protocol: 'https', hostname: 'cdn.sanity.io' },
       { protocol: 'https', hostname: 'res.cloudinary.com' },
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
     ],
-    formats: ['image/avif', 'image/webp'],
-    minimumCacheTTL: 60 * 60 * 24 * 30,
   },
   // Next.js 16: moved out of experimental
   serverExternalPackages: ['mongoose'],
