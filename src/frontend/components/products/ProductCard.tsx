@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Heart, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { urlFor } from '@/cms/lib/image';
+import { safeImageUrl, IMAGE_PLACEHOLDER } from '@/cms/lib/image';
 import { useCartStore } from '@/frontend/store/cartStore';
 import { useWishlistStore, useWishlistHydrated } from '@/frontend/store/wishlistStore';
 import { ProductQuickModal } from '@/frontend/components/products/ProductQuickModal';
@@ -87,8 +87,8 @@ export function ProductCard({ product, index = 0, inView = true }: ProductCardPr
             <>
               {images.map((img, i) => (
                 <Image
-                  key={img.asset._id || i}
-                  src={urlFor(img).width(500).height(625).quality(80).url()}
+                  key={img.asset?._id || i}
+                  src={safeImageUrl(img, 500, 625) || IMAGE_PLACEHOLDER}
                   alt={img.alt || product.name}
                   fill
                   loading={i === 0 ? undefined : 'lazy'}
