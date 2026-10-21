@@ -1,11 +1,21 @@
 import type { Metadata } from 'next';
-import { CatalogPage, generateCatalogMetadata, type CatalogSearchParams } from '@/frontend/components/products/CatalogPage';
+import { client } from '@/cms/lib/client';
+import { ALL_CATEGORY_SLUGS_QUERY } from '@/cms/lib/queries';
+import { CatalogPage, generateCatalogMetadata } from '@/frontend/components/products/CatalogPage';
 
 export const revalidate = 3600;
 
 interface PageProps {
   params: Promise<{ collection: string }>;
-  searchParams: Promise<CatalogSearchParams>;
+}
+
+export async function generateStaticParams() {
+  try {
+    const rows = await client.fetch<{ slug: string }[]>(ALL_CATEGORY_SLUGS_QUERY, {}, { next: { revalidate: 3600 } });
+    return rows.map(({ slug }) => ({ collection: slug }));
+  } catch {
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -13,7 +23,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return generateCatalogMetadata(collection);
 }
 
-export default async function CategoryPage({ params, searchParams }: PageProps) {
+export default async function CategoryPage({ params }: PageProps) {
   const { collection } = await params;
-  return <CatalogPage categorySlug={collection} searchParams={await searchParams} />;
+  return <CatalogPage categorySlug={collection} />;
 }

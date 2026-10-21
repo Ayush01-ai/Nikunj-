@@ -95,6 +95,7 @@ export interface ProductSpec {
 
 export interface Product {
   _id: string;
+  _createdAt?: string;
   name: string;
   slug: { current: string };
   deity?: string;

@@ -54,6 +54,7 @@ const FRAGRANCE_FIELDS = groq`
 
 const PRODUCT_CARD_FIELDS = groq`
   _id,
+  _createdAt,
   name,
   slug,
   "deity": deity->name,
