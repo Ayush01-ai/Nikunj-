@@ -21,26 +21,6 @@ import toast from 'react-hot-toast';
 const STEPS = ['Cart', 'Address', 'Payment'] as const;
 type Step = typeof STEPS[number];
 
-const CASHFREE_SRC = 'https://sdk.cashfree.com/js/v3/cashfree.js';
-
-type CashfreeCheckoutResult = { error?: { message?: string }; paymentDetails?: { paymentMessage?: string } };
-type CashfreeFactory = (opts: { mode: 'sandbox' | 'production' }) => {
-  checkout: (opts: { paymentSessionId: string; redirectTarget: '_modal' }) => Promise<CashfreeCheckoutResult>;
-};
-
-function loadCashfreeSDK(): Promise<CashfreeFactory> {
-  return new Promise((resolve, reject) => {
-    const w = window as unknown as { Cashfree?: CashfreeFactory };
-    if (w.Cashfree) return resolve(w.Cashfree);
-    const script = document.createElement('script');
-    script.src = CASHFREE_SRC;
-    script.async = true;
-    script.onload = () => (w.Cashfree ? resolve(w.Cashfree) : reject(new Error('Payment gateway failed to load')));
-    script.onerror = () => reject(new Error('Payment gateway failed to load. Check your connection.'));
-    document.body.appendChild(script);
-  });
-}
-
 interface Address {
   fullName: string;
   phone: string;
@@ -67,10 +47,6 @@ export default function CheckoutPage() {
   });
   const [paymentMethod, setPaymentMethod] = useState<'cod' | 'upi' | 'card' | 'netbanking'>('cod');
   const [placing, setPlacing] = useState(false);
-  // Guests must prove ownership of the order's phone number with a one-time code before a
-  // Cashfree payment order can be created for it (see /api/payment/guest-verify/*). Registered
-  // customers skip this entirely — their session is sufficient (see authorizeOrderForPayment).
-  const [guestVerify, setGuestVerify] = useState<{ orderId: string; otp: string; sending: boolean; verifying: boolean } | null>(null);
 
   // Checkout only ever acts on the items the customer selected in the cart/sidebar — any
   // items left deselected stay in the cart untouched (see cartStore's deselectedIds).
@@ -154,101 +130,6 @@ export default function CheckoutPage() {
     }
   };
 
-  // Starts (or resumes, if a Cashfree session already exists) the Cashfree checkout modal
-  // for `orderId`. `guestProof` is required for guest orders (minted by confirmGuestOtpAndPay
-  // below) and ignored for registered orders, which are authorized by the signed-in session.
-  const startCashfreePayment = async (orderId: string, guestProof?: string) => {
-    setPlacing(true);
-    try {
-      const [Cashfree, payRes] = await Promise.all([
-        loadCashfreeSDK(),
-        fetch('/api/payment/cashfree/create', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ orderId, guestProof }),
-        }),
-      ]);
-      const pay = await payRes.json();
-      if (!payRes.ok || !pay.data) throw new Error(pay.error || 'Could not start payment');
-
-      const cashfree = Cashfree({ mode: pay.data.environment === 'production' ? 'production' : 'sandbox' });
-      const result = await cashfree.checkout({
-        paymentSessionId: pay.data.paymentSessionId,
-        redirectTarget: '_modal',
-      });
-      if (result?.error) {
-        toast.error('Payment cancelled. Your order is saved as pending.');
-        return;
-      }
-      // The modal closed without a reported error — confirm server-side (never trust the
-      // client's view of payment status). The same guestProof authorizes the verify call.
-      const verifyRes = await fetch('/api/payment/cashfree/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId, guestProof }),
-      });
-      const verify = await verifyRes.json().catch(() => ({}));
-      if (verify.status === 'failed' && verifyRes.status === 402) {
-        toast.error('Payment was not completed. Your order is saved as pending.');
-        return;
-      }
-      if (verifyRes.status === 202 || verifyRes.status === 403) {
-        // Still processing at Cashfree (or the guest proof expired). The confirmation page
-        // re-checks with Cashfree server-side, and the webhook confirms it regardless.
-        toast('Payment is being confirmed. We will update your order shortly.');
-      } else if (!verifyRes.ok) {
-        throw new Error(verify.error || 'Payment verification failed');
-      }
-      clearSelectedFromCart();
-      router.push(`/confirmation?orderId=${encodeURIComponent(orderId)}`);
-    } catch (err: unknown) {
-      toast.error(`${err instanceof Error ? err.message : 'Payment failed'}. Contact support with order ${orderId}.`);
-    } finally {
-      setPlacing(false);
-    }
-  };
-
-  // Step 1 of guest-order payment authorization: request a one-time code for the phone
-  // number on the order. Safe to call again for "Resend code".
-  const requestGuestOtp = async (orderId: string) => {
-    setGuestVerify((gv) => (gv ? { ...gv, sending: true } : gv));
-    try {
-      const res = await fetch('/api/payment/guest-verify/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId, phone: address.phone }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || 'Could not send verification code');
-      toast.success(json.message || 'Verification code sent');
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Could not send verification code');
-    } finally {
-      setGuestVerify((gv) => (gv ? { ...gv, sending: false } : gv));
-    }
-  };
-
-  // Step 2: verify the code, mint the guestPaymentProof token, then proceed to payment.
-  const confirmGuestOtpAndPay = async () => {
-    if (!guestVerify) return;
-    setGuestVerify((gv) => (gv ? { ...gv, verifying: true } : gv));
-    try {
-      const res = await fetch('/api/payment/guest-verify/confirm-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId: guestVerify.orderId, phone: address.phone, otp: guestVerify.otp }),
-      });
-      const json = await res.json();
-      if (!res.ok || !json.guestProof) throw new Error(json.error || 'Invalid or expired code');
-      const { orderId } = guestVerify;
-      setGuestVerify(null);
-      await startCashfreePayment(orderId, json.guestProof);
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Invalid or expired code');
-      setGuestVerify((gv) => (gv ? { ...gv, verifying: false } : gv));
-    }
-  };
-
   const placeOrder = async () => {
     setPlacing(true);
     try {
@@ -284,14 +165,10 @@ export default function CheckoutPage() {
         clearSelectedFromCart();
         router.push(`/confirmation?orderId=${encodeURIComponent(json.orderId)}`);
         setPlacing(false);
-      } else if (!user) {
-        // Guest checkout: payment cannot start until the phone number on the order is
-        // verified with a one-time code (see authorizeOrderForPayment / guest-verify routes).
-        setPlacing(false);
-        setGuestVerify({ orderId: json.orderId, otp: '', sending: false, verifying: false });
-        requestGuestOtp(json.orderId);
       } else {
-        await startCashfreePayment(json.orderId);
+        clearSelectedFromCart();
+        router.push(`/checkout/success?orderId=${encodeURIComponent(json.orderId)}`);
+        setPlacing(false);
       }
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to place order');
@@ -634,49 +511,12 @@ export default function CheckoutPage() {
 
                   <div className="flex items-center gap-3 mt-4 p-3 bg-green-50 border border-green-200">
                     <ShieldCheck size={16} className="text-green-600" />
-                    <span className="font-lato text-xs text-green-700">100% Secure Payments by Cashfree</span>
+                    <span className="font-lato text-xs text-green-700">Pay securely via UPI after placing your order</span>
                   </div>
-
-                  {/* Guest-checkout payment authorization: a one-time code is required for the
-                      phone number on the order before Cashfree can be started (see
-                      authorizeOrderForPayment). Registered customers never see this. */}
-                  {guestVerify && (
-                    <div className="bg-white border border-gold/40 p-6 mt-4 space-y-3">
-                      <h3 className="font-cinzel text-xs font-semibold text-deep tracking-wider">Verify Your Phone Number</h3>
-                      <p className="font-lato text-xs text-[var(--text-mid)]">
-                        Enter the 6-digit code sent to +91-{address.phone} to authorize payment for this order.
-                      </p>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={6}
-                        value={guestVerify.otp}
-                        onChange={(e) => setGuestVerify((gv) => (gv ? { ...gv, otp: e.target.value.replace(/\D/g, '') } : gv))}
-                        placeholder="Enter 6-digit code"
-                        className="w-full border border-[var(--border)] px-3 py-2 font-lato text-sm tracking-widest"
-                      />
-                      <div className="flex gap-3">
-                        <button
-                          onClick={confirmGuestOtpAndPay}
-                          disabled={guestVerify.verifying || guestVerify.otp.length !== 6}
-                          className="btn-gold flex-1 disabled:opacity-60"
-                        >
-                          {guestVerify.verifying ? 'Verifying...' : 'Verify & Pay'}
-                        </button>
-                        <button
-                          onClick={() => requestGuestOtp(guestVerify.orderId)}
-                          disabled={guestVerify.sending}
-                          className="btn-outline-gold"
-                        >
-                          {guestVerify.sending ? 'Sending...' : 'Resend Code'}
-                        </button>
-                      </div>
-                    </div>
-                  )}
 
                   <div className="flex gap-3 mt-5">
                     <button onClick={() => setStep('Address')} className="btn-outline-gold flex-1">← Back</button>
-                    <button onClick={placeOrder} disabled={placing || !!guestVerify} className="btn-gold flex-1 disabled:opacity-60">
+                    <button onClick={placeOrder} disabled={placing} className="btn-gold flex-1 disabled:opacity-60">
                       {placing ? 'Placing Order...' : paymentMethod === 'cod' ? '🙏 Place Order' : '🔒 Pay Now'}
                     </button>
                   </div>
