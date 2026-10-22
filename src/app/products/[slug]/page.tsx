@@ -319,7 +319,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   Related Products
                 </h2>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
                 {relatedProducts.map((p, i) => (
                   <ProductCard key={p._id} product={p} index={i} inView />
                 ))}
@@ -340,7 +340,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   Devotees Also Loved
                 </h2>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
                 {differentProducts.map((p, i) => (
                   <ProductCard key={p._id} product={p} index={i} inView />
                 ))}

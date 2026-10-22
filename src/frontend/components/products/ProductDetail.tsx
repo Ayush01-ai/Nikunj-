@@ -97,11 +97,11 @@ export function ProductDetail({ product, settings }: ProductDetailProps) {
   };
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
+    <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,440px)_minmax(0,1fr)] gap-6 lg:gap-12">
 
         {/* ─── Image Gallery ─────────────────────────────── */}
-        <div className="space-y-4">
+        <div className="space-y-3 w-full max-w-md mx-auto lg:max-w-none">
           {/* Main image */}
           <div
             className="relative aspect-square bg-cream overflow-hidden cursor-zoom-in group"
@@ -114,7 +114,7 @@ export function ProductDetail({ product, settings }: ProductDetailProps) {
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                 priority
-                sizes="(max-width: 1024px) 100vw, 50vw"
+                sizes="(max-width: 1024px) 448px, 440px"
               />
             ) : (
               <SacredPlaceholder
@@ -199,7 +199,7 @@ export function ProductDetail({ product, settings }: ProductDetailProps) {
           </p>
 
           {/* Name */}
-          <h1 className="font-crimson text-3xl sm:text-4xl font-semibold text-deep leading-tight mb-4">
+          <h1 className="font-crimson text-2xl sm:text-3xl font-semibold text-deep leading-tight mb-3">
             {product.name}
           </h1>
 

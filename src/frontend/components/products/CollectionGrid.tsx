@@ -101,12 +101,12 @@ function GridView({ products, total, page, pageHref, clearHref, hasCategory, tit
   const totalPages = Math.ceil(total / PAGE_SIZE);
   return (
     <>
-      <p className="font-crimson italic text-[var(--text-mid)] mb-4">
+      <p className="font-crimson italic text-sm text-[var(--text-mid)] mb-3">
         {total} {total === 1 ? 'product' : 'products'} found
       </p>
       {products.length > 0 ? (
         <>
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
             {products.map((product, i) => (
               <ProductCard key={product._id} product={product} index={i} inView />
             ))}

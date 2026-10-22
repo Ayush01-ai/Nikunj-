@@ -170,7 +170,7 @@ export async function CatalogPage({ categorySlug, typeSlug }: CatalogPageProps) 
         </div>
 
         {/* Page Header */}
-        <div className="relative bg-white border-b border-[var(--border)] py-10 px-4 sm:px-6 lg:px-8 text-center overflow-hidden">
+        <div className="relative bg-white border-b border-[var(--border)] py-6 sm:py-8 px-4 sm:px-6 lg:px-8 text-center overflow-hidden">
           {category?.bannerImage?.asset && !type && (
             <SafeImage
               src={safeImageUrl(category.bannerImage, 1600, 400, 75) || IMAGE_PLACEHOLDER}
@@ -185,7 +185,7 @@ export async function CatalogPage({ categorySlug, typeSlug }: CatalogPageProps) 
             <span className="font-cinzel text-[10px] tracking-[0.4em] uppercase text-gold block mb-2">
               {type && category ? category.name : 'Divine Ornaments & Pooja Essentials'}
             </span>
-            <h1 className="font-cinzel text-2xl sm:text-3xl font-semibold text-deep mb-2">{title}</h1>
+            <h1 className="font-cinzel text-xl sm:text-2xl font-semibold text-deep mb-1">{title}</h1>
           </div>
         </div>
 
@@ -194,7 +194,7 @@ export async function CatalogPage({ categorySlug, typeSlug }: CatalogPageProps) 
           <div className="bg-white border-b border-[var(--border)]">
             <ul
               aria-label="Shop by product type"
-              className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex gap-3 sm:gap-5 overflow-x-auto list-none scrollbar-hide"
+              className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex gap-3 sm:gap-4 overflow-x-auto list-none scrollbar-hide"
             >
               {[
                 { key: 'all', name: category ? `All ${category.name}` : 'All Products', href: allHref, active: !typeSlug, image: undefined, icon: 'all' as const, count: undefined as number | undefined },
@@ -215,7 +215,7 @@ export async function CatalogPage({ categorySlug, typeSlug }: CatalogPageProps) 
                     className="group flex flex-col items-center gap-2 w-[76px] sm:w-20 text-center"
                   >
                     <span
-                      className={`relative w-16 h-16 rounded-full overflow-hidden flex items-center justify-center border-2 transition-all duration-300 group-hover:-translate-y-0.5 ${
+                      className={`relative w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border-2 transition-all duration-300 group-hover:-translate-y-0.5 ${
                         tile.active
                           ? 'border-gold bg-gold/15 shadow-gold-sm'
                           : 'border-[var(--border)] bg-cream group-hover:border-gold/60'
@@ -226,11 +226,11 @@ export async function CatalogPage({ categorySlug, typeSlug }: CatalogPageProps) 
                           src={safeImageUrl(tile.image, 128, 128) || IMAGE_PLACEHOLDER}
                           alt=""
                           fill
-                          sizes="64px"
+                          sizes="56px"
                           className="object-cover group-hover:scale-110 transition-transform duration-500"
                         />
                       ) : (
-                        <ProductTypeIcon name={tile.icon} size={30} className="group-hover:scale-110 transition-transform duration-300" />
+                        <ProductTypeIcon name={tile.icon} size={26} className="group-hover:scale-110 transition-transform duration-300" />
                       )}
                     </span>
                     <span className={`font-cinzel text-[10px] tracking-wider leading-tight ${tile.active ? 'text-gold-dark font-semibold' : 'text-[var(--text-mid)] group-hover:text-gold'}`}>
@@ -244,9 +244,9 @@ export async function CatalogPage({ categorySlug, typeSlug }: CatalogPageProps) 
           </div>
         )}
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-col lg:flex-row gap-8">
-            <aside className="w-full lg:w-64 flex-shrink-0">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex flex-col lg:flex-row gap-6">
+            <aside className="w-full lg:w-56 flex-shrink-0">
               <Suspense fallback={<div className="skeleton h-96" />}>
                 <ProductFilters
                   categories={categories}
@@ -261,7 +261,7 @@ export async function CatalogPage({ categorySlug, typeSlug }: CatalogPageProps) 
               </Suspense>
             </aside>
 
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <CollectionGrid
                 initialProducts={products}
                 basePath={basePath}

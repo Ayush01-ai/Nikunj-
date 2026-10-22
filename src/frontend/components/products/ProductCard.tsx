@@ -83,18 +83,18 @@ export function ProductCard({ product, index = 0, inView = true }: ProductCardPr
         onMouseLeave={() => setHovered(false)}
       >
         {/* Image */}
-        <Link prefetch={false} href={getProductHref(product)} className="block relative overflow-hidden product-image-ratio bg-cream">
+        <Link prefetch={false} href={getProductHref(product)} className="block relative overflow-hidden aspect-square bg-cream">
           {activeImage ? (
             <>
               {images.map((img, i) => (
                 <SafeImage
                   key={img.asset?._id || i}
-                  src={safeImageUrl(img, 500, 625) || IMAGE_PLACEHOLDER}
+                  src={safeImageUrl(img, 500, 500) || IMAGE_PLACEHOLDER}
                   alt={img.alt || product.name}
                   fill
                   loading={i === 0 ? undefined : 'lazy'}
                   className={`object-cover transition-opacity duration-500 ${i === imgIndex ? 'opacity-100' : 'opacity-0'}`}
-                  sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                  sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 240px"
                 />
               ))}
 
@@ -184,24 +184,24 @@ export function ProductCard({ product, index = 0, inView = true }: ProductCardPr
         </Link>
 
         {/* Info */}
-        <div className="p-4">
-          <p className="font-cinzel text-[9px] tracking-[0.2em] uppercase text-gold mb-1 font-semibold">
+        <div className="p-2.5 sm:p-3">
+          <p className="font-cinzel text-[8px] sm:text-[9px] tracking-[0.2em] uppercase text-gold mb-0.5 font-semibold truncate">
             {product.deity}
           </p>
           <Link prefetch={false} href={getProductHref(product)}>
-            <h3 className="font-crimson text-base font-semibold text-deep leading-snug mb-2 hover:text-gold-dark transition-colors line-clamp-2">
+            <h3 className="font-crimson text-sm sm:text-[15px] font-semibold text-deep leading-snug mb-1 hover:text-gold-dark transition-colors line-clamp-2">
               {product.name}
             </h3>
           </Link>
           {product.shortDescription && (
-            <p className="text-[11px] text-[var(--text-mid)] leading-relaxed mb-3 line-clamp-2">
+            <p className="hidden sm:block truncate text-[11px] text-[var(--text-mid)] leading-snug mb-2">
               {product.shortDescription}
             </p>
           )}
 
           {/* Price */}
-          <div className="flex items-center gap-2 mb-3">
-            <span className="font-cinzel text-sm sm:text-base font-bold text-gold-dark tracking-wide">
+          <div className="flex items-center flex-wrap gap-x-2 mb-2">
+            <span className="font-cinzel text-sm font-bold text-gold-dark tracking-wide">
               {pricing.hasRange && <span className="text-[10px] font-normal text-[var(--text-mid)] mr-1">From</span>}
               ₹{pricing.price.toLocaleString('en-IN')}
             </span>
@@ -213,18 +213,18 @@ export function ProductCard({ product, index = 0, inView = true }: ProductCardPr
           </div>
 
           {/* Actions */}
-          <div className="flex gap-2">
+          <div className="flex gap-1.5">
             <button
               onClick={handleAddToCart}
               aria-label={`Add ${product.name} to cart`}
-              className="flex-1 bg-transparent text-gold-dark border border-gold font-cinzel text-[9px] tracking-widest uppercase py-2.5 hover:bg-gold hover:text-white transition-all duration-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-gold/50"
+              className="flex-1 bg-transparent text-gold-dark border border-gold font-cinzel text-[8px] sm:text-[9px] tracking-wider sm:tracking-widest uppercase py-2 hover:bg-gold hover:text-white transition-all duration-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-gold/50"
             >
               Add to Cart
             </button>
             <Link prefetch={false}
               href={getProductHref(product)}
               aria-label={`View details for ${product.name}`}
-              className="flex-1 bg-gold text-white font-cinzel text-[9px] tracking-widest uppercase py-2.5 text-center hover:bg-gold-dark transition-colors flex items-center justify-center cursor-pointer shadow-xs focus-visible:ring-2 focus-visible:ring-gold/50"
+              className="flex-1 bg-gold text-white font-cinzel text-[8px] sm:text-[9px] tracking-wider sm:tracking-widest uppercase py-2 text-center hover:bg-gold-dark transition-colors flex items-center justify-center cursor-pointer shadow-xs focus-visible:ring-2 focus-visible:ring-gold/50"
             >
               View Details
             </Link>
