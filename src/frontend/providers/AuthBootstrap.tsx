@@ -37,7 +37,10 @@ export function AuthBootstrap() {
       return;
     }
 
-    fetchWithRetry('/api/auth/me', { cache: 'no-store' })
+    // Fresh Google/Clerk sign-ins carry Clerk's client cookie; give a cold Worker more chances
+    // so a just-signed-in user isn't bounced back to /login by a cold-start 5xx.
+    const clerkSignedIn = document.cookie.split(';').some((c) => c.trim().startsWith('__client_uat') && !/=0$/.test(c.trim()));
+    fetchWithRetry('/api/auth/me', { cache: 'no-store' }, { retries: clerkSignedIn ? 4 : 2 })
       .then((r) => (r.ok ? r.json() : null))
       .then((json) => {
         if (json?.success && json.user) setUser(json.user);
