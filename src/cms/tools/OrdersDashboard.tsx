@@ -60,6 +60,7 @@ interface DashOrder {
   cashfreeOrderId?: string;
   cashfreePaymentId?: string;
   razorpayPaymentId?: string;
+  upiReference?: string;
   placedAt?: string;
   stockAdjusted?: boolean;
   tracking?: { courier?: string; trackingNumber?: string; trackingUrl?: string; handedOverAt?: string };
@@ -89,7 +90,7 @@ interface AdminCfg {
 
 const ORDERS_QUERY = `*[_type == "order" && !(_id in path("drafts.**"))] | order(coalesce(placedAt, _createdAt) desc)[0...2000]{
   _id, orderNumber, status, customerName, phone, total, deliveryCharge, paymentMethod, paymentStatus, placedAt, stockAdjusted,
-  paymentGateway, cashfreeOrderId, cashfreePaymentId, razorpayPaymentId, refund,
+  paymentGateway, cashfreeOrderId, cashfreePaymentId, razorpayPaymentId, upiReference, refund,
   tracking, delivery, items, shippingAddress, statusHistory, cancelRequest,
   returnInfo{reasonCategory, reason, requestedAt, requestedBy, withinWindow, refundAmount, "photos": photos[].asset->url}
 }`;
@@ -491,7 +492,23 @@ export function OrdersDashboard() {
     }
     switch (o.status) {
       case 'pending':
-        out.push(btn('Confirm order', () => void run(o._id, () => setOrderStatus(client, o._id, 'confirmed', { note: 'Confirmed from dashboard' })), 'primary'));
+        if (o.paymentMethod !== 'cod' && o.paymentStatus !== 'paid') {
+          out.push(
+            btn(
+              'Payment received — Confirm',
+              () => {
+                const utr = o.upiReference ? ` (customer UTR ${o.upiReference})` : '';
+                if (!window.confirm(`Only confirm after you see ₹${(o.total ?? 0).toLocaleString('en-IN')} credited for ${o.orderNumber}${utr} in your bank / UPI app. Mark as paid and confirm?`)) return;
+                void run(o._id, () =>
+                  setOrderStatus(client, o._id, 'confirmed', { note: 'UPI payment verified manually', set: { paymentStatus: 'paid' } }),
+                );
+              },
+              'primary',
+            ),
+          );
+        } else {
+          out.push(btn('Confirm order', () => void run(o._id, () => setOrderStatus(client, o._id, 'confirmed', { note: 'Confirmed from dashboard' })), 'primary'));
+        }
         break;
       case 'confirmed':
         out.push(btn('Send to delivery partner (OTP)', () => sendToPartner(o), 'primary'));

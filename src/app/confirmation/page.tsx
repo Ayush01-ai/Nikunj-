@@ -1,6 +1,7 @@
 import React, { Suspense } from 'react';
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import { CheckCircle, Package, Home, MessageCircle, Search } from 'lucide-react';
 import { client } from '@/cms/lib/client';
 import { SITE_SETTINGS_QUERY } from '@/cms/lib/queries';
@@ -55,6 +56,10 @@ async function ConfirmationContent({ orderId }: { orderId: string }) {
     getOrderSummary(orderId),
   ]);
   const shopWhatsApp = admin.ownerWhatsApp || settings?.whatsappNumber;
+  // Manual-UPI orders show payment / verification state on the UPI page (which also reads the owner's Studio status).
+  if (order?.paymentMethod === 'upi' && order.paymentStatus !== 'paid') {
+    redirect(`/checkout/success?orderId=${encodeURIComponent(orderId)}`);
+  }
   const items = order?.items.map((i) => ({
     productName: i.name,
     option: i.selectedSize,
@@ -105,7 +110,7 @@ async function ConfirmationContent({ orderId }: { orderId: string }) {
               <span>{inr(order.total)}</span>
             </div>
             <p className="mt-1 font-lato text-xs text-[var(--text-mid)]">
-              {order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Paid online'}
+              {order.paymentMethod === 'cod' ? 'Cash on Delivery' : order.paymentStatus === 'paid' ? 'Paid online' : 'Awaiting payment'}
               {order.shippingAddress?.city && ` · Delivering to ${order.shippingAddress.city}`}
             </p>
           </div>

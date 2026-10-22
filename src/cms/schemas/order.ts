@@ -296,7 +296,7 @@ export const order = defineType({
       title: 'Payment Status',
       type: 'string',
       group: 'items',
-      description: 'For Cash on Delivery, change this to Paid once you receive the money.',
+      description: 'For Cash on Delivery, change this to Paid once you receive the money. For UPI, use "Payment received — Confirm" after matching the UPI credit in your bank app.',
       options: {
         list: [
           { title: 'Pending', value: 'pending' },
@@ -312,6 +312,15 @@ export const order = defineType({
     defineField({ name: 'paymentGateway', title: 'Payment Gateway', type: 'string', group: 'items', readOnly: true, hidden: ({ value }) => !value }),
     defineField({ name: 'cashfreeOrderId', title: 'Cashfree Order ID', type: 'string', group: 'items', readOnly: true, hidden: ({ value }) => !value }),
     defineField({ name: 'cashfreePaymentId', title: 'Cashfree Payment ID', type: 'string', group: 'items', readOnly: true, hidden: ({ value }) => !value }),
+    defineField({
+      name: 'upiReference',
+      title: 'Customer-reported UPI reference (UTR)',
+      description: 'Entered by the customer after paying. Match it (and the amount) against your bank/UPI app before confirming — it is not proof of payment on its own.',
+      type: 'string',
+      group: 'items',
+      readOnly: true,
+      hidden: ({ value }) => !value,
+    }),
 
     defineField({ name: 'customerName', title: 'Customer Name', type: 'string', group: 'customer', readOnly: true }),
     defineField({ name: 'phone', title: 'Phone', type: 'string', group: 'customer', readOnly: true }),

@@ -32,6 +32,7 @@ export interface SanityOrder {
   cashfreeOrderId?: string;
   cashfreePaymentId?: string;
   razorpayPaymentId?: string;
+  upiReference?: string;
   refund?: RefundInfo | null;
 }
 
@@ -43,7 +44,7 @@ const ORDER_PROJECTION = `{
   tracking, statusHistory[]{status, at, note},
   cancelRequest{state, reasonCategory, details, requestedAt, decidedAt, decisionNote},
   returnInfo{reasonCategory, reason, requestedAt, rejectedReason, rejectedAt, refundAmount, refundedAt, "photoCount": count(photos)},
-  paymentGateway, cashfreeOrderId, cashfreePaymentId, razorpayPaymentId, refund
+  paymentGateway, cashfreeOrderId, cashfreePaymentId, razorpayPaymentId, upiReference, refund
 }`;
 
 const hasToken = () => Boolean(process.env.SANITY_API_TOKEN);
@@ -55,6 +56,28 @@ export async function getSanityOrder(orderId: string): Promise<SanityOrder | nul
   } catch (error) {
     console.error('[sanity-orders] read failed', error instanceof Error ? error.message : error);
     return null;
+  }
+}
+
+/** Records the customer-reported UPI reference on an order that is still awaiting payment in Studio. */
+export async function setSanityUpiReference(orderId: string, upiReference: string): Promise<boolean> {
+  if (!hasToken()) return false;
+  const id = sanityOrderId(orderId);
+  try {
+    const doc = await writeClient.fetch<{ _rev: string } | null>(`*[_id == $id && status == "pending"][0]{_rev}`, { id });
+    if (!doc) return false;
+    // ifRevisionId: abort if the owner confirmed/cancelled the order between the read and this write.
+    await writeClient
+      .patch(id)
+      .ifRevisionId(doc._rev)
+      .setIfMissing({ statusHistory: [] })
+      .set({ upiReference })
+      .append('statusHistory', [{ status: 'pending', at: new Date().toISOString(), note: `Customer reported UPI reference ${upiReference}` }])
+      .commit({ autoGenerateArrayKeys: true });
+    return true;
+  } catch (error) {
+    console.error('[sanity-orders] upi reference failed', orderId, error instanceof Error ? error.message : error);
+    return false;
   }
 }
 
@@ -88,6 +111,19 @@ export async function getSanityOrderStatuses(orderIds: string[]): Promise<Map<st
  * Idempotent: if the order already exists the create fails with 409 and stock is untouched.
  */
 export async function pushConfirmedOrderToSanity(order: IOrder, note: string): Promise<boolean> {
+  return pushOrderToSanity(order, note, 'confirmed');
+}
+
+/**
+ * Manual-UPI order: copied into Sanity as "Awaiting payment" (stock reserved there) so the owner can match
+ * the incoming UPI credit and confirm it. The customer is not sent a confirmation until the owner confirms.
+ */
+export async function pushAwaitingPaymentOrderToSanity(order: IOrder, note: string): Promise<boolean> {
+  return pushOrderToSanity(order, note, 'pending');
+}
+
+async function pushOrderToSanity(order: IOrder, note: string, status: 'confirmed' | 'pending'): Promise<boolean> {
+  const confirmed = status === 'confirmed';
   if (!hasToken()) {
     console.error('[sanity-orders] SANITY_API_TOKEN missing; order not synced:', order.orderId);
     return false;
@@ -103,7 +139,7 @@ export async function pushConfirmedOrderToSanity(order: IOrder, note: string): P
       _id: sanityOrderId(order.orderId),
       _type: 'order',
       orderNumber: order.orderId,
-      status: 'confirmed',
+      status,
       placedAt: (order.createdAt ?? new Date()).toISOString(),
       customerName: addr.fullName,
       phone: addr.phone,
@@ -135,7 +171,8 @@ export async function pushConfirmedOrderToSanity(order: IOrder, note: string): P
       paymentGateway: order.paymentGateway,
       cashfreeOrderId: order.cashfreeOrderId,
       cashfreePaymentId: order.cashfreePaymentId,
-      statusHistory: [{ status: 'confirmed', at: now, note }],
+      upiReference: order.upiReference,
+      statusHistory: [{ status, at: now, note }],
       stockAdjusted: stockPatches.length > 0,
     });
     for (const patch of stockPatches) tx.patch(patch.id, (p) => p.inc(patch.inc));
@@ -143,16 +180,16 @@ export async function pushConfirmedOrderToSanity(order: IOrder, note: string): P
     await releaseStockHold(order.orderId);
     await recordOrderPlaced({ orderId: order.orderId, total: order.total, phone: addr.phone, name: addr.fullName, placedAt: order.createdAt });
     // Fresh order only (a duplicate create returns 409 below), so the customer is messaged once.
-    await notifyCustomerOrderConfirmed(order);
+    if (confirmed) await notifyCustomerOrderConfirmed(order);
     return true;
   } catch (error) {
-    const status = (error as { statusCode?: number }).statusCode;
-    if (status === 409) {
+    const statusCode = (error as { statusCode?: number }).statusCode;
+    if (statusCode === 409) {
       await releaseStockHold(order.orderId);
       return true;
     }
     console.error('[sanity-orders] sync failed', order.orderId, error instanceof Error ? error.message : error);
-    if (status === 401 || status === 403) {
+    if (statusCode === 401 || statusCode === 403) {
       console.error(
         '[sanity-orders] SANITY_API_TOKEN cannot write to Sanity. Use a token with the "Editor" role ' +
           '(sanity.io/manage → API → Tokens). Copy missed orders with: ' +
@@ -160,13 +197,13 @@ export async function pushConfirmedOrderToSanity(order: IOrder, note: string): P
       );
     }
     // The order is saved and confirmed on the website, so the customer must still be told.
-    await notifyCustomerOrderConfirmed(order);
+    if (confirmed) await notifyCustomerOrderConfirmed(order);
     return false;
   }
 }
 
 /** Order confirmation to the customer on the channel snapshotted at order time (see orderNotify.ts). Idempotent. */
-async function notifyCustomerOrderConfirmed(order: IOrder): Promise<void> {
+export async function notifyCustomerOrderConfirmed(order: IOrder): Promise<void> {
   const addr = order.shippingAddress;
   const items = order.items.map((i) => ({
     productName: i.name,

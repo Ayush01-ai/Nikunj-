@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Minus, Plus, Trash2, Tag, ShieldCheck, Truck, Banknote, Smartphone, CreditCard, Building2 } from 'lucide-react';
+import { Minus, Plus, Trash2, Tag, ShieldCheck, Truck, Banknote, Smartphone } from 'lucide-react';
 import { useCartStore } from '@/frontend/store/cartStore';
 import { getVariantPricing, orderTotals } from '@/cms/lib/pricing';
 import { useSiteSettings } from '@/frontend/providers/Providers';
@@ -45,7 +45,7 @@ export default function CheckoutPage() {
     phone: user?.phone || '',
     line1: '', city: '', state: '', pincode: '',
   });
-  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'upi' | 'card' | 'netbanking'>('cod');
+  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'upi'>('cod');
   const [placing, setPlacing] = useState(false);
 
   // Checkout only ever acts on the items the customer selected in the cart/sidebar — any
@@ -486,8 +486,6 @@ export default function CheckoutPage() {
                     {([
                       { id: 'cod', label: 'Cash on Delivery', icon: Banknote },
                       { id: 'upi', label: 'UPI / Google Pay / PhonePe', icon: Smartphone },
-                      { id: 'card', label: 'Credit / Debit Card', icon: CreditCard },
-                      { id: 'netbanking', label: 'Net Banking', icon: Building2 },
                     ] as const).map((method) => {
                       const Icon = method.icon;
                       return (

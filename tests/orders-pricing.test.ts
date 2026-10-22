@@ -43,6 +43,7 @@ vi.mock('@/backend/lib/sanityOrders', () => ({
   getSanityOrderStatuses: vi.fn(),
   getSanityOrders: vi.fn(),
   pushConfirmedOrderToSanity: vi.fn(async () => undefined),
+  pushAwaitingPaymentOrderToSanity: vi.fn(async () => undefined),
 }));
 
 let ipSeq = 0;

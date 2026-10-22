@@ -44,6 +44,7 @@ vi.mock('@/cms/lib/client', () => {
 vi.mock('@/backend/lib/sanityOrders', () => ({
   getSanityOrderStatuses: vi.fn(),
   pushConfirmedOrderToSanity: vi.fn(),
+  pushAwaitingPaymentOrderToSanity: vi.fn(),
 }));
 vi.mock('@/cms/lib/pricing', async () => ({
   ...(await vi.importActual<typeof import('@/cms/lib/pricing')>('@/cms/lib/pricing')),

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Minus, Plus } from 'lucide-react';
 import { formatINR, getVariantPricing, variantStock } from '@/cms/lib/pricing';
 import type { Product, ProductColor } from '@/types';
@@ -163,42 +164,54 @@ export function QuantitySelector({
   label?: string | null;
 }) {
   const limit = Math.max(1, max);
-  const btn = size === 'sm' ? 'w-9 h-9' : 'w-10 h-10';
-  const set = (q: number) => onChange(Math.max(1, Math.min(limit, Math.floor(q) || 1)));
+  const h = size === 'sm' ? 'h-9' : 'h-10';
+  const btn = `${size === 'sm' ? 'w-9' : 'w-10'} ${h}`;
+  const clamp = (q: number) => Math.max(1, Math.min(limit, Math.floor(q) || 1));
+  const set = (q: number) => onChange(clamp(q));
+  // Free-text draft so the field can be cleared while typing without snapping back to 1.
+  const [draft, setDraft] = useState<string | null>(null);
+  const shown = draft ?? String(value);
+  const btnClass = `${btn} shrink-0 appearance-none bg-transparent text-deep flex items-center justify-center hover:bg-gold hover:text-white transition-colors disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-deep disabled:cursor-not-allowed cursor-pointer`;
   return (
     <div>
       {label && (
         <p className="font-cinzel text-[10px] tracking-widest uppercase text-[var(--text-mid)] mb-2">{label}</p>
       )}
       <div className="flex items-center gap-3">
-        <div className="flex items-center border border-[var(--border)] bg-white">
+        <div className={`flex items-stretch ${h} border border-[var(--border)] bg-white text-deep`}>
           <button
             type="button"
-            onClick={() => set(value - 1)}
+            onClick={() => { setDraft(null); set(value - 1); }}
             disabled={value <= 1}
             aria-label="Decrease quantity"
-            className={`${btn} flex items-center justify-center hover:bg-gold hover:text-white transition-all disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-current disabled:cursor-not-allowed cursor-pointer`}
+            className={btnClass}
           >
-            <Minus size={14} />
+            <Minus size={14} strokeWidth={2} className="w-3.5 h-3.5 shrink-0 stroke-current" aria-hidden="true" />
           </button>
           <input
-            type="number"
+            type="text"
             inputMode="numeric"
-            min={1}
-            max={limit}
-            value={value}
-            onChange={(e) => set(Number(e.target.value))}
+            pattern="[0-9]*"
+            autoComplete="off"
+            value={shown}
+            onChange={(e) => {
+              const digits = e.target.value.replace(/\D/g, '').slice(0, 3);
+              setDraft(digits);
+              if (digits) set(Number(digits));
+            }}
+            onBlur={() => setDraft(null)}
             aria-label="Quantity"
-            className="w-12 h-full text-center font-cinzel text-sm bg-transparent border-x border-[var(--border)] focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            data-testid="quantity-value"
+            className="w-12 h-full shrink-0 m-0 p-0 text-center font-cinzel text-sm leading-none text-deep [-webkit-text-fill-color:currentColor] opacity-100 bg-transparent border-x border-[var(--border)] rounded-none appearance-none focus:outline-none"
           />
           <button
             type="button"
-            onClick={() => set(value + 1)}
+            onClick={() => { setDraft(null); set(value + 1); }}
             disabled={value >= limit}
             aria-label="Increase quantity"
-            className={`${btn} flex items-center justify-center hover:bg-gold hover:text-white transition-all disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-current disabled:cursor-not-allowed cursor-pointer`}
+            className={btnClass}
           >
-            <Plus size={14} />
+            <Plus size={14} strokeWidth={2} className="w-3.5 h-3.5 shrink-0 stroke-current" aria-hidden="true" />
           </button>
         </div>
         {max > 0 && max <= 10 && (

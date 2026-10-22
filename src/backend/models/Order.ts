@@ -39,6 +39,9 @@ export interface IOrder extends Document {
   /** The payment_session_id used by the Cashfree Checkout JS SDK to open the hosted payment UI. */
   cashfreePaymentSessionId?: string;
   cashfreePaymentId?: string;
+  /** UPI transaction reference (UTR / RRN) the customer reports after paying via the manual UPI link. */
+  upiReference?: string;
+  upiReferenceAt?: Date;
   status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'return_requested' | 'return_approved' | 'returned' | 'refunded';
   notes?: string;
   /** True while this order's quantities are reserved but not yet decremented in Sanity. */
@@ -120,6 +123,8 @@ const OrderSchema = new Schema<IOrder>(
     cashfreeOrderId: { type: String },
     cashfreePaymentSessionId: { type: String },
     cashfreePaymentId: { type: String },
+    upiReference: { type: String, maxlength: 32 },
+    upiReferenceAt: { type: Date },
     status: {
       type: String,
       enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'return_requested', 'return_approved', 'returned', 'refunded'],

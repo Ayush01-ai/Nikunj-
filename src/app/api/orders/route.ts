@@ -8,7 +8,7 @@ import { nanoid } from 'nanoid';
 import sanitizeHtml from 'sanitize-html';
 import { client } from '@/cms/lib/client';
 import { COUPON_BY_CODE_QUERY, SITE_SETTINGS_QUERY } from '@/cms/lib/queries';
-import { getAdminSettings, getSanityOrderStatuses, getSanityOrders, pushConfirmedOrderToSanity } from '@/backend/lib/sanityOrders';
+import { getAdminSettings, getSanityOrderStatuses, getSanityOrders, pushAwaitingPaymentOrderToSanity, pushConfirmedOrderToSanity } from '@/backend/lib/sanityOrders';
 import { refundView } from '@/backend/lib/refundView';
 import { deliveryView, ensureDeliveryCode, OUT_FOR_DELIVERY } from '@/backend/lib/delivery';
 import { refundBreakdown } from '@/cms/lib/refunds';
@@ -90,7 +90,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const validPaymentMethods = ['upi', 'card', 'netbanking', 'cod', 'whatsapp'];
+    // Card / net banking went through Cashfree, which is bypassed; only COD and manual UPI can be paid.
+    const validPaymentMethods = ['upi', 'cod'];
     if (!validPaymentMethods.includes(paymentMethod)) {
       return NextResponse.json({ success: false, error: 'Invalid payment method.' }, { status: 400 });
     }
@@ -303,6 +304,9 @@ export async function POST(req: NextRequest) {
 
     if (paymentMethod === 'cod') {
       await pushConfirmedOrderToSanity(order, 'Cash on Delivery order placed');
+    } else {
+      // Manual UPI: the owner sees it in Studio as "Awaiting payment" and confirms once the money arrives.
+      await pushAwaitingPaymentOrderToSanity(order, 'UPI order placed — awaiting manual payment verification');
     }
 
     return NextResponse.json({

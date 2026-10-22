@@ -11,6 +11,8 @@ interface OrderDoc {
   phone?: string;
   total?: number;
   paymentStatus?: string;
+  paymentMethod?: string;
+  upiReference?: string;
   stockAdjusted?: boolean;
   tracking?: { courier?: string; trackingNumber?: string; trackingUrl?: string };
   items?: { productId?: string; productName?: string; option?: string; colour?: string; quantity?: number; price?: number }[];
@@ -30,6 +32,8 @@ export const AdvanceOrderStatusAction: DocumentActionComponent = (props) => {
   const doc = props.published as OrderDoc | null;
   const next = doc?.status ? NEXT_STEP[doc.status] : undefined;
   if (!doc || !next) return null;
+  // A pending prepaid (manual UPI) order is confirmed only after the owner has seen the money arrive.
+  const confirmsPayment = doc.status === 'pending' && doc.paymentMethod !== 'cod' && doc.paymentStatus !== 'paid';
 
   const apply = async () => {
     setBusy(true);
@@ -37,8 +41,8 @@ export const AdvanceOrderStatusAction: DocumentActionComponent = (props) => {
       await client
         .patch(props.id)
         .setIfMissing({ statusHistory: [] })
-        .set({ status: next.status })
-        .append('statusHistory', [historyEntry(next.status)])
+        .set({ status: next.status, ...(confirmsPayment && { paymentStatus: 'paid' }) })
+        .append('statusHistory', [historyEntry(next.status, confirmsPayment ? 'UPI payment verified manually' : undefined)])
         .commit();
     } finally {
       setBusy(false);
@@ -48,14 +52,17 @@ export const AdvanceOrderStatusAction: DocumentActionComponent = (props) => {
   };
 
   const missingTracking = next.status === 'shipped' && !doc.tracking?.trackingNumber;
+  const needsConfirm = missingTracking || confirmsPayment;
   return {
-    label: busy ? 'Saving…' : next.label,
+    label: busy ? 'Saving…' : confirmsPayment ? 'Payment received — Confirm' : next.label,
     tone: 'primary',
     disabled: busy,
-    onHandle: () => (missingTracking ? setConfirming(true) : void apply()),
+    onHandle: () => (needsConfirm ? setConfirming(true) : void apply()),
     dialog: confirming && {
       type: 'confirm',
-      message: 'No tracking number yet. Add the courier and tracking number first so the customer can follow the parcel. Mark as Shipped anyway?',
+      message: confirmsPayment
+        ? `Only confirm after you see ₹${(doc.total ?? 0).toLocaleString('en-IN')} credited for order ${doc.orderNumber}${doc.upiReference ? ` (customer UTR ${doc.upiReference})` : ''} in your bank / UPI app. Mark as paid and confirm?`
+        : 'No tracking number yet. Add the courier and tracking number first so the customer can follow the parcel. Mark as Shipped anyway?',
       onConfirm: () => void apply(),
       onCancel: () => {
         setConfirming(false);

@@ -12,6 +12,7 @@ vi.mock('@/cms/lib/client', () => ({ client: { fetch: vi.fn() } }));
 vi.mock('@/backend/lib/sanityOrders', () => ({
   getSanityOrderStatuses: vi.fn(),
   pushConfirmedOrderToSanity: vi.fn(),
+  pushAwaitingPaymentOrderToSanity: vi.fn(),
 }));
 vi.mock('@/cms/lib/pricing', () => ({ getVariantPricing: vi.fn() }));
 
