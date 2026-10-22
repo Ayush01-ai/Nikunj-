@@ -413,15 +413,11 @@ export function Navbar({ settings }: NavbarProps) {
               <Link href="/wishlist" className="font-cinzel text-xs tracking-widest text-[var(--text-mid)]" onClick={() => setMobileOpen(false)}>
                 Wishlist
               </Link>
-              <Link href="/track-order" className="font-cinzel text-xs tracking-widest text-[var(--text-mid)]" onClick={() => setMobileOpen(false)}>
-                Track Order
-              </Link>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Search Modal */}
       <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   );

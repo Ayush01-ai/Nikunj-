@@ -11,6 +11,7 @@ import { getAdminSettings } from '@/backend/lib/sanityOrders';
 import { isCashfreeConfigured } from '@/backend/lib/cashfreeConfig';
 import { settleCashfreeOrder } from '@/backend/lib/cashfreeSettlement';
 import { createRateLimiter } from '@/backend/lib/rateLimit';
+import { getWhatsAppHref } from '@/frontend/lib/whatsapp';
 import type { SiteSettings } from '@/types';
 
 export const metadata: Metadata = {
@@ -53,7 +54,7 @@ async function ConfirmationContent({ orderId }: { orderId: string }) {
     getAdminSettings(),
     getOrderSummary(orderId),
   ]);
-  const shopWhatsApp = admin.ownerWhatsApp ? `91${admin.ownerWhatsApp}` : settings?.whatsappNumber?.replace(/\D/g, '');
+  const shopWhatsApp = admin.ownerWhatsApp || settings?.whatsappNumber;
   const items = order?.items.map((i) => ({
     productName: i.name,
     option: i.selectedSize,
@@ -118,7 +119,7 @@ async function ConfirmationContent({ orderId }: { orderId: string }) {
               same chat when your order is packed, shipped and delivered.
             </p>
             <a
-              href={`https://wa.me/${shopWhatsApp}?text=${encodeURIComponent(message)}`}
+              href={getWhatsAppHref(shopWhatsApp, message)}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 bg-[#1a8f47] hover:bg-[#157a3c] text-white font-cinzel text-[11px] tracking-widest uppercase py-3 transition-colors"

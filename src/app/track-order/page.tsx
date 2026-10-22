@@ -13,6 +13,7 @@ import { useSiteSettings } from '@/frontend/providers/Providers';
 import { ORDER_STATUS_LABEL, ORDER_STEPS, isReturnStatus } from '@/cms/lib/orderMessages';
 import { OrderRequestPanel, type RequestableOrder } from '@/frontend/components/orders/OrderRequestPanel';
 import { RefundPanel, type RefundView } from '@/frontend/components/orders/RefundPanel';
+import { getWhatsAppHref } from '@/frontend/lib/whatsapp';
 
 interface TrackedOrder extends RequestableOrder {
   orderId: string;
@@ -88,7 +89,7 @@ function TrackOrderContent() {
 
   const cancelled = order?.status === 'cancelled';
   const currentStep = order ? ORDER_STEPS.indexOf(order.status as (typeof ORDER_STEPS)[number]) : -1;
-  const whatsapp = settings?.whatsappNumber?.replace(/\D/g, '');
+  const whatsapp = settings?.whatsappNumber;
 
   return (
     <main className="min-h-screen bg-cream pt-10 pb-16 px-4">
@@ -285,7 +286,7 @@ function TrackOrderContent() {
               <p className="text-center font-crimson italic text-[var(--text-mid)]">
                 Questions about this order?{' '}
                 <a
-                  href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(`Namaste 🙏 I have a question about my order ${order.orderId}.`)}`}
+                  href={getWhatsAppHref(whatsapp, `Namaste 🙏 I have a question about my order ${order.orderId}.`)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-gold-dark underline"

@@ -275,7 +275,7 @@ export async function CatalogPage({ categorySlug, typeSlug }: CatalogPageProps) 
 
       <Footer settings={settings} />
       <WhatsAppFloat
-        number={settings?.whatsappNumber || '919999999999'}
+        number={settings?.whatsappNumber || '919118698641'}
         message="Namaste! 🙏 I'd like to know more about your divine ornaments."
       />
     </>

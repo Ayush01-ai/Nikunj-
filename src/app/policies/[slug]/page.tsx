@@ -27,7 +27,7 @@ const policies: Record<string, { title: string; content: string[] }> = {
     content: [
       'We take pride in delivering your divine ornaments safely and swiftly.',
       'Delivery Timelines: Standard Delivery 5-7 business days. Express Delivery 2-3 business days where available.',
-      'Free Delivery: Enjoy free standard delivery on orders above Rs.999.',
+      'Free Delivery: Enjoy free standard delivery on orders above Rs.399.',
       'Packaging: All items are carefully packed to ensure they arrive in perfect condition.',
       'Tracking: Once your order is dispatched, you will receive a tracking number via SMS or WhatsApp.',
     ],
@@ -96,7 +96,7 @@ export default async function PolicyPage({ params }: PolicyPageProps) {
               <div className="space-y-5">
                 {policy.content.map((para, i) => (
                   <p key={i} className="font-crimson text-base text-[var(--text-mid)] leading-relaxed">
-                    {para.replace('Rs.999', `Rs.${settings?.freeDeliveryThreshold || 999}`)}
+                    {para.replace('Rs.399', `Rs.${settings?.freeDeliveryThreshold || 399}`)}
                   </p>
                 ))}
               </div>

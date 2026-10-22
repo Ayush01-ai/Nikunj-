@@ -15,6 +15,7 @@ import { SacredPlaceholder } from '@/frontend/components/ui/SacredIcon';
 import { colourAtImage, colourImageIndex, productGallery, toCartItem } from '@/frontend/lib/product';
 import { defaultVariant, getVariantPricing } from '@/cms/lib/pricing';
 import { track } from '@/frontend/lib/analytics';
+import { getWhatsAppHref } from '@/frontend/lib/whatsapp';
 import { ColorSelector, PriceBlock, QuantitySelector, VariantSelector } from '@/frontend/components/products/ProductOptions';
 import type { Product, SiteSettings } from '@/types';
 
@@ -260,7 +261,7 @@ export function ProductDetail({ product, settings }: ProductDetailProps) {
           {/* Trust strips */}
           <div className="border border-[var(--border)] p-4 space-y-3">
             {[
-              { icon: <Truck size={14} />, text: `Free delivery on orders above ₹${settings?.freeDeliveryThreshold || 999}` },
+              { icon: <Truck size={14} />, text: `Free delivery on orders above ₹${settings?.freeDeliveryThreshold || 399}` },
               { icon: <Shield size={14} />, text: 'Secure payment — 100% safe & encrypted' },
               { icon: <RotateCcw size={14} />, text: 'Easy returns within 7 days of delivery' },
               { icon: <Check size={14} />, text: 'Handcrafted with authentic sacred materials' },
@@ -283,7 +284,7 @@ export function ProductDetail({ product, settings }: ProductDetailProps) {
           {/* WhatsApp Order */}
           {settings?.whatsappNumber && (
             <a
-              href={`https://wa.me/${settings.whatsappNumber.replace(/\D/g, '')}?text=${encodeURIComponent(`Namaste! 🙏 I want to order: ${product.name}${selectedSize ? `\nVariant: ${selectedSize}` : ''}${selectedColor ? `\nColour: ${selectedColor}` : ''}\nQty: ${quantity}\nPrice: ₹${(pricing.price * quantity).toLocaleString('en-IN')}\n${process.env.NEXT_PUBLIC_SITE_URL || 'https://nikunjsakhi.com'}/products/${product.slug.current}`)}`}
+              href={getWhatsAppHref(settings.whatsappNumber, `Namaste! 🙏 I want to order: ${product.name}${selectedSize ? `\nVariant: ${selectedSize}` : ''}${selectedColor ? `\nColour: ${selectedColor}` : ''}\nQty: ${quantity}\nPrice: ₹${(pricing.price * quantity).toLocaleString('en-IN')}\n${process.env.NEXT_PUBLIC_SITE_URL || 'https://nikunjsakhi.com'}/products/${product.slug.current}`)}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-5 flex items-center justify-center gap-3 bg-[#25D366] text-white font-cinzel text-[10px] tracking-widest uppercase py-3 hover:bg-[#1da955] transition-colors"

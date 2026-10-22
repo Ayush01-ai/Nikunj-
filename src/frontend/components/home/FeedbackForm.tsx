@@ -275,7 +275,7 @@ export function FeedbackForm({ reviews = [], showReviews = true, showForm = true
                 </div>
 
                 {/* Honeypot: hidden from people, filled by bots */}
-                <div className="absolute -left-[9999px] w-px h-px overflow-hidden" aria-hidden="true">
+                <div className="absolute -left-[3999px] w-px h-px overflow-hidden" aria-hidden="true">
                   <label>
                     Website
                     <input {...register('website')} type="text" tabIndex={-1} autoComplete="off" />

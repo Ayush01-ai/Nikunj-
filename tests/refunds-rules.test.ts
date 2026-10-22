@@ -91,10 +91,10 @@ describe('masking', () => {
 
 describe('clampRefundAmount', () => {
   it('defaults to the order total and never exceeds it', () => {
-    expect(clampRefundAmount(undefined, 999)).toBe(999);
-    expect(clampRefundAmount(0, 999)).toBe(999);
-    expect(clampRefundAmount(-5, 999)).toBe(999);
-    expect(clampRefundAmount(5000, 999)).toBe(999);
+    expect(clampRefundAmount(undefined, 399)).toBe(399);
+    expect(clampRefundAmount(0, 399)).toBe(399);
+    expect(clampRefundAmount(-5, 399)).toBe(399);
+    expect(clampRefundAmount(5000, 399)).toBe(399);
     expect(clampRefundAmount('450.555', 999)).toBe(450.56);
   });
 });

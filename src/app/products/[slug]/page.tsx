@@ -360,7 +360,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
       <Footer settings={settings} />
       <WhatsAppFloat
-        number={settings?.whatsappNumber || '919999999999'}
+        number={settings?.whatsappNumber || '919118698641'}
         message={`Namaste! 🙏 I'm interested in "${product.name}". Please share more details.`}
       />
     </>

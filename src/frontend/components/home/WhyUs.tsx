@@ -6,17 +6,21 @@ import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { Sparkles, Gem, Truck, ShieldCheck, HeartHandshake, RotateCcw } from 'lucide-react';
 
-const whyItems = [
-  { icon: Sparkles, title: 'Divine Craftsmanship', desc: 'Every ornament is handcrafted by skilled artisans with generations of sacred expertise.' },
-  { icon: Gem, title: 'Pure & Authentic', desc: 'We use only authentic materials — pure silver, gold plated brass, and sacred metals.' },
-  { icon: Truck, title: 'Free Delivery', desc: 'Free shipping on orders above ₹999. Fast, secure, and carefully packed.' },
-  { icon: ShieldCheck, title: 'Secure Payments', desc: 'All payments are 100% secure via Cashfree, UPI, and Cash on Delivery.' },
-  { icon: HeartHandshake, title: 'Made with Devotion', desc: 'Each piece is crafted with prayers and blessings for your beloved deity.' },
-  { icon: RotateCcw, title: 'Easy Returns', desc: 'Hassle-free 7-day return policy. Your satisfaction is our priority.' },
-];
+interface WhyUsProps {
+  freeDeliveryThreshold?: number;
+}
 
-export function WhyUs() {
+export function WhyUs({ freeDeliveryThreshold = 399 }: WhyUsProps = {}) {
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
+
+  const whyItems = [
+    { icon: Sparkles, title: 'Divine Craftsmanship', desc: 'Every ornament is handcrafted by skilled artisans with generations of sacred expertise.' },
+    { icon: Gem, title: 'Pure & Authentic', desc: 'We use only authentic materials — pure silver, gold plated brass, and sacred metals.' },
+    { icon: Truck, title: 'Free Delivery', desc: 'Free shipping on orders above ₹399. Fast, secure, and carefully packed.' },
+    { icon: ShieldCheck, title: 'Secure Payments', desc: 'All payments are 100% secure via Cashfree, UPI, and Cash on Delivery.' },
+    { icon: HeartHandshake, title: 'Made with Devotion', desc: 'Each piece is crafted with prayers and blessings for your beloved deity.' },
+    { icon: RotateCcw, title: 'Easy Returns', desc: 'Hassle-free 7-day return policy. Your satisfaction is our priority.' },
+  ];
 
   return (
     <section className="py-20 px-4 sm:px-6 lg:px-8 bg-cream overflow-hidden" ref={ref}>
@@ -102,4 +106,3 @@ export function WhyUs() {
     </section>
   );
 }
-

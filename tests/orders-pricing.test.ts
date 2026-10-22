@@ -5,7 +5,7 @@ import { orderTotals, deliveryPolicy } from '@/cms/lib/pricing';
 // The amount charged (Order.total → Cashfree order_amount) must be subtotal + delivery − discount,
 // with delivery taken from Studio Site Settings, and must equal what the checkout showed.
 const mocks = vi.hoisted(() => {
-  const settings = { current: { freeDeliveryThreshold: 999, deliveryCharge: 99 } as Record<string, unknown> | null };
+  const settings = { current: { freeDeliveryThreshold: 599, deliveryCharge: 99 } as Record<string, unknown> | null };
   const cdnFetch = vi.fn(async (query: string) => {
     if (String(query).includes('_type == "product"')) {
       return [{ _id: 'prod-1', name: 'Attar', price: 499, stock: 10, sizes: [], colors: [] }];
@@ -62,21 +62,21 @@ function placeOrder(extra: Record<string, unknown> = {}, quantity = 1) {
 
 describe('orderTotals', () => {
   it('adds the delivery charge below the free-delivery threshold', () => {
-    expect(orderTotals(499, 0, { freeDeliveryThreshold: 999, deliveryCharge: 99 })).toMatchObject({ deliveryCharge: 99, total: 598 });
+    expect(orderTotals(300, 0, { freeDeliveryThreshold: 399, deliveryCharge: 99 })).toMatchObject({ deliveryCharge: 99, total: 399 });
   });
 
   it('makes delivery free at or above the threshold (decided on the pre-coupon subtotal)', () => {
-    expect(orderTotals(999, 100, { freeDeliveryThreshold: 999, deliveryCharge: 99 })).toMatchObject({ deliveryCharge: 0, discount: 100, total: 899 });
+    expect(orderTotals(999, 100, { freeDeliveryThreshold: 399, deliveryCharge: 99 })).toMatchObject({ deliveryCharge: 0, discount: 100, total: 899 });
     expect(orderTotals(499, 0, { freeDeliveryThreshold: 499, deliveryCharge: 40 })).toMatchObject({ deliveryCharge: 0, total: 499 });
   });
 
   it('subtracts the discount but never below zero items value', () => {
-    expect(orderTotals(300, 1000, { freeDeliveryThreshold: 999, deliveryCharge: 40 })).toMatchObject({ discount: 300, total: 40 });
+    expect(orderTotals(300, 1000, { freeDeliveryThreshold: 399, deliveryCharge: 40 })).toMatchObject({ discount: 300, total: 40 });
   });
 
   it('falls back to safe defaults for missing or invalid settings', () => {
-    expect(deliveryPolicy(null)).toEqual({ freeDeliveryThreshold: 999, deliveryCharge: 99 });
-    expect(deliveryPolicy({ freeDeliveryThreshold: -5, deliveryCharge: Number.NaN })).toEqual({ freeDeliveryThreshold: 999, deliveryCharge: 99 });
+    expect(deliveryPolicy(null)).toEqual({ freeDeliveryThreshold: 399, deliveryCharge: 99 });
+    expect(deliveryPolicy({ freeDeliveryThreshold: -5, deliveryCharge: Number.NaN })).toEqual({ freeDeliveryThreshold: 399, deliveryCharge: 99 });
     expect(deliveryPolicy({ freeDeliveryThreshold: 0, deliveryCharge: 0 })).toEqual({ freeDeliveryThreshold: 0, deliveryCharge: 0 });
   });
 });
@@ -84,7 +84,7 @@ describe('orderTotals', () => {
 describe('POST /api/orders — delivery charge and total', () => {
   beforeEach(() => {
     mocks.create.mockClear();
-    mocks.settings.current = { freeDeliveryThreshold: 999, deliveryCharge: 99 };
+    mocks.settings.current = { freeDeliveryThreshold: 599, deliveryCharge: 99 };
   });
 
   it('stores subtotal + delivery as the order total (the amount sent to Cashfree)', async () => {

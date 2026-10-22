@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
+import { getWhatsAppHref, normalizeWhatsAppNumber } from '@/frontend/lib/whatsapp';
 
 interface AnnouncementBarProps {
   text?: string;
@@ -10,42 +10,56 @@ interface AnnouncementBarProps {
 }
 
 export function AnnouncementBar({ text, whatsappNumber, instagramHandle }: AnnouncementBarProps) {
-  // U5: Don't render a blank bar when no content is configured
   if (!text && !whatsappNumber && !instagramHandle) return null;
 
+  const cleanWhatsapp = normalizeWhatsAppNumber(whatsappNumber);
+  const waUrl = getWhatsAppHref(
+    whatsappNumber,
+    'Namaste! 🙏 I would like to know more about Nikunj Sakhi divine ornaments.',
+  );
+
+  // If text from CMS already includes the coupon code, show it; otherwise ensure the coupon message is prominently included
+  const hasCouponMention = text && /first100/i.test(text);
+
   return (
-    <div className="bg-gold-dark text-white text-center py-2 px-4 font-cinzel text-xs tracking-widest">
-      <p>
-        {text || (
+    <aside
+      aria-label="Announcement"
+      className="bg-gold-dark text-white text-center py-2 px-3 sm:px-4 font-cinzel text-[11px] sm:text-xs tracking-wider"
+    >
+      <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1">
+        <span>✦ Free delivery on orders above ₹399</span>
+        <span aria-hidden="true" className="text-white/60">|</span>
+        <span>
+          Use coupon code for discount &ndash; <strong className="font-bold underline decoration-white/80 underline-offset-2">First100</strong> (first 100 customers only)
+        </span>
+        {cleanWhatsapp && (
           <>
-            ✦ Free delivery on orders above ₹999 &nbsp;|&nbsp;
-            {whatsappNumber && (
-              <a
-                href={`https://wa.me/${whatsappNumber}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline hover:text-white/80 transition-colors"
-              >
-                WhatsApp Us
-              </a>
-            )}
-            {instagramHandle && (
-              <>
-                &nbsp;|&nbsp;
-                <a
-                  href={`https://www.instagram.com/${instagramHandle}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline hover:text-white/80 transition-colors"
-                >
-                  @{instagramHandle}
-                </a>
-              </>
-            )}
-            &nbsp; ✦
+            <span aria-hidden="true" className="text-white/60">|</span>
+            <a
+              href={waUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-white/80 transition-colors inline-flex items-center gap-1 font-medium"
+            >
+              WhatsApp Us
+            </a>
           </>
         )}
-      </p>
-    </div>
+        {instagramHandle && (
+          <>
+            <span aria-hidden="true" className="text-white/60">|</span>
+            <a
+              href={`https://www.instagram.com/${instagramHandle}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-white/80 transition-colors"
+            >
+              @{instagramHandle}
+            </a>
+          </>
+        )}
+        <span aria-hidden="true">✦</span>
+      </div>
+    </aside>
   );
 }

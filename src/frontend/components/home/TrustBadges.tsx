@@ -64,7 +64,7 @@ interface TrustBadgesProps {
   freeDeliveryThreshold?: number;
 }
 
-export function TrustBadges({ freeDeliveryThreshold = 999 }: TrustBadgesProps) {
+export function TrustBadges({ freeDeliveryThreshold = 399 }: TrustBadgesProps) {
   const reduceMotion = useReducedMotion();
   const badges = [
     { Icon: CraftIcon, label: 'Sacred Craftsmanship', motion: { rotate: [0, -6, 6, 0] } },

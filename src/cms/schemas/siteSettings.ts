@@ -33,7 +33,7 @@ export const siteSettings = defineType({
       name: 'announcement',
       title: 'Announcement Bar Text',
       type: 'string',
-      initialValue: '✦ Free delivery on orders above ₹999 | Follow us @jewelleryCollection.7 ✦',
+      initialValue: '✦ Free delivery on orders above ₹399 | Use coupon code "First100" for discount (first 100 customers only) ✦',
     }),
     defineField({
       name: 'announcementActive',
@@ -74,12 +74,13 @@ export const siteSettings = defineType({
       name: 'whatsappNumber',
       title: 'WhatsApp Number (with country code, no +)',
       type: 'string',
-      initialValue: '919XXXXXXXXX',
+      initialValue: '919118698641',
     }),
     defineField({
       name: 'email',
       title: 'Contact Email',
       type: 'string',
+      initialValue: 'Nikunj.sakhi14@gmail.com',
     }),
     defineField({
       name: 'phone',
@@ -146,7 +147,7 @@ export const siteSettings = defineType({
       name: 'freeDeliveryThreshold',
       title: 'Free Delivery Threshold (₹)',
       type: 'number',
-      initialValue: 999,
+      initialValue: 399,
     }),
     defineField({
       name: 'deliveryCharge',

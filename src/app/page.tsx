@@ -27,7 +27,7 @@ import type { HeroSlide, Category, Product, Testimonial, SiteSettings } from '@/
 export const revalidate = false; // on-demand only (see /api/revalidate); no queue for time-based ISR
 
 async function getHomeData() {
-  const [heroSlides, categories, allProducts, featuredProducts, bestsellers, newArrivals, testimonials, settings] =
+  const [heroSlides, categories, allProducts, featuredProducts, bestsellers, newArrivals, testimonials, rawSettings] =
     await Promise.all([
       sanityFetch<HeroSlide[]>('home', HERO_SLIDES_QUERY),
       sanityFetch<Category[]>('home', CATEGORIES_QUERY),
@@ -39,6 +39,13 @@ async function getHomeData() {
       sanityFetch<SiteSettings>('home', SITE_SETTINGS_QUERY),
     ]);
 
+  const settings: SiteSettings | null = rawSettings
+    ? {
+        ...rawSettings,
+        freeDeliveryThreshold: rawSettings.freeDeliveryThreshold ? Math.min(rawSettings.freeDeliveryThreshold, 399) : 399,
+      }
+    : null;
+
   return { heroSlides, categories, allProducts, featuredProducts, bestsellers, newArrivals, testimonials, settings };
 }
 
@@ -46,7 +53,7 @@ export default async function HomePage() {
   const { heroSlides, categories, allProducts, featuredProducts, bestsellers, newArrivals, testimonials, settings } =
     await getHomeData();
 
-  const whatsappNumber = settings?.whatsappNumber || '919999999999';
+  const whatsappNumber = settings?.whatsappNumber || '919118698641';
 
   return (
     <>
@@ -63,7 +70,6 @@ export default async function HomePage() {
       <main>
         <HeroSection slides={heroSlides} settings={settings} />
 
-
         <CategoryGrid categories={categories} />
         <FeaturedProducts
           allProducts={allProducts}
@@ -71,7 +77,9 @@ export default async function HomePage() {
           bestsellers={bestsellers}
           newArrivals={newArrivals}
         />
-        {settings?.showWhyUs !== false && <WhyUs />}
+        {settings?.showWhyUs !== false && (
+          <WhyUs freeDeliveryThreshold={399} />
+        )}
         {settings?.showInstagram !== false && <InstagramStrip instagramHandle={settings?.instagramHandle} />}
         {(settings?.showReviews !== false || settings?.showFeedbackForm !== false) && (
           <FeedbackForm

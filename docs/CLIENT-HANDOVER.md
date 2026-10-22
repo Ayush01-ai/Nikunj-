@@ -18,7 +18,9 @@ Plain-language guide for running the store. For technical detail see
 
 - **Add/edit a product**: Studio → Products. Prices and stock you set here are the prices
   charged — the website recalculates every total on the server, so customers can't change them.
-  A variant with stock 0 cannot be bought.
+  Add customer-selectable size / volume options in **Variants**; this field is independent of
+  the Product Type's browse filters. The storefront shows the selector after at least one option
+  is published. A variant with stock 0 cannot be bought.
 - **Orders Dashboard**: filter by *Today / Yesterday / Last 7 days / Last 30 days / This month /
   All time*, see all ordered products, change order status, approve/reject cancellations and returns.
 - **Deliver an order with a customer code (recommended)**: Orders Dashboard → **Send to delivery

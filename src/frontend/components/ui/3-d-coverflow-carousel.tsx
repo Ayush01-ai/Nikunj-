@@ -1,9 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Eye, Heart, ShoppingBag } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Heart, ShoppingBag, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getImageUrl } from '@/cms/lib/image';
 import { useCartStore } from '@/frontend/store/cartStore';
@@ -60,7 +59,7 @@ export function CoverFlowCarousel({
     ? getImageUrl(currentProduct.images[0], { width: 1600, quality: 70 })
     : undefined;
 
-  const addToCart = (product: Product) => {
+  const addToCart = (product: Product, buyNow = false) => {
     if (!product.stock || product.inStock === false) {
       toast.error('This item is currently out of stock.');
       return;
@@ -71,6 +70,10 @@ export function CoverFlowCarousel({
     }
     const image = product.images?.[0]?.asset ? getImageUrl(product.images[0], { width: 500, quality: 80 }) : '';
     addItem(toCartItem(product, { image }));
+    if (buyNow) {
+      router.push('/checkout');
+      return;
+    }
     openCart();
     toast.success(`${product.name} added to cart`);
   };
@@ -124,7 +127,7 @@ export function CoverFlowCarousel({
 
                 {!isCenter && visible && (
                   <div className="absolute inset-x-0 bottom-0 px-4 pb-5 text-center">
-                    <p className="truncate font-cinzel text-sm font-semibold text-white">{product.name}</p>
+                    <p className="truncate font-cinzel text-xs sm:text-sm font-semibold text-white">{product.name}</p>
                     <p className="font-cinzel text-xs text-gold-light">₹{product.price.toLocaleString('en-IN')}</p>
                   </div>
                 )}
@@ -141,21 +144,30 @@ export function CoverFlowCarousel({
                     </button>
                   </div>
 
-                  <div className="-mx-5 -mb-5 bg-gradient-to-t from-black/90 via-black/75 to-transparent px-5 pb-5 pt-10">
-                    <p className="mb-1 font-cinzel text-xs font-semibold tracking-wider text-gold-light">{product.category?.name || 'Sacred collection'}</p>
-                    <h2 className="font-cinzel text-xl font-semibold leading-tight text-white">{product.name}</h2>
-                    <p className="mb-4 mt-1 font-cinzel text-lg font-bold text-gold-light">₹{product.price.toLocaleString('en-IN')}</p>
+                  <div className="-mx-5 -mb-5 bg-gradient-to-t from-black/95 via-black/70 to-transparent px-4 pb-3 pt-5 sm:px-5 sm:pb-3.5 sm:pt-5">
+                    <div className="mb-2.5 flex min-w-0 items-baseline justify-center gap-2">
+                      <h3 className="min-w-0 flex-1 truncate whitespace-nowrap text-left font-cinzel text-[10px] font-semibold leading-tight text-white sm:text-xs">
+                        {product.name}
+                      </h3>
+                      <p className="shrink-0 whitespace-nowrap font-cinzel text-[10px] font-bold text-gold-light sm:text-xs">
+                      ₹{product.price.toLocaleString('en-IN')}
+                      </p>
+                    </div>
                     <div className="flex gap-2">
-                      <button onClick={(event) => { event.stopPropagation(); addToCart(product); }} className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 bg-gold-dark px-3 text-xs font-cinzel font-semibold tracking-wider text-white transition hover:bg-gold-800 shadow-sm">
-                        <ShoppingBag size={14} /> Add to cart
-                      </button>
-                      <Link
-                        href={getProductHref(product)}
-                        onClick={(event) => event.stopPropagation()}
-                        className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 border border-gold bg-black/70 px-3 text-xs font-cinzel font-semibold tracking-wider text-gold-light transition hover:bg-gold-dark hover:text-white shadow-sm"
+                      <button
+                        type="button"
+                        onClick={(event) => { event.stopPropagation(); addToCart(product, false); }}
+                        className="inline-flex h-8 sm:h-9 flex-1 items-center justify-center gap-1.5 bg-black/60 border border-gold/50 px-2 text-[10px] sm:text-xs font-cinzel font-semibold tracking-wider text-gold-light transition hover:bg-gold-dark hover:text-white shadow-xs rounded-xs"
                       >
-                        <Eye size={14} /> View details
-                      </Link>
+                        <ShoppingBag size={12} className="sm:size-[13px]" /> Add to cart
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(event) => { event.stopPropagation(); addToCart(product, true); }}
+                        className="inline-flex h-8 sm:h-9 flex-1 items-center justify-center gap-1.5 bg-gold hover:bg-gold-light px-2 text-[10px] sm:text-xs font-cinzel font-bold tracking-wider text-deep transition shadow-xs rounded-xs"
+                      >
+                        <Zap size={12} className="sm:size-[13px]" fill="currentColor" /> Buy Now
+                      </button>
                     </div>
                   </div>
                 </div>

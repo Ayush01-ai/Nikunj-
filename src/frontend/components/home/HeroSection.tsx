@@ -146,7 +146,7 @@ export function HeroSection({ slides, settings }: HeroSectionProps) {
         </motion.div>
 
         {/* Trust Badges */}
-        <TrustBadges freeDeliveryThreshold={settings?.freeDeliveryThreshold || 999} />
+        <TrustBadges freeDeliveryThreshold={settings?.freeDeliveryThreshold || 399} />
       </motion.div>
     </section>
   );

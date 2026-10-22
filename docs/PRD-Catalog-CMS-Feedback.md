@@ -100,7 +100,7 @@ graph TD
 | Volume / Pack | Pooja Fragrances | 3 ml, 6 ml, 12 ml · 20 sticks, 100 g, 12 cones |
 | Material | Shringar | Brass, Pearl, Kundan, Stone, Zari |
 | Colour | Shringar, Vastra | Red, Yellow, Green… |
-| Price | All | Under ₹500, ₹500–999, ₹1000–2499, ₹2500+ |
+| Price | All | Under ₹500, ₹500–399, ₹1000–2499, ₹2500+ |
 | Flags | All | Featured, Best Seller, New Arrival, Premium |
 
 ---

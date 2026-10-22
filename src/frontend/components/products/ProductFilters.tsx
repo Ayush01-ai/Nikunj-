@@ -24,7 +24,7 @@ const countLabel = (n?: number) => (n === undefined ? '' : ` (${n})`);
 const PRICE_RANGES = [
   { label: 'All', min: 0, max: 0 },
   { label: 'Under ₹500', min: 0, max: 499 },
-  { label: '₹500 – ₹999', min: 500, max: 999 },
+  { label: '₹500 – ₹399', min: 500, max: 399 },
   { label: '₹1000 – ₹2499', min: 1000, max: 2499 },
   { label: '₹2500+', min: 2500, max: 0 },
 ];

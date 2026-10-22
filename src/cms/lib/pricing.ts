@@ -98,7 +98,7 @@ export function lowestPricing(product: PricedProduct): VariantPricing & { hasRan
 export const formatINR = (amount: number) => `₹${Math.round(amount).toLocaleString('en-IN')}`;
 
 /** Used only when Site Settings leaves the delivery fields empty. */
-export const DEFAULT_FREE_DELIVERY_THRESHOLD = 999;
+export const DEFAULT_FREE_DELIVERY_THRESHOLD = 399;
 export const DEFAULT_DELIVERY_CHARGE = 99;
 
 export type DeliverySettings = { freeDeliveryThreshold?: number | null; deliveryCharge?: number | null } | null | undefined;

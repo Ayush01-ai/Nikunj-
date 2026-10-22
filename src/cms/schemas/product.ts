@@ -244,13 +244,7 @@ export const product = defineType({
       type: 'array',
       group: 'basic',
       description:
-        'Options the customer picks from (size / volume). Set "Variant Price" to the exact selling price of that option, or leave it empty and use "Price Adjustment" (added to the product price).',
-      components: {
-        field: facetField(['size', 'volume'], {
-          size: 'Deity Sizes (e.g. Laddu Gopal 0, 1, 2 / 6 inch)',
-          volume: 'Volume / Pack Size (e.g. 3 ml, 6 ml, 12 ml / 20 sticks)',
-        }),
-      },
+        'Optional purchase options customers can select (size / volume). This field is always available, independently of browse filters. Set "Variant Price" to the exact selling price of that option, or leave it empty and use "Price Adjustment" (added to the product price).',
       of: [
         defineArrayMember({
           type: 'object',

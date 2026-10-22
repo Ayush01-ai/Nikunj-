@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { getWhatsAppHref } from '@/frontend/lib/whatsapp';
 
 interface WhatsAppFloatProps {
   number: string;
@@ -9,7 +10,7 @@ interface WhatsAppFloatProps {
 }
 
 export function WhatsAppFloat({ number, message = 'Namaste! 🙏 I would like to know more.' }: WhatsAppFloatProps) {
-  const href = `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
+  const href = getWhatsAppHref(number, message);
 
   return (
     <motion.a
@@ -17,7 +18,7 @@ export function WhatsAppFloat({ number, message = 'Namaste! 🙏 I would like to
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Chat with us on WhatsApp"
-      className="fixed bottom-6 right-6 z-[999] w-14 h-14 bg-[#25D366] rounded-full flex items-center justify-center wa-float-btn hover:scale-110 transition-transform"
+      className="fixed bottom-6 right-6 z-[399] w-14 h-14 bg-[#25D366] rounded-full flex items-center justify-center wa-float-btn hover:scale-110 transition-transform"
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ delay: 2, type: 'spring', damping: 15 }}

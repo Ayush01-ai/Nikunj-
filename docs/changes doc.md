@@ -54,7 +54,7 @@ This document lists the 14 requested changes. For each one it gives the problem 
 ## 5. Sale percentage
 - **Cause:** Each component calculated the % differently. Some used the legacy `originalPrice` field, some rounded up, and some ignored the variant's price.
 - **Fix:** All prices and discounts now come from one module, `src/cms/lib/pricing.ts`:
-  - `discountPercent(mrp, price)` rounds **down**, so it never advertises more than the real saving (₹999 vs ₹1,200 = 16.75% → "16% off"), and returns 0 when price ≥ MRP.
+  - `discountPercent(mrp, price)` rounds **down**, so it never advertises more than the real saving (₹399 vs ₹1,200 = 16.75% → "16% off"), and returns 0 when price ≥ MRP.
   - `getVariantPricing`, `lowestPricing` and `formatINR` handle variant prices and formatting.
   - Product cards, the detail page, Quick View, the cart and the order API all use it.
 - **Admin note:** "Radha Krishna Haar set" has a size `0-5` with a **+₹1200 modifier** and a legacy MRP of ₹1800. Set the **Variant Price** field for that size so the shown discount is what you intend.

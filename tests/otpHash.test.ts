@@ -29,7 +29,7 @@ describe('otpHash', () => {
   });
 
   it('refuses a submitted value that is itself a stored hash', () => {
-    const stored = hashOtp('999000');
+    const stored = hashOtp('399000');
     expect(otpMatches(stored, stored)).toBe(false);
   });
 
