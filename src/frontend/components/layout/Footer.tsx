@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { NikunjSakhiLogo } from '@/frontend/components/ui/NikunjSakhiLogo';
 import { FooterShopLinks } from '@/frontend/components/layout/FooterShopLinks';
+import { getWhatsAppHref } from '@/frontend/lib/whatsapp';
 import type { SiteSettings } from '@/types';
 
 interface FooterProps {
@@ -21,6 +22,7 @@ const quickLinks = [
 
 const supportLinks = [
   { href: '/track-order', label: 'Track Your Order' },
+  { href: '/contact', label: 'Contact Us' },
   { href: '/#about', label: 'About Us' },
   { href: '/policies/return', label: 'Return Policy' },
   { href: '/policies/shipping', label: 'Shipping Policy' },
@@ -31,6 +33,10 @@ const supportLinks = [
 
 export function Footer({ settings }: FooterProps) {
   const year = new Date().getFullYear();
+  const whatsappUrl = getWhatsAppHref(
+    settings?.whatsappNumber,
+    'Namaste! 🙏 I need assistance regarding Nikunj Sakhi divine ornaments.',
+  );
 
   const trustHighlights = [
     { icon: Truck, title: 'Free Delivery', sub: `On orders above ₹${settings?.freeDeliveryThreshold || 999}` },
@@ -142,49 +148,45 @@ export function Footer({ settings }: FooterProps) {
             </h2>
             <ul className="space-y-3 text-xs">
               <li>
-                <Link href="/#feedback" className="text-xs text-white/50 hover:text-gold-light transition-colors">
+                <Link href="/contact" className="text-xs text-white/50 hover:text-gold-light transition-colors font-medium">
                   Contact Us
                 </Link>
               </li>
-              {settings?.whatsappNumber && (
-                <li>
-                  <a
-                    href={`https://wa.me/${settings.whatsappNumber}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 text-xs text-white/50 hover:text-gold-light transition-colors"
-                  >
-                    <MessageCircle size={14} className="text-gold-light" />
-                    WhatsApp Us
-                  </a>
-                </li>
-              )}
-              {settings?.email && (
-                <li>
-                  <a
-                    href={`mailto:${settings.email}`}
-                    className="flex items-center gap-3 text-xs text-white/50 hover:text-gold-light transition-colors"
-                  >
-                    <Mail size={14} />
-                    {settings.email}
-                  </a>
-                </li>
-              )}
+              <li>
+                <a
+                  href="mailto:Nikunj.sakhi14@gmail.com"
+                  className="flex items-center gap-2.5 text-xs text-white/50 hover:text-gold-light transition-colors break-all"
+                >
+                  <Mail size={14} className="text-gold-light flex-shrink-0" />
+                  <span>Nikunj.sakhi14@gmail.com</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2.5 text-xs text-white/50 hover:text-gold-light transition-colors"
+                >
+                  <MessageCircle size={14} className="text-gold-light flex-shrink-0" />
+                  <span>WhatsApp Us</span>
+                </a>
+              </li>
               {settings?.phone && (
                 <li>
                   <a
                     href={`tel:${settings.phone}`}
-                    className="flex items-center gap-3 text-xs text-white/50 hover:text-gold-light transition-colors"
+                    className="flex items-center gap-2.5 text-xs text-white/50 hover:text-gold-light transition-colors"
                   >
-                    <Phone size={14} />
-                    {settings.phone}
+                    <Phone size={14} className="text-gold-light flex-shrink-0" />
+                    <span>{settings.phone}</span>
                   </a>
                 </li>
               )}
               {settings?.address && (
-                <li className="flex items-start gap-3 text-xs text-white/50">
-                  <MapPin size={14} className="mt-0.5 flex-shrink-0" />
-                  {settings.address}
+                <li className="flex items-start gap-2.5 text-xs text-white/50">
+                  <MapPin size={14} className="mt-0.5 flex-shrink-0 text-gold-light" />
+                  <span>{settings.address}</span>
                 </li>
               )}
             </ul>

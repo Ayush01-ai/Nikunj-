@@ -22,7 +22,7 @@ const navLinks = [
   { href: '/#products', label: 'Featured' },
   { href: '/#about', label: 'About Us' },
   { href: '/#reviews', label: 'Reviews' },
-  { href: '/#feedback', label: 'Contact' },
+  { href: '/contact', label: 'Contact Us' },
 ];
 
 export function Navbar({ settings }: NavbarProps) {
@@ -41,9 +41,7 @@ export function Navbar({ settings }: NavbarProps) {
   const cartCount = items.reduce((sum, i) => sum + i.quantity, 0);
   const isShopRoute = pathname.startsWith('/collections') || pathname.startsWith('/products');
   const visibleLinks = navLinks.filter(
-    (link) =>
-      !(link.href === '/#reviews' && settings?.showReviews === false) &&
-      !(link.href === '/#feedback' && settings?.showFeedbackForm === false),
+    (link) => !(link.href === '/#reviews' && settings?.showReviews === false),
   );
 
   const openShop = () => {
@@ -194,7 +192,9 @@ export function Navbar({ settings }: NavbarProps) {
               </li>
               {visibleLinks.map((link) => {
                 const sectionId = link.href.split('#')[1] || '';
-                const isActive = pathname === '/' && activeSection === sectionId;
+                const isActive = sectionId
+                  ? pathname === '/' && activeSection === sectionId
+                  : pathname === link.href;
                 return (
                   <li key={link.href}>
                     <Link
