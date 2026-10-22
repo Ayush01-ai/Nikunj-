@@ -25,18 +25,15 @@ import type { Product, SiteSettings, Testimonial } from '@/types';
 import { pickDiverse, seedFrom } from '@/cms/lib/suggestions';
 
 export const revalidate = false; // on-demand only (see /api/revalidate); no queue for time-based ISR
+export const dynamicParams = false;
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
 }
 
 export async function generateStaticParams() {
-  try {
-    const slugs = await client.fetch<{ slug: string }[]>(ALL_PRODUCT_SLUGS_QUERY, {}, { next: { revalidate: false, tags: ['sanity'] } });
-    return slugs.map(({ slug }) => ({ slug }));
-  } catch {
-    return [];
-  }
+  const slugs = await client.fetch<{ slug: string }[]>(ALL_PRODUCT_SLUGS_QUERY, {}, { next: { revalidate: false, tags: ['sanity'] } });
+  return slugs.map(({ slug }) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
