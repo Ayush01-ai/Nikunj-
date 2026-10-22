@@ -39,7 +39,7 @@ async function SuccessContent({ orderId }: { orderId: string }) {
         </p>
         <UpiPayment orderId={order.orderId} totalAmount={order.total} />
         <div className="mt-6">
-          <Link href="/" className="btn-outline-gold inline-block">Back to Home</Link>
+          <Link prefetch={false} href="/" className="btn-outline-gold inline-block">Back to Home</Link>
         </div>
       </div>
     </div>

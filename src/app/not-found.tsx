@@ -29,10 +29,10 @@ export default async function NotFound() {
             The page you are looking for may have moved or no longer exists.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
-            <Link href="/collections" className="btn-gold">
+            <Link prefetch={false} href="/collections" className="btn-gold">
               Shop Products
             </Link>
-            <Link href="/" className="btn-outline-gold">
+            <Link prefetch={false} href="/" className="btn-outline-gold">
               Return Home
             </Link>
           </div>

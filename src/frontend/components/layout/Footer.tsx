@@ -111,7 +111,7 @@ export function Footer({ settings }: FooterProps) {
             <ul className="space-y-3 text-xs">
               {quickLinks.map((link) => (
                 <li key={link.href}>
-                  <Link
+                  <Link prefetch={false}
                     href={link.href}
                     className="text-xs text-white/50 hover:text-gold-light transition-colors"
                   >
@@ -130,7 +130,7 @@ export function Footer({ settings }: FooterProps) {
             <ul className="space-y-3 text-xs">
               {supportLinks.map((link) => (
                 <li key={link.href}>
-                  <Link
+                  <Link prefetch={false}
                     href={link.href}
                     className="text-xs text-white/50 hover:text-gold-light transition-colors"
                   >
@@ -148,7 +148,7 @@ export function Footer({ settings }: FooterProps) {
             </h2>
             <ul className="space-y-3 text-xs">
               <li>
-                <Link href="/contact" className="text-xs text-white/50 hover:text-gold-light transition-colors font-medium">
+                <Link prefetch={false} href="/contact" className="text-xs text-white/50 hover:text-gold-light transition-colors font-medium">
                   Contact Us
                 </Link>
               </li>

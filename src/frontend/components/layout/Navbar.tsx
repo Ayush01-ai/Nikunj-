@@ -164,7 +164,7 @@ export function Navbar({ settings }: NavbarProps) {
           <div className={`flex items-center justify-between transition-[height] duration-500 ${scrolled ? 'h-14 md:h-16' : 'h-16 md:h-[76px]'}`}>
 
             {/* Logo sits fully inside the bar so it never overlaps page content below */}
-            <Link
+            <Link prefetch={false}
               href="/"
               className="group relative z-10 flex-shrink-0 flex items-center h-full py-1 mr-4"
               aria-label="Nikunj Sakhi – Home"
@@ -197,7 +197,7 @@ export function Navbar({ settings }: NavbarProps) {
                   : pathname === link.href;
                 return (
                   <li key={link.href}>
-                    <Link
+                    <Link prefetch={false}
                       href={link.href}
                       aria-current={isActive ? 'page' : undefined}
                       onClick={(event) => handleSectionNav(event, link.href)}
@@ -222,7 +222,7 @@ export function Navbar({ settings }: NavbarProps) {
               </button>
 
               {/* Wishlist */}
-              <Link
+              <Link prefetch={false}
                 href="/wishlist"
                 aria-label="Wishlist"
                 className="hidden sm:flex p-2 text-[var(--text-mid)] hover:text-gold transition-colors cursor-pointer rounded-xs focus-visible:ring-2 focus-visible:ring-gold/50"
@@ -231,7 +231,7 @@ export function Navbar({ settings }: NavbarProps) {
               </Link>
 
               {/* Auth */}
-              <Link
+              <Link prefetch={false}
                 href={user ? '/account' : '/login'}
                 aria-label="Account"
                 className="flex p-2 text-[var(--text-mid)] hover:text-gold transition-colors cursor-pointer rounded-xs focus-visible:ring-2 focus-visible:ring-gold/50"
@@ -287,7 +287,7 @@ export function Navbar({ settings }: NavbarProps) {
               <div className="max-w-7xl mx-auto px-8 py-8 grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-8">
                 {menu.map((cat) => (
                   <div key={cat._id}>
-                    <Link
+                    <Link prefetch={false}
                       href={`/collections/${cat.slug}`}
                       className="font-cinzel text-xs font-semibold tracking-widest uppercase text-gold-dark hover:text-gold transition-colors"
                     >
@@ -296,7 +296,7 @@ export function Navbar({ settings }: NavbarProps) {
                     <ul className="mt-3 space-y-2">
                       {cat.types.map((type) => (
                         <li key={type._id}>
-                          <Link
+                          <Link prefetch={false}
                             href={`/collections/${cat.slug}/${type.slug}`}
                             className="font-crimson text-[15px] text-[var(--text-mid)] hover:text-gold transition-colors"
                           >
@@ -312,7 +312,7 @@ export function Navbar({ settings }: NavbarProps) {
                   <p className="font-crimson italic text-sm text-[var(--text-mid)]">
                     Handcrafted shringar and pooja essentials for your beloved deity.
                   </p>
-                  <Link href="/collections" className="btn-outline-gold self-start mt-4">
+                  <Link prefetch={false} href="/collections" className="btn-outline-gold self-start mt-4">
                     Shop Products
                   </Link>
                 </div>
@@ -355,12 +355,12 @@ export function Navbar({ settings }: NavbarProps) {
                 </button>
                 {mobileShopOpen && (
                   <div className="mt-4 space-y-4 text-left border-y border-[var(--border)] py-4">
-                    <Link href="/collections" onClick={() => setMobileOpen(false)} className="block font-cinzel text-xs tracking-widest uppercase text-gold-dark">
+                    <Link prefetch={false} href="/collections" onClick={() => setMobileOpen(false)} className="block font-cinzel text-xs tracking-widest uppercase text-gold-dark">
                       Shop Products
                     </Link>
                     {menu.map((cat) => (
                       <div key={cat._id}>
-                        <Link
+                        <Link prefetch={false}
                           href={`/collections/${cat.slug}`}
                           onClick={() => setMobileOpen(false)}
                           className="block font-cinzel text-xs tracking-widest uppercase text-gold-dark"
@@ -369,7 +369,7 @@ export function Navbar({ settings }: NavbarProps) {
                         </Link>
                         <div className="mt-2 flex flex-wrap gap-2">
                           {cat.types.map((type) => (
-                            <Link
+                            <Link prefetch={false}
                               key={type._id}
                               href={`/collections/${cat.slug}/${type.slug}`}
                               onClick={() => setMobileOpen(false)}
@@ -392,7 +392,7 @@ export function Navbar({ settings }: NavbarProps) {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.08 }}
                 >
-                  <Link
+                  <Link prefetch={false}
                     href={link.href}
                     className="font-cinzel text-xl tracking-[0.2em] text-deep hover:text-gold transition-colors"
                     onClick={(event) => {
@@ -407,10 +407,10 @@ export function Navbar({ settings }: NavbarProps) {
             </nav>
 
             <div className="p-6 border-t border-[var(--border)] flex justify-center gap-6">
-              <Link href="/login" className="font-cinzel text-xs tracking-widest text-[var(--text-mid)]" onClick={() => setMobileOpen(false)}>
+              <Link prefetch={false} href="/login" className="font-cinzel text-xs tracking-widest text-[var(--text-mid)]" onClick={() => setMobileOpen(false)}>
                 Account
               </Link>
-              <Link href="/wishlist" className="font-cinzel text-xs tracking-widest text-[var(--text-mid)]" onClick={() => setMobileOpen(false)}>
+              <Link prefetch={false} href="/wishlist" className="font-cinzel text-xs tracking-widest text-[var(--text-mid)]" onClick={() => setMobileOpen(false)}>
                 Wishlist
               </Link>
             </div>

@@ -407,13 +407,13 @@ export default function AccountPage() {
               <div className="text-center py-16">
                 <Package size={40} className="text-gold/30 mx-auto mb-4" />
                 <p className="font-crimson italic text-[var(--text-mid)]">No orders yet.</p>
-                <Link href="/collections" className="btn-gold mt-4 inline-block">Shop Now</Link>
+                <Link prefetch={false} href="/collections" className="btn-gold mt-4 inline-block">Shop Now</Link>
               </div>
             ) : (
               <div className="grid gap-4">
                 {(orders as AccountOrder[]).map((order) => (
                   <motion.div key={order._id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                    <Link
+                    <Link prefetch={false}
                       href={`/track-order?id=${encodeURIComponent(order.orderId)}`}
                       aria-label={`Track order ${order.orderId}, status ${ORDER_STATUS_LABEL[order.status] ?? order.status}`}
                       className="block bg-white border border-[var(--border)] p-5 hover:border-gold-dark focus-visible:border-gold-dark transition-colors"
@@ -473,7 +473,7 @@ export default function AccountPage() {
               <div className="text-center py-16">
                 <Heart size={40} className="text-gold/30 mx-auto mb-4" />
                 <p className="font-crimson italic text-[var(--text-mid)]">Your wishlist is empty.</p>
-                <Link href="/collections" className="btn-gold mt-4 inline-block">Explore Collections</Link>
+                <Link prefetch={false} href="/collections" className="btn-gold mt-4 inline-block">Explore Collections</Link>
               </div>
             ) : loadingWishlist ? (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">{[...Array(4)].map((_, i) => <div key={i} className="skeleton aspect-[4/5] rounded" />)}</div>
@@ -484,7 +484,7 @@ export default function AccountPage() {
                     const pricing = lowestPricing(p);
                     return (
                       <div key={p._id} className="group bg-white border border-[var(--border)] hover:border-gold transition-colors">
-                        <Link href={getProductHref(p)} className="block relative aspect-[4/5] bg-cream overflow-hidden">
+                        <Link prefetch={false} href={getProductHref(p)} className="block relative aspect-[4/5] bg-cream overflow-hidden">
                           {p.images?.[0]?.asset ? (
                             <SafeImage src={safeImageUrl(p.images[0], 400, 500) || IMAGE_PLACEHOLDER} alt={p.name} fill sizes="(max-width:640px) 50vw, 25vw" className="object-cover group-hover:scale-105 transition-transform duration-500" />
                           ) : (
@@ -492,7 +492,7 @@ export default function AccountPage() {
                           )}
                         </Link>
                         <div className="p-3">
-                          <Link href={getProductHref(p)} className="font-lato text-sm text-deep line-clamp-1 hover:text-gold">{p.name}</Link>
+                          <Link prefetch={false} href={getProductHref(p)} className="font-lato text-sm text-deep line-clamp-1 hover:text-gold">{p.name}</Link>
                           <div className="flex items-center justify-between mt-1">
                             <span className="font-cinzel text-sm text-gold-dark">{formatINR(pricing.price)}</span>
                             <button type="button" onClick={() => toggleWishlist(p._id)} aria-label={`Remove ${p.name} from wishlist`} className="text-rose-500 hover:scale-110 transition-transform">
@@ -505,7 +505,7 @@ export default function AccountPage() {
                   })}
                 </div>
                 <div className="text-center mt-6">
-                  <Link href="/wishlist" className="btn-outline-gold inline-block">Open Full Wishlist</Link>
+                  <Link prefetch={false} href="/wishlist" className="btn-outline-gold inline-block">Open Full Wishlist</Link>
                 </div>
               </>
             )
@@ -517,7 +517,7 @@ export default function AccountPage() {
               <div className="text-center py-16">
                 <ShoppingBag size={40} className="text-gold/30 mx-auto mb-4" />
                 <p className="font-crimson italic text-[var(--text-mid)]">Your cart is empty.</p>
-                <Link href="/collections" className="btn-gold mt-4 inline-block">Start Shopping</Link>
+                <Link prefetch={false} href="/collections" className="btn-gold mt-4 inline-block">Start Shopping</Link>
               </div>
             ) : (
               <div className="bg-white border border-[var(--border)]">
@@ -549,7 +549,7 @@ export default function AccountPage() {
                         {item.image ? <Image src={item.image} alt="" fill sizes="64px" className="object-cover" /> : <SacredPlaceholder className="w-full h-full" />}
                       </span>
                       <div className="flex-1 min-w-0">
-                        <Link href={item.href || `/products/${item.slug}`} className="font-lato text-sm text-deep line-clamp-1 hover:text-gold">{item.name}</Link>
+                        <Link prefetch={false} href={item.href || `/products/${item.slug}`} className="font-lato text-sm text-deep line-clamp-1 hover:text-gold">{item.name}</Link>
                         <p className="font-lato text-[11px] text-[var(--text-mid)]">
                           {[item.selectedSize, item.selectedColor].filter(Boolean).join(' · ')}{(item.selectedSize || item.selectedColor) ? ' · ' : ''}Qty {item.quantity}
                         </p>
@@ -574,7 +574,7 @@ export default function AccountPage() {
                   <div className="flex gap-2">
                     <button type="button" onClick={openCart} className="btn-outline-gold">Edit Cart</button>
                     {cartSelectedItems.length > 0 ? (
-                      <Link href="/checkout" className="btn-gold">Checkout ({cartSelectedItems.length})</Link>
+                      <Link prefetch={false} href="/checkout" className="btn-gold">Checkout ({cartSelectedItems.length})</Link>
                     ) : (
                       <span className="btn-gold opacity-40 pointer-events-none" aria-disabled="true">Checkout</span>
                     )}

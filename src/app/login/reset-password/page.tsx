@@ -65,7 +65,7 @@ export default function ResetPasswordPage() {
           {invalidLink ? (
             <div className="mt-4 space-y-4">
               <p className="font-lato text-sm text-[var(--text-mid)]">This reset link is incomplete or invalid. Please request a new one.</p>
-              <Link href="/login" className="btn-gold inline-flex">Back to Login</Link>
+              <Link prefetch={false} href="/login" className="btn-gold inline-flex">Back to Login</Link>
             </div>
           ) : (
             <>

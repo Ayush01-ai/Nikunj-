@@ -51,7 +51,7 @@ export function ShopSuggestions({ variant, count = 3, onNavigate }: { variant: '
         <ul className="mt-2 flex gap-3 overflow-x-auto pb-1 -mx-1 px-1 snap-x">
           {picks.map((p) => (
             <li key={p._id} className="snap-start shrink-0 w-28">
-              <Link href={getProductHref(p)} onClick={onNavigate} className="block group">
+              <Link prefetch={false} href={getProductHref(p)} onClick={onNavigate} className="block group">
                 <div className="relative w-28 h-28 bg-white border border-[var(--border)] overflow-hidden">
                   {p.image && <Image src={p.image} alt={p.name} fill sizes="112px" className="object-cover" />}
                 </div>
@@ -73,7 +73,7 @@ export function ShopSuggestions({ variant, count = 3, onNavigate }: { variant: '
       <ul className="mt-3 space-y-3">
         {picks.map((p) => (
           <li key={p._id}>
-            <Link href={getProductHref(p)} onClick={onNavigate} className="flex items-center gap-3 group">
+            <Link prefetch={false} href={getProductHref(p)} onClick={onNavigate} className="flex items-center gap-3 group">
               <div className="relative w-14 h-14 shrink-0 bg-white border border-[var(--border)] overflow-hidden">
                 {p.image && <Image src={p.image} alt="" fill sizes="56px" className="object-cover transition-transform group-hover:scale-105" />}
               </div>

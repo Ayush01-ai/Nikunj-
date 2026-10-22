@@ -76,7 +76,7 @@ function ViewAllCard({ inView }: { inView: boolean }) {
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.5 }}
     >
-      <Link
+      <Link prefetch={false}
         href="/collections"
         className="view-all-card group block h-full text-center p-5 border border-[#E8C16A] text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-gold-sm"
       >
@@ -110,7 +110,7 @@ function CategoryCard({
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.5, delay: index * 0.07 }}
     >
-      <Link
+      <Link prefetch={false}
         href={`/collections/${category.slug.current}`}
         className={`
           group block h-full text-center p-5 border transition-all duration-300

@@ -167,7 +167,7 @@ export function CartSidebar() {
                     />
                   </label>
                   {/* Image */}
-                  <Link
+                  <Link prefetch={false}
                     href={item.href || `/products/${encodeURIComponent(item.slug)}`}
                     onClick={closeCart}
                     aria-label={`View ${item.name}`}
@@ -188,7 +188,7 @@ export function CartSidebar() {
                       {[item.productType, item.deity].filter(Boolean).join(' · ')}
                     </p>
                     <h3 className="font-crimson text-sm font-semibold text-deep leading-snug line-clamp-2 mb-0.5">
-                      <Link
+                      <Link prefetch={false}
                         href={item.href || `/products/${encodeURIComponent(item.slug)}`}
                         onClick={closeCart}
                         className="hover:text-gold-dark hover:underline underline-offset-2"
@@ -278,7 +278,7 @@ export function CartSidebar() {
               </p>
             ) : (
               <Button asChild className="w-full normal-case tracking-wider font-semibold">
-                <Link
+                <Link prefetch={false}
                   href="/checkout"
                   onClick={closeCart}
                 >

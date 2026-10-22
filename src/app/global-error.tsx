@@ -26,7 +26,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
             >
               Try Again
             </button>
-            <Link href="/" style={{ color: '#8B6010' }}>Return Home</Link>
+            <Link prefetch={false} href="/" style={{ color: '#8B6010' }}>Return Home</Link>
           </div>
         </main>
       </body>

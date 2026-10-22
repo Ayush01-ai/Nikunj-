@@ -134,12 +134,12 @@ export function HeroSection({ slides, settings }: HeroSectionProps) {
           className="flex flex-col sm:flex-row gap-4 justify-center"
         >
           <Button asChild className="normal-case tracking-wider text-sm font-semibold shadow-md hover:shadow-lg">
-            <Link href="/collections">
+            <Link prefetch={false} href="/collections">
               ✦ Explore Collection
             </Link>
           </Button>
           <Button asChild variant="outline" className="normal-case tracking-wider text-sm font-semibold">
-            <Link href="/collections?sort=newest">
+            <Link prefetch={false} href="/collections?sort=newest">
               View Offers
             </Link>
           </Button>

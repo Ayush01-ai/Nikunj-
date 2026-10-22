@@ -243,7 +243,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 {results.map((product, i) => {
                   const off = discountPercent(product.originalPrice, product.price);
                   return (
-                    <Link
+                    <Link prefetch={false}
                       key={product._id}
                       id={`search-opt-${i}`}
                       data-index={i}
@@ -303,7 +303,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
             {showEmpty && (
               <div className="px-6 py-8 text-center font-crimson italic text-[var(--text-mid)]">
                 No products found for &ldquo;{query}&rdquo;.{' '}
-                <Link href="/collections" onClick={onClose} className="not-italic font-cinzel text-[10px] tracking-widest uppercase text-gold hover:underline">
+                <Link prefetch={false} href="/collections" onClick={onClose} className="not-italic font-cinzel text-[10px] tracking-widest uppercase text-gold hover:underline">
                   Browse all products
                 </Link>
               </div>

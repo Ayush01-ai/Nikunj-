@@ -83,7 +83,7 @@ export function ProductCard({ product, index = 0, inView = true }: ProductCardPr
         onMouseLeave={() => setHovered(false)}
       >
         {/* Image */}
-        <Link href={getProductHref(product)} className="block relative overflow-hidden product-image-ratio bg-cream">
+        <Link prefetch={false} href={getProductHref(product)} className="block relative overflow-hidden product-image-ratio bg-cream">
           {activeImage ? (
             <>
               {images.map((img, i) => (
@@ -188,7 +188,7 @@ export function ProductCard({ product, index = 0, inView = true }: ProductCardPr
           <p className="font-cinzel text-[9px] tracking-[0.2em] uppercase text-gold mb-1 font-semibold">
             {product.deity}
           </p>
-          <Link href={getProductHref(product)}>
+          <Link prefetch={false} href={getProductHref(product)}>
             <h3 className="font-crimson text-base font-semibold text-deep leading-snug mb-2 hover:text-gold-dark transition-colors line-clamp-2">
               {product.name}
             </h3>
@@ -221,7 +221,7 @@ export function ProductCard({ product, index = 0, inView = true }: ProductCardPr
             >
               Add to Cart
             </button>
-            <Link
+            <Link prefetch={false}
               href={getProductHref(product)}
               aria-label={`View details for ${product.name}`}
               className="flex-1 bg-gold text-white font-cinzel text-[9px] tracking-widest uppercase py-2.5 text-center hover:bg-gold-dark transition-colors flex items-center justify-center cursor-pointer shadow-xs focus-visible:ring-2 focus-visible:ring-gold/50"

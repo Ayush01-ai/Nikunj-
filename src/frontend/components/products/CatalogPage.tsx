@@ -159,7 +159,7 @@ export async function CatalogPage({ categorySlug, typeSlug }: CatalogPageProps) 
                   {isLast ? (
                     <span className="text-gold" aria-current="page">{b.name}</span>
                   ) : (
-                    <Link href={b.href} className="text-[var(--text-mid)] hover:text-gold transition-colors">{b.name}</Link>
+                    <Link prefetch={false} href={b.href} className="text-[var(--text-mid)] hover:text-gold transition-colors">{b.name}</Link>
                   )}
                   {!isLast && <span className="text-gold/50" aria-hidden="true">›</span>}
                 </span>
@@ -209,7 +209,7 @@ export async function CatalogPage({ categorySlug, typeSlug }: CatalogPageProps) 
                 })),
               ].map((tile) => (
                 <li key={tile.key} className="flex-shrink-0">
-                  <Link
+                  <Link prefetch={false}
                     href={tile.href}
                     aria-current={tile.active ? 'page' : undefined}
                     className="group flex flex-col items-center gap-2 w-[76px] sm:w-20 text-center"

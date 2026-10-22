@@ -25,7 +25,7 @@ export function AboutSection() {
           className="object-contain w-full h-full"
           priority
         />
-        <Link
+        <Link prefetch={false}
           href="/collections"
           className="absolute inset-0 z-10 cursor-pointer"
           aria-label="Browse the Nikunj Sakhi collection"

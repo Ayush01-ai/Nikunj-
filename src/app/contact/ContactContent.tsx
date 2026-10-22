@@ -108,7 +108,7 @@ ${message || 'I would like assistance with your divine ornaments.'}`;
       {/* Breadcrumb strip */}
       <nav aria-label="Breadcrumb" className="border-b border-gold/20 bg-cream/60 py-3 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex items-center gap-2 text-xs font-cinzel">
-          <Link href="/" className="text-[var(--text-mid)] hover:text-gold transition-colors">
+          <Link prefetch={false} href="/" className="text-[var(--text-mid)] hover:text-gold transition-colors">
             Home
           </Link>
           <span className="text-gold/40">/</span>
@@ -208,7 +208,7 @@ ${message || 'I would like assistance with your divine ornaments.'}`;
                 Enter your Order ID &amp; mobile number.
               </p>
             </div>
-            <Link
+            <Link prefetch={false}
               href="/track-order"
               className="inline-flex items-center justify-center gap-2 bg-deep hover:bg-black text-white py-2.5 px-4 font-cinzel text-xs font-semibold tracking-wider transition-colors rounded-xs"
             >

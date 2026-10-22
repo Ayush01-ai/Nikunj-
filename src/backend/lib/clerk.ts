@@ -100,6 +100,14 @@ export async function clerkSessionMethod(
 }
 
 export async function requireAuthHybrid(req: NextRequest): Promise<AuthPayload> {
+  // Anonymous visitors carry no credentials; skip Clerk verification (CPU-heavy on Workers).
+  const hasCredentials =
+    req.headers.has('authorization') ||
+    req.cookies.has('ns_token') ||
+    req.cookies.has('__session') ||
+    req.cookies.getAll().some((c) => c.name.startsWith('__session_') || c.name.startsWith('__client_uat'));
+  if (!hasCredentials) throw new AuthError('Authentication required', 401);
+
   if (isClerkConfigured()) {
     try {
       // Verify the Clerk session straight from the request (no clerkMiddleware needed, which

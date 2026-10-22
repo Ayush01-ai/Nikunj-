@@ -110,23 +110,23 @@ export default async function PolicyPage({ params }: PolicyPageProps) {
               <p className="font-crimson italic text-[var(--text-mid)] mb-6">
                 The policy you are looking for does not exist.
               </p>
-              <Link href="/" className="btn-gold">
+              <Link prefetch={false} href="/" className="btn-gold">
                 Return Home
               </Link>
             </div>
           )}
 
           <div className="mt-12 pt-8 border-t border-[var(--border)] flex flex-wrap gap-6">
-            <Link href="/policies/return" className="font-cinzel text-xs tracking-wider text-gold hover:text-gold-dark transition-colors">
+            <Link prefetch={false} href="/policies/return" className="font-cinzel text-xs tracking-wider text-gold hover:text-gold-dark transition-colors">
               Return Policy
             </Link>
-            <Link href="/policies/shipping" className="font-cinzel text-xs tracking-wider text-gold hover:text-gold-dark transition-colors">
+            <Link prefetch={false} href="/policies/shipping" className="font-cinzel text-xs tracking-wider text-gold hover:text-gold-dark transition-colors">
               Shipping Policy
             </Link>
-            <Link href="/policies/privacy" className="font-cinzel text-xs tracking-wider text-gold hover:text-gold-dark transition-colors">
+            <Link prefetch={false} href="/policies/privacy" className="font-cinzel text-xs tracking-wider text-gold hover:text-gold-dark transition-colors">
               Privacy Policy
             </Link>
-            <Link href="/policies/terms" className="font-cinzel text-xs tracking-wider text-gold hover:text-gold-dark transition-colors">
+            <Link prefetch={false} href="/policies/terms" className="font-cinzel text-xs tracking-wider text-gold hover:text-gold-dark transition-colors">
               Terms &amp; Conditions
             </Link>
           </div>

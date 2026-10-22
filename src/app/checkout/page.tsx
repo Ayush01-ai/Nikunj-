@@ -185,7 +185,7 @@ export default function CheckoutPage() {
             <p className="font-crimson italic text-[var(--text-mid)] mb-4">
               {items.length === 0 ? 'Your cart is empty' : 'No items selected for checkout'}
             </p>
-            <Link href="/collections" className="btn-gold">Shop Now</Link>
+            <Link prefetch={false} href="/collections" className="btn-gold">Shop Now</Link>
           </div>
         </div>
         <Footer settings={null} />
@@ -239,7 +239,7 @@ export default function CheckoutPage() {
                       return (
                       <li key={item.id} className="bg-white border border-[var(--border)] p-4 flex gap-4 focus-within:border-gold-dark">
                         {/* Image */}
-                        <Link
+                        <Link prefetch={false}
                           href={href}
                           className="relative w-20 h-[100px] flex-shrink-0 overflow-hidden bg-cream focus-visible:outline-2 focus-visible:outline-gold-dark"
                           aria-label={`View ${item.name}`}
@@ -256,7 +256,7 @@ export default function CheckoutPage() {
                           {meta && (
                             <p className="font-cinzel text-[10px] uppercase tracking-widest text-gold-dark truncate">{meta}</p>
                           )}
-                          <Link
+                          <Link prefetch={false}
                             href={href}
                             className="font-crimson text-base font-semibold text-deep hover:text-gold-dark underline-offset-2 hover:underline focus-visible:underline"
                           >

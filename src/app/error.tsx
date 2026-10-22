@@ -21,7 +21,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
           <button type="button" onClick={reset} className="btn-gold">
             Try Again
           </button>
-          <Link href="/" className="btn-outline-gold">
+          <Link prefetch={false} href="/" className="btn-outline-gold">
             Return Home
           </Link>
         </div>

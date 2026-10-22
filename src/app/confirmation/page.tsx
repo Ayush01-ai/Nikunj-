@@ -152,10 +152,10 @@ async function ConfirmationContent({ orderId }: { orderId: string }) {
 
         {/* CTA buttons */}
         <div className="flex flex-col sm:flex-row gap-3">
-          <Link href={`/track-order?id=${encodeURIComponent(orderId)}`} className="btn-gold flex-1 flex items-center justify-center gap-2">
+          <Link prefetch={false} href={`/track-order?id=${encodeURIComponent(orderId)}`} className="btn-gold flex-1 flex items-center justify-center gap-2">
             <Search size={14} aria-hidden="true" /> Track Order
           </Link>
-          <Link href="/" className="btn-outline-gold flex-1 flex items-center justify-center gap-2">
+          <Link prefetch={false} href="/" className="btn-outline-gold flex-1 flex items-center justify-center gap-2">
             <Home size={14} aria-hidden="true" /> Back to Home
           </Link>
         </div>
@@ -181,7 +181,7 @@ export default async function ConfirmationPage({
       <div className="min-h-screen bg-cream flex items-center justify-center">
         <div className="text-center">
           <p className="font-crimson italic text-[var(--text-mid)] mb-4">No order found.</p>
-          <Link href="/" className="btn-gold">Go Home</Link>
+          <Link prefetch={false} href="/" className="btn-gold">Go Home</Link>
         </div>
       </div>
     );

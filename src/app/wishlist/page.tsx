@@ -88,7 +88,7 @@ export default function WishlistPage() {
             <p className="font-crimson italic text-[var(--text-mid)] mb-6">
               Save your favorite divine ornaments here
             </p>
-            <Link href="/collections" className="btn-gold">Explore Products</Link>
+            <Link prefetch={false} href="/collections" className="btn-gold">Explore Products</Link>
           </div>
         ) : (
           <AnimatePresence>
@@ -103,7 +103,7 @@ export default function WishlistPage() {
                   className="bg-white border border-[var(--border)] group relative"
                 >
                   {/* Image */}
-                  <Link href={getProductHref(product)} className="block">
+                  <Link prefetch={false} href={getProductHref(product)} className="block">
                     <div className="product-image-ratio relative bg-cream overflow-hidden">
                       {product.images?.[0]?.asset ? (
                         <SafeImage
@@ -140,7 +140,7 @@ export default function WishlistPage() {
                   {/* Info */}
                   <div className="p-3">
                     <p className="font-cinzel text-[9px] tracking-widest uppercase text-gold mb-1">{product.deity}</p>
-                    <Link href={getProductHref(product)} className="font-crimson text-sm font-semibold text-deep line-clamp-2 hover:text-gold transition-colors block mb-2">
+                    <Link prefetch={false} href={getProductHref(product)} className="font-crimson text-sm font-semibold text-deep line-clamp-2 hover:text-gold transition-colors block mb-2">
                       {product.name}
                     </Link>
                     <div className="flex items-center gap-2 mb-3">

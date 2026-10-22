@@ -181,7 +181,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           <nav aria-label="Breadcrumb" className="min-w-0 flex flex-wrap items-center gap-2 font-cinzel text-[10px] tracking-widest uppercase">
             {breadcrumbs.map((b) => (
               <span key={b.href} className="flex items-center gap-2">
-                <Link href={b.href} className="text-[var(--text-mid)] hover:text-gold transition-colors">{b.name}</Link>
+                <Link prefetch={false} href={b.href} className="text-[var(--text-mid)] hover:text-gold transition-colors">{b.name}</Link>
                 <span className="text-gold/50" aria-hidden="true">›</span>
               </span>
             ))}
@@ -262,7 +262,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   {product.returnPolicy ||
                     'Easy returns within 7 days of delivery. Items must be unused and in original packaging. Damaged-in-transit items get a full refund or replacement. Customised items are non-returnable unless defective.'}
                 </p>
-                <Link
+                <Link prefetch={false}
                   href="/policies/return"
                   className="mt-4 self-start font-cinzel text-[10px] tracking-widest uppercase text-gold-dark hover:text-gold underline underline-offset-4"
                 >
@@ -346,7 +346,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 ))}
               </div>
               <p className="mt-10 text-center">
-                <Link href="/collections" className="font-cinzel text-[10px] tracking-widest uppercase text-gold-dark hover:text-deep">
+                <Link prefetch={false} href="/collections" className="font-cinzel text-[10px] tracking-widest uppercase text-gold-dark hover:text-deep">
                   View all collections →
                 </Link>
               </p>

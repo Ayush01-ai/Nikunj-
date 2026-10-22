@@ -309,7 +309,7 @@ function TrackOrderContent() {
         )}
 
         <p className="mt-10 text-center">
-          <Link href="/collections" className="font-cinzel text-[10px] tracking-widest uppercase text-gold-dark hover:text-deep">
+          <Link prefetch={false} href="/collections" className="font-cinzel text-[10px] tracking-widest uppercase text-gold-dark hover:text-deep">
             Continue Shopping →
           </Link>
         </p>

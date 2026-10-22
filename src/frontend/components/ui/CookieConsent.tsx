@@ -49,7 +49,7 @@ export function CookieConsent({ gaId }: CookieConsentProps) {
           <p className="font-crimson text-[15px] text-deep leading-relaxed">
             We use essential cookies to keep you signed in and your cart working. With your permission we also use
             analytics cookies to understand how the site is used.{' '}
-            <Link href="/policies/privacy" className="underline text-gold-dark hover:text-deep">
+            <Link prefetch={false} href="/policies/privacy" className="underline text-gold-dark hover:text-deep">
               Privacy Policy
             </Link>
           </p>

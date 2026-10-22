@@ -178,7 +178,7 @@ export function ProductQuickModal({ product, onClose }: ProductQuickModalProps) 
                 <Button onClick={handleBuyNow} disabled={outOfStock} className="w-full">
                   <Zap size={14} /> Buy Now
                 </Button>
-                <Link
+                <Link prefetch={false}
                   href={getProductHref(product)}
                   onClick={onClose}
                   className="flex items-center justify-center gap-1.5 font-cinzel text-[10px] tracking-widest uppercase text-[var(--text-mid)] hover:text-gold transition-colors py-1"

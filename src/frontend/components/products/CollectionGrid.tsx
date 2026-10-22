@@ -80,7 +80,7 @@ function Empty({ clearHref, hasCategory, title }: { clearHref: string; hasCatego
       <p className="font-crimson italic text-[var(--text-mid)]">
         {hasCategory ? `New ${title} pieces are coming soon.` : 'Try a different filter or browse all collections.'}
       </p>
-      <Link href={clearHref} className="btn-gold mt-6 inline-block">
+      <Link prefetch={false} href={clearHref} className="btn-gold mt-6 inline-block">
         {hasCategory ? 'Clear Filters' : 'Browse All'}
       </Link>
     </div>
@@ -114,7 +114,7 @@ function GridView({ products, total, page, pageHref, clearHref, hasCategory, tit
           {totalPages > 1 && (
             <nav aria-label="Pagination" className="flex justify-center gap-2 mt-12">
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                <Link
+                <Link prefetch={false}
                   key={p}
                   href={pageHref(p)}
                   aria-current={p === page ? 'page' : undefined}
