@@ -1,10 +1,14 @@
 'use client';
 
-import { useSignIn } from '@clerk/nextjs';
+import { useClerk } from '@clerk/nextjs';
 
 /**
- * Google sign-in handled entirely by Clerk's client SDK (no server route, no Mongoose).
+ * Google sign-in handled entirely by Clerk's client SDK (no server route, no Mongoose, no Worker).
  * Only render when ClerkProvider is mounted (see ClerkEnabledContext).
+ *
+ * Uses `signIn.authenticateWithRedirect`, which always starts a fresh sign-in. The newer
+ * `signIn.sso()` silently does nothing when an earlier Google attempt was abandoned (its
+ * verification expired), which left the button dead until Clerk's client state was cleared.
  */
 export function ClerkGoogleButton({
   next,
@@ -17,18 +21,19 @@ export function ClerkGoogleButton({
   children: React.ReactNode;
   onError: (message: string) => void;
 }) {
-  const { signIn } = useSignIn();
+  const clerk = useClerk();
 
   const start = async () => {
     try {
-      const { error } = await signIn.sso({
+      const signIn = clerk.client?.signIn;
+      if (!signIn) throw new Error('Clerk client not ready');
+      await signIn.authenticateWithRedirect({
         strategy: 'oauth_google',
-        redirectUrl: next,
-        redirectCallbackUrl: `/sso-callback?next=${encodeURIComponent(next)}`,
+        redirectUrl: `/sso-callback?next=${encodeURIComponent(next)}`,
+        redirectUrlComplete: new URL(next, window.location.origin).toString(),
         // Always show Google's account chooser instead of silently reusing one session.
         oidcPrompt: 'select_account',
       });
-      if (error) onError('Google sign-in failed. Please try again.');
     } catch (err) {
       console.error('[clerk] google sso failed', err);
       onError('Google sign-in failed. Please try again.');
