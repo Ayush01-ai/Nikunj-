@@ -3,7 +3,7 @@ import { connectDB } from '@/backend/lib/mongodb';
 import { Order } from '@/backend/models/Order';
 import { ORDER_ID_PATTERN } from '@/backend/lib/orderAccess';
 import { clientIp, createRateLimiter } from '@/backend/lib/rateLimit';
-import { getSanityOrder, setSanityUpiReference } from '@/backend/lib/sanityOrders';
+import { getSanityOrder, resyncOrderToSanity, setSanityUpiReference } from '@/backend/lib/sanityOrders';
 
 const isIpLimited = createRateLimiter(10, 10 * 60 * 1000, 'api/orders/upi-reference:ip');
 const isOrderLimited = createRateLimiter(5, 60 * 60 * 1000, 'api/orders/upi-reference:order');
@@ -54,6 +54,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: 'This order is not awaiting a UPI payment.' }, { status: 409 });
   }
   if (managed) await setSanityUpiReference(orderId, utr);
+  // Not in Studio yet (first sync failed) — copy it now; the copy carries the reference just saved.
+  else await resyncOrderToSanity(orderId);
 
   return NextResponse.json({ success: true }, { headers: { 'Cache-Control': 'no-store' } });
 }

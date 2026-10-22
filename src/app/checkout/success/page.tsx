@@ -6,7 +6,7 @@ import { CheckCircle, XCircle } from 'lucide-react';
 import { connectDB } from '@/backend/lib/mongodb';
 import { Order } from '@/backend/models/Order';
 import { ORDER_ID_PATTERN } from '@/backend/lib/orderAccess';
-import { getSanityOrder } from '@/backend/lib/sanityOrders';
+import { getSanityOrder, resyncOrderToSanity } from '@/backend/lib/sanityOrders';
 import { UpiPayment } from './UpiPayment';
 
 export const metadata: Metadata = {
@@ -41,6 +41,8 @@ const inr = (n: number) => n.toLocaleString('en-IN');
 async function SuccessContent({ orderId }: { orderId: string }) {
   const [order, managed] = await Promise.all([loadOrder(orderId), getSanityOrder(orderId)]);
   if (!order) notFound();
+  // First sync to Studio failed (e.g. missing token) — retry so the owner can see and confirm it.
+  if (!managed) await resyncOrderToSanity(orderId);
   if (order.paymentMethod === 'cod') redirect(`/confirmation?orderId=${encodeURIComponent(orderId)}`);
 
   // The owner's decision in Studio is the source of truth; the website copy is the fallback.

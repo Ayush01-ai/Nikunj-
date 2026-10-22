@@ -8,7 +8,7 @@ import { SITE_SETTINGS_QUERY } from '@/cms/lib/queries';
 import { orderPlacedMessage } from '@/cms/lib/orderMessages';
 import { connectDB } from '@/backend/lib/mongodb';
 import { Order } from '@/backend/models/Order';
-import { getAdminSettings } from '@/backend/lib/sanityOrders';
+import { getAdminSettings, resyncOrderToSanity } from '@/backend/lib/sanityOrders';
 import { isCashfreeConfigured } from '@/backend/lib/cashfreeConfig';
 import { settleCashfreeOrder } from '@/backend/lib/cashfreeSettlement';
 import { createRateLimiter } from '@/backend/lib/rateLimit';
@@ -27,6 +27,7 @@ async function getOrderSummary(orderId: string) {
   try {
     await connectDB();
     await reconcileCashfreePayment(orderId);
+    await resyncOrderToSanity(orderId);
     return await Order.findOne({ orderId }).select('items total paymentMethod paymentStatus status shippingAddress.city').lean();
   } catch {
     return null;

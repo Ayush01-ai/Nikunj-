@@ -1,6 +1,6 @@
 import { writeClient } from '@/cms/lib/client';
 import { STOCK_PRODUCTS_QUERY, buildStockPatches, stockLookupIds } from '@/cms/lib/orderStock';
-import type { IOrder } from '@/backend/models/Order';
+import { Order, type IOrder } from '@/backend/models/Order';
 import { notifyOrder } from '@/backend/lib/orderNotify';
 import type { CancelRequestInfo } from '@/cms/lib/orderRequests';
 import type { RefundInfo } from '@/cms/lib/refunds';
@@ -122,10 +122,41 @@ export async function pushAwaitingPaymentOrderToSanity(order: IOrder, note: stri
   return pushOrderToSanity(order, note, 'pending');
 }
 
+/**
+ * Retries the Sanity copy of an order whose first sync failed (e.g. the token was missing or Sanity was down).
+ * `stockHeld` is cleared once an order reaches Sanity, so it marks orders that never got there.
+ * Safe to call repeatedly: it is a no-op for synced orders, and a concurrent duplicate create returns 409.
+ */
+export async function resyncOrderToSanity(orderId: string): Promise<boolean> {
+  if (!hasToken()) return false;
+  try {
+    const order = await Order.findOne({ orderId, stockHeld: true, status: { $ne: 'cancelled' } });
+    if (!order) return false;
+    if (order.paymentMethod === 'upi' && order.paymentStatus !== 'paid') {
+      // Abandoned payment-gateway attempts (e.g. legacy Cashfree) are not manual-UPI orders.
+      if (order.paymentGateway) return false;
+      return await pushOrderToSanity(order, 'UPI order placed — awaiting manual payment verification (re-synced)', 'pending');
+    }
+    if (order.paymentMethod === 'cod' || order.paymentStatus === 'paid') {
+      return await pushOrderToSanity(order, `${order.paymentMethod === 'cod' ? 'Cash on Delivery order placed' : 'Payment received online'} (re-synced)`, 'confirmed');
+    }
+    return false;
+  } catch (error) {
+    console.error('[sanity-orders] resync failed', orderId, error instanceof Error ? error.message : error);
+    return false;
+  }
+}
+
 async function pushOrderToSanity(order: IOrder, note: string, status: 'confirmed' | 'pending'): Promise<boolean> {
   const confirmed = status === 'confirmed';
   if (!hasToken()) {
-    console.error('[sanity-orders] SANITY_API_TOKEN missing; order not synced:', order.orderId);
+    console.error(
+      '[sanity-orders] SANITY_API_TOKEN missing; order not synced:', order.orderId,
+      '— add SANITY_API_TOKEN (Editor role) under Cloudflare → Workers → nikunj → Settings → Variables and Secrets. ' +
+        'The order is re-synced automatically when the customer next opens its page, or run scripts/sync-orders-to-sanity.mjs.',
+    );
+    // The order is saved and confirmed on the website, so the customer must still be told.
+    if (confirmed) await notifyCustomerOrderConfirmed(order);
     return false;
   }
   try {

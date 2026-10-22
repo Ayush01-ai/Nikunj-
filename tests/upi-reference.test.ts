@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   findOneAndUpdate: vi.fn(),
   getSanityOrder: vi.fn(),
   setSanityUpiReference: vi.fn(),
+  resyncOrderToSanity: vi.fn(),
   limited: vi.fn(),
 }));
 
@@ -15,6 +16,7 @@ vi.mock('@/backend/models/Order', () => ({
 vi.mock('@/backend/lib/sanityOrders', () => ({
   getSanityOrder: mocks.getSanityOrder,
   setSanityUpiReference: mocks.setSanityUpiReference,
+  resyncOrderToSanity: mocks.resyncOrderToSanity,
 }));
 vi.mock('@/backend/lib/rateLimit', () => ({
   clientIp: () => '1.2.3.4',
@@ -35,6 +37,7 @@ beforeEach(() => {
   mocks.findOneAndUpdate.mockReset().mockResolvedValue({ orderId: 'NS-AB12CD34' });
   mocks.getSanityOrder.mockReset().mockResolvedValue({ orderNumber: 'NS-AB12CD34', status: 'pending' });
   mocks.setSanityUpiReference.mockReset().mockResolvedValue(true);
+  mocks.resyncOrderToSanity.mockReset().mockResolvedValue(true);
 });
 
 describe('POST /api/orders/upi-reference', () => {
@@ -46,6 +49,15 @@ describe('POST /api/orders/upi-reference', () => {
     expect(update.$set.upiReference).toBe('412345678901');
     expect(update.$set).not.toHaveProperty('paymentStatus');
     expect(mocks.setSanityUpiReference).toHaveBeenCalledWith('NS-AB12CD34', '412345678901');
+    expect(mocks.resyncOrderToSanity).not.toHaveBeenCalled();
+  });
+
+  it('copies an order that never reached Studio (failed first sync) after saving the reference', async () => {
+    mocks.getSanityOrder.mockResolvedValue(null);
+    expect((await call({ orderId: 'NS-AB12CD34', utr: '412345678901' })).status).toBe(200);
+    expect(mocks.setSanityUpiReference).not.toHaveBeenCalled();
+    expect(mocks.resyncOrderToSanity).toHaveBeenCalledWith('NS-AB12CD34');
+    expect(mocks.findOneAndUpdate.mock.invocationCallOrder[0]).toBeLessThan(mocks.resyncOrderToSanity.mock.invocationCallOrder[0]);
   });
 
   it.each([
