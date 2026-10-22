@@ -1,8 +1,7 @@
 import { SsoCallback } from './SsoCallback';
 
-// Auth callback: never prerender at build time.
-export const dynamic = 'force-dynamic';
-
+// Prerendered (client-only component) so Google sign-in lands on a static page instead of a
+// cold Worker render; HandleSSOCallback completes the session in the browser.
 export default function SsoCallbackPage() {
   return <SsoCallback />;
 }

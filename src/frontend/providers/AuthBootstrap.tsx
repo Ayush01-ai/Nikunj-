@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useAuthStore } from '@/frontend/store/authStore';
+import { fetchWithRetry } from '@/frontend/lib/fetchRetry';
 
 /**
  * One-time, app-wide session hydration check.
@@ -36,7 +37,7 @@ export function AuthBootstrap() {
       return;
     }
 
-    fetch('/api/auth/me', { cache: 'no-store' })
+    fetchWithRetry('/api/auth/me', { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : null))
       .then((json) => {
         if (json?.success && json.user) setUser(json.user);

@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Phone, ArrowRight, RotateCcw, MessageCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/frontend/store/authStore';
+import { fetchWithRetry } from '@/frontend/lib/fetchRetry';
 import { Navbar } from '@/frontend/components/layout/Navbar';
 import { Footer } from '@/frontend/components/layout/Footer';
 import type { User } from '@/types';
@@ -201,7 +202,7 @@ function OtpStep({
   };
 
   const finishLogin = async () => {
-    const me = await fetch('/api/auth/me', { cache: 'no-store' }).then((r) => r.json());
+    const me = await fetchWithRetry('/api/auth/me', { cache: 'no-store' }).then((r) => r.json());
     if (me?.success && me.user) {
       onLoggedIn(me.user);
     } else {

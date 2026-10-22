@@ -9,6 +9,7 @@ import {
   Package, MapPin, Heart, LogOut, ChevronRight, ShoppingBag, Truck, CheckCircle2, Clock, User as UserIcon, Mail, Phone, Trash2, Pencil, Plus, X, Star,
 } from 'lucide-react';
 import { useAuthStore } from '@/frontend/store/authStore';
+import { fetchWithRetry } from '@/frontend/lib/fetchRetry';
 import { useWishlistStore } from '@/frontend/store/wishlistStore';
 import { useCartStore } from '@/frontend/store/cartStore';
 import { ClerkSignOutBridge } from '@/frontend/components/auth/ClerkSignOutBridge';
@@ -161,7 +162,7 @@ export default function AccountPage() {
     if (!isAuthenticated) return;
     setLoadingOrders(true);
     // Session identity comes from the HttpOnly `ns_token` cookie, sent automatically.
-    fetch('/api/orders', { cache: 'no-store' })
+    fetchWithRetry('/api/orders', { cache: 'no-store' })
       .then(async (r) => {
         if (r.status === 401) {
           logout();

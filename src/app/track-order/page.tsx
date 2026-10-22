@@ -9,6 +9,7 @@ import { DeliveryCode, type DeliveryCodeView } from '@/frontend/components/order
 import { Navbar } from '@/frontend/components/layout/Navbar';
 import { Footer } from '@/frontend/components/layout/Footer';
 import { useAuthStore } from '@/frontend/store/authStore';
+import { fetchWithRetry } from '@/frontend/lib/fetchRetry';
 import { useSiteSettings } from '@/frontend/providers/Providers';
 import { ORDER_STATUS_LABEL, ORDER_STEPS, isReturnStatus } from '@/cms/lib/orderMessages';
 import { OrderRequestPanel, type RequestableOrder } from '@/frontend/components/orders/OrderRequestPanel';
@@ -54,7 +55,7 @@ function TrackOrderContent() {
       setLoading(true);
       setError('');
       try {
-        const res = await fetch('/api/track-order', {
+        const res = await fetchWithRetry('/api/track-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ orderId: id, phone: mobile }),

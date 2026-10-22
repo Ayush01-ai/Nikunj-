@@ -10,6 +10,7 @@ import { useCartStore } from '@/frontend/store/cartStore';
 import { getVariantPricing, orderTotals } from '@/cms/lib/pricing';
 import { useSiteSettings } from '@/frontend/providers/Providers';
 import { useAuthStore } from '@/frontend/store/authStore';
+import { fetchWithRetry } from '@/frontend/lib/fetchRetry';
 import { Navbar } from '@/frontend/components/layout/Navbar';
 import { Footer } from '@/frontend/components/layout/Footer';
 import { SacredIcon } from '@/frontend/components/ui/SacredIcon';
@@ -73,6 +74,12 @@ export default function CheckoutPage() {
     setServerPricing(null);
   }, [sub, couponData]);
 
+  // The checkout page is a static asset, so placing the order may be the first request to reach a
+  // cold Worker. A cheap, retried GET while the shopper fills the form warms it up first.
+  useEffect(() => {
+    fetchWithRetry('/api/auth/me', { cache: 'no-store' }).catch(() => undefined);
+  }, []);
+
   // Steps are client state on one URL, so the global ScrollReset never fires. Without this the
   // previous step's scroll position is kept and a shorter next step (e.g. Address after a long
   // cart) opens on the footer. Also move focus so keyboard/screen-reader users land on the step.
@@ -114,7 +121,7 @@ export default function CheckoutPage() {
     if (!couponInput.trim()) return;
     setValidatingCoupon(true);
     try {
-      const res = await fetch('/api/coupon/validate', {
+      const res = await fetchWithRetry('/api/coupon/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code: couponInput.trim().toUpperCase(), orderTotal: sub }),

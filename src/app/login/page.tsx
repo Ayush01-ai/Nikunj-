@@ -10,6 +10,7 @@ import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Phone, Mail, Lock, User as UserIcon, ArrowRight, Eye, EyeOff, KeyRound } from 'lucide-react';
 import { useAuthStore } from '@/frontend/store/authStore';
+import { fetchWithRetry } from '@/frontend/lib/fetchRetry';
 import { Navbar } from '@/frontend/components/layout/Navbar';
 import { Footer } from '@/frontend/components/layout/Footer';
 import { signInSchema, signUpSchema, forgotSchema } from '@/frontend/lib/formSchemas';
@@ -94,7 +95,7 @@ export default function LoginPage() {
     if (error) toast.error(OAUTH_ERRORS[error] ?? 'Sign-in failed. Please try again.');
 
     if (params.get('oauth') === 'success') {
-      fetch('/api/auth/me', { cache: 'no-store' })
+      fetchWithRetry('/api/auth/me', { cache: 'no-store' })
         .then((r) => r.json())
         .then((json) => {
           if (json?.success && json.user) {

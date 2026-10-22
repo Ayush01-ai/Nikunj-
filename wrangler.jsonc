@@ -10,6 +10,11 @@
   // Match the existing dashboard values so deploys don't change URL exposure.
   "workers_dev": false,
   "preview_urls": false,
+  // Runs before every `wrangler deploy` (incl. `opennextjs-cloudflare deploy` and Workers Builds):
+  // publishes prerendered pages as static assets so they load without spending Worker CPU.
+  "build": {
+    "command": "node scripts/static-html-assets.mjs"
+  },
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
