@@ -25,8 +25,7 @@ import type { Product, SiteSettings, Testimonial } from '@/types';
 import { pickDiverse, seedFrom } from '@/cms/lib/suggestions';
 
 export const revalidate = false; // on-demand only (see /api/revalidate); no queue for time-based ISR
-// Products published after the last build render on demand instead of 404ing until the rebuild.
-export const dynamicParams = true;
+export const dynamicParams = false;
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
