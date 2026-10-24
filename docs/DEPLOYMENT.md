@@ -148,14 +148,29 @@ npm run cf:deploy
    1. Cloudflare → Workers & Pages → `nikunj` → Settings → Builds → **Deploy Hooks** → create a
       hook for branch `main` and copy its URL.
    2. sanity.io/manage → API → Webhooks → **Create**: URL = that deploy hook URL, method POST,
-      dataset `production`, trigger on Create/Update/Delete, filter
-      `_type in ["product","category","productType","deity","fragrance","heroSlide","siteSettings","testimonial"]`.
+      dataset `production`, trigger on Create/Update/Delete, **Drafts OFF**, **Versions OFF**,
+      HTTP method POST, filter (one line):
+
+      ```groq
+      _type in ["product","category","productType","deity","fragrance","heroSlide","siteSettings","testimonial"] && !(_id in path("drafts.**")) && !(_id in path("versions.**"))
+      ```
+
+      Only published storefront content triggers a build. Orders, customers (`lead`), coupons,
+      admin settings and the `analyticsDay` documents written by page-view tracking are
+      excluded, so shop traffic never starts a rebuild. There is no `homePage` type: the home
+      page is built from `siteSettings` and `heroSlide`.
       This calls Cloudflare directly (no Worker CPU), so it works on the Free plan.
    3. (Optional, alternative) add the hook URL as the secret `CLOUDFLARE_DEPLOY_HOOK_URL` so
       `/api/revalidate` can trigger it. It logs `CLOUDFLARE_DEPLOY_HOOK_URL missing` when unset.
 
    A rebuild takes ~3–5 minutes. Newly published products render on demand until then;
-   edits to existing products, prices and listings appear once the rebuild finishes.
+   edits to existing products, prices and listings appear once the rebuild finishes. Every
+   build wipes `.next/cache` first (`scripts/clean-next-cache.mjs`) and reads the live Sanity
+   API rather than its CDN, so nothing carries over from a previous deployment.
+
+   Pricing note: if a product has **Variants** with a *Variant Price* (or a *Price Adjustment*),
+   those decide what shoppers pay and what cards show ("From ₹X"); the product's own
+   Price/Sale Price is then not used. Edit the variant prices to change the price.
 8. **Resend** — verify the sending domain (DNS records), set `EMAIL_FROM`.
 9. **Meta WhatsApp** — business verification, approved templates.
 

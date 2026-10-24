@@ -10,6 +10,7 @@ import { ContactContent } from './ContactContent';
 import type { SiteSettings } from '@/types';
 
 export const revalidate = false; // on-demand only (see /api/revalidate)
+export const fetchCache = 'force-cache'; // build-time Sanity reads are frozen into this deployment
 
 export const metadata: Metadata = {
   title: 'Contact Us & Support | Nikunj Sakhi',

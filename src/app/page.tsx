@@ -25,6 +25,7 @@ import { CartSidebar } from '@/frontend/components/cart/CartSidebar';
 import type { HeroSlide, Category, Product, Testimonial, SiteSettings } from '@/types';
 
 export const revalidate = false; // on-demand only (see /api/revalidate); no queue for time-based ISR
+export const fetchCache = 'force-cache'; // build-time Sanity reads are frozen into this deployment
 
 async function getHomeData() {
   const [heroSlides, categories, allProducts, featuredProducts, bestsellers, newArrivals, testimonials, rawSettings] =

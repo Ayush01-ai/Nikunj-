@@ -60,6 +60,7 @@ const policies: Record<string, { title: string; content: string[] }> = {
 };
 
 export const revalidate = false; // on-demand only (see /api/revalidate); no queue for time-based ISR
+export const fetchCache = 'force-cache'; // build-time Sanity reads are frozen into this deployment
 
 export function generateStaticParams() {
   return Object.keys(policies).map((slug) => ({ slug }));

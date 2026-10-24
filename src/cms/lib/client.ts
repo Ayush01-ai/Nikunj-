@@ -8,8 +8,9 @@ export const client = createClient({
   projectId,
   dataset,
   apiVersion,
-  // Edge-safe: next-sanity uses fetch only. The CDN is always on for read-only public queries.
-  useCdn: true,
+  // Builds start right after a publish (Deploy Hook), when the Sanity CDN can still serve the
+  // previous version, so prerendering reads the live API. Runtime reads keep using the CDN.
+  useCdn: process.env.NEXT_PHASE !== 'phase-production-build',
 });
 
 /** Write client — only used server-side for mutations */

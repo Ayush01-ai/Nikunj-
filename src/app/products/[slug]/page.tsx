@@ -25,6 +25,7 @@ import type { Product, SiteSettings, Testimonial } from '@/types';
 import { pickDiverse, seedFrom } from '@/cms/lib/suggestions';
 
 export const revalidate = false; // on-demand only (see /api/revalidate); no queue for time-based ISR
+export const fetchCache = 'force-cache'; // build-time Sanity reads are frozen into this deployment
 // Products published after the last build render on demand instead of 404ing until the rebuild.
 export const dynamicParams = true;
 
@@ -33,13 +34,13 @@ interface ProductPageProps {
 }
 
 export async function generateStaticParams() {
-  const slugs = await client.fetch<{ slug: string }[]>(ALL_PRODUCT_SLUGS_QUERY, {}, { next: { revalidate: false, tags: ['sanity'] } });
+  const slugs = await client.fetch<{ slug: string }[]>(ALL_PRODUCT_SLUGS_QUERY, {});
   return slugs.map(({ slug }) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = await client.fetch<Product>(PRODUCT_BY_SLUG_QUERY, { slug }, { next: { revalidate: false, tags: ['sanity'] } });
+  const product = await client.fetch<Product>(PRODUCT_BY_SLUG_QUERY, { slug });
   if (!product) return {};
 
   const imageUrl = product.images?.find((img) => img?.asset?.url)?.asset.url ?? '/og-default.jpg';
@@ -75,12 +76,12 @@ async function getData(slug: string) {
         productTypeId: product.productType?._id ?? '',
         deityId: product.deityRef?._id ?? '',
         productId: product._id,
-      }, { next: { revalidate: false, tags: ['sanity'] } }),
+      }),
       [],
     ),
-    safe(client.fetch<Product[]>(DIFFERENT_PRODUCTS_QUERY, { categoryId: product.category?._id ?? '', productId: product._id }, { next: { revalidate: false, tags: ['sanity'] } }), []),
-    safe(client.fetch<Testimonial[]>(PRODUCT_REVIEWS_QUERY, { productId: product._id }, { next: { revalidate: false, tags: ['sanity'] } }), []),
-    safe(client.fetch<SiteSettings | null>(SITE_SETTINGS_QUERY, {}, { next: { revalidate: false, tags: ['sanity'] } }), null),
+    safe(client.fetch<Product[]>(DIFFERENT_PRODUCTS_QUERY, { categoryId: product.category?._id ?? '', productId: product._id }), []),
+    safe(client.fetch<Testimonial[]>(PRODUCT_REVIEWS_QUERY, { productId: product._id }), []),
+    safe(client.fetch<SiteSettings | null>(SITE_SETTINGS_QUERY, {}), null),
   ]);
   const seed = seedFrom(product._id);
   relatedProducts = (relatedProducts ?? []).slice(0, 4);
