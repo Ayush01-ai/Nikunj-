@@ -39,15 +39,19 @@ export async function POST(req: NextRequest) {
 
   // The default Cloudflare static-assets cache is read-only, so also trigger a rebuild when a
   // deploy hook is configured. This keeps the deployment on the free tier (no R2/KV needed).
-  let rebuild: 'triggered' | 'failed' | 'skipped' = 'skipped';
+  let rebuild: 'triggered' | 'failed' | 'not_configured' = 'not_configured';
   const hook = process.env.CLOUDFLARE_DEPLOY_HOOK_URL;
   if (hook) {
     try {
       const res = await fetch(hook, { method: 'POST' });
       rebuild = res.ok ? 'triggered' : 'failed';
-    } catch {
+      if (!res.ok) console.error(`[revalidate] deploy hook returned HTTP ${res.status}; site not rebuilt`);
+    } catch (err) {
       rebuild = 'failed';
+      console.error('[revalidate] deploy hook request failed; site not rebuilt', err);
     }
+  } else {
+    console.error('[revalidate] CLOUDFLARE_DEPLOY_HOOK_URL missing; Sanity changes will not go live until the next deploy');
   }
 
   return NextResponse.json({ revalidated: true, rebuild, at: Date.now() });

@@ -41,4 +41,22 @@ describe('/api/revalidate', () => {
     expect((await POST(req({}, '?secret=top-secret'))).status).toBe(200);
     expect(revalidatePath).toHaveBeenCalledWith('/', 'layout');
   });
+
+  it('reports and logs a missing deploy hook so content changes are not silently dropped', async () => {
+    const err = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const res = await POST(req({}, '?secret=top-secret'));
+    expect(await res.json()).toMatchObject({ revalidated: true, rebuild: 'not_configured' });
+    expect(err).toHaveBeenCalledWith(expect.stringContaining('CLOUDFLARE_DEPLOY_HOOK_URL missing'));
+    err.mockRestore();
+  });
+
+  it('triggers the Cloudflare deploy hook when configured', async () => {
+    const hook = 'https://api.cloudflare.com/client/v4/workers/builds/deploy_hooks/abc';
+    process.env.CLOUDFLARE_DEPLOY_HOOK_URL = hook;
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('{}', { status: 200 }));
+    const res = await POST(req({}, '?secret=top-secret'));
+    expect(fetchMock).toHaveBeenCalledWith(hook, { method: 'POST' });
+    expect(await res.json()).toMatchObject({ rebuild: 'triggered' });
+    fetchMock.mockRestore();
+  });
 });

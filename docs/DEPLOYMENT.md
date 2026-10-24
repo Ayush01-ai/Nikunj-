@@ -142,6 +142,20 @@ npm run cf:deploy
    (Studio now uses token login so it can authorise refund sends).
 7. **Sanity webhook** (optional, for WhatsApp order-status messages) → POST
    `https://<domain>/api/webhooks/order-status` with header `x-webhook-secret`.
+7a. **Publishing Sanity content (required on Cloudflare).** Pages are built from Sanity at deploy
+   time and served as static files, so a product/price/image change only appears after a
+   rebuild. Set this up once:
+   1. Cloudflare → Workers & Pages → `nikunj` → Settings → Builds → **Deploy Hooks** → create a
+      hook for branch `main` and copy its URL.
+   2. sanity.io/manage → API → Webhooks → **Create**: URL = that deploy hook URL, method POST,
+      dataset `production`, trigger on Create/Update/Delete, filter
+      `_type in ["product","category","productType","deity","fragrance","heroSlide","siteSettings","testimonial"]`.
+      This calls Cloudflare directly (no Worker CPU), so it works on the Free plan.
+   3. (Optional, alternative) add the hook URL as the secret `CLOUDFLARE_DEPLOY_HOOK_URL` so
+      `/api/revalidate` can trigger it. It logs `CLOUDFLARE_DEPLOY_HOOK_URL missing` when unset.
+
+   A rebuild takes ~3–5 minutes. Newly published products render on demand until then;
+   edits to existing products, prices and listings appear once the rebuild finishes.
 8. **Resend** — verify the sending domain (DNS records), set `EMAIL_FROM`.
 9. **Meta WhatsApp** — business verification, approved templates.
 
