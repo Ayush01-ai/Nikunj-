@@ -31,5 +31,8 @@
   },
   "observability": {
     "enabled": true
-  }
+  },
+  // Source maps for the Next.js bundle exceed Cloudflare's 60 MiB upload cap (error 10021), so
+  // never upload them; this keeps deploys working regardless of wrangler/Next defaults.
+  "upload_source_maps": false
 }
