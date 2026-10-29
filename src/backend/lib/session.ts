@@ -25,7 +25,9 @@ export async function syncAdminRole(user: IUser): Promise<void> {
   if (!user.phone) return;
   const { adminPhones } = await getAdminSettings();
   if (adminPhones && adminPhones.length > 0) {
-    const role = adminPhones.includes(user.phone) ? 'admin' : 'user';
+    // Admin elevation requires the phone number to be verified via WhatsApp or phone auth
+    const isPhoneVerified = user.authProviders?.includes('whatsapp') || user.authProviders?.includes('phone');
+    const role = adminPhones.includes(user.phone) && isPhoneVerified ? 'admin' : 'user';
     if (user.role !== role) {
       user.role = role;
       await user.save();

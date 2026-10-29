@@ -26,7 +26,7 @@ export default function SsoCallbackPage() {
   const next = (() => {
     if (typeof window === 'undefined') return '/';
     const n = new URLSearchParams(window.location.search).get('next');
-    return n && n.startsWith('/') && !n.startsWith('//') ? n : '/';
+    return n && n.startsWith('/') && !n.startsWith('//') && !n.startsWith('/\\') && !n.includes('\\') ? n : '/';
   })();
 
   return (

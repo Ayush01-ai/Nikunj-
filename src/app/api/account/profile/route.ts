@@ -25,10 +25,18 @@ export async function PATCH(req: NextRequest) {
 
     if (body.phone !== undefined) {
       const phone = sanitizePhone(String(body.phone ?? ''));
-      if (!isValidPhone(phone)) {
-        return NextResponse.json({ success: false, error: 'Please enter a valid 10-digit phone number.' }, { status: 400 });
+      if (user.phone && phone !== user.phone) {
+        return NextResponse.json(
+          { success: false, error: 'Phone number cannot be changed directly. Please verify with WhatsApp OTP.' },
+          { status: 400 },
+        );
       }
-      user.phone = phone;
+      if (!user.phone) {
+        return NextResponse.json(
+          { success: false, error: 'Phone number cannot be added directly. Please sign in or link via WhatsApp OTP.' },
+          { status: 400 },
+        );
+      }
     }
 
     if (body.email !== undefined) {

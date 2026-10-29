@@ -7,7 +7,9 @@ function isGoogleConfigured(): boolean {
 }
 
 function safeNext(value: string | null): string {
-  return value && value.startsWith('/') && !value.startsWith('//') ? value : '/account';
+  return value && value.startsWith('/') && !value.startsWith('//') && !value.startsWith('/\\') && !value.includes('\\')
+    ? value
+    : '/account';
 }
 
 export async function GET(req: NextRequest) {

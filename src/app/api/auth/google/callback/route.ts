@@ -86,7 +86,7 @@ export async function GET(req: NextRequest) {
     }
     await syncAdminRole(user);
 
-    const dest = next.startsWith('/') && !next.startsWith('//') ? next : '/account';
+    const dest = next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\') && !next.includes('\\') ? next : '/account';
     const res = NextResponse.redirect(`${base}/login?oauth=success&next=${encodeURIComponent(dest)}`);
     setSessionCookie(res, user, 'google');
     res.cookies.delete({ name: 'ns_oauth_state', path: '/api/auth/google' });

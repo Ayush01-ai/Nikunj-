@@ -128,9 +128,28 @@ export class CashfreeSignatureError extends Error {}
  * This is the same computation as the SDK's `PGVerifyWebhookSignature`, but compared in
  * constant time. Throws `CashfreeSignatureError` on any mismatch; callers must reject.
  */
-export function verifyCashfreeWebhookSignature(signature: string, rawBody: string, timestamp: string) {
+export function verifyCashfreeWebhookSignature(
+  signature: string,
+  rawBody: string,
+  timestamp: string,
+  options?: { maxAgeMs?: number; now?: number },
+) {
   const secret = process.env.CASHFREE_SECRET_KEY;
   if (!secret) throw new CashfreeSignatureError('Cashfree is not configured.');
+
+  if (options?.maxAgeMs) {
+    let ts = Number(timestamp);
+    if (!Number.isFinite(ts)) {
+      throw new CashfreeSignatureError('Webhook timestamp is invalid.');
+    }
+    // Convert seconds to ms if 10-digit unix timestamp
+    if (ts < 1e11) ts *= 1000;
+    const now = options.now ?? Date.now();
+    if (Math.abs(now - ts) > options.maxAgeMs) {
+      throw new CashfreeSignatureError('Webhook timestamp is expired or outside tolerance window.');
+    }
+  }
+
   const expected = createHmac('sha256', secret).update(timestamp + rawBody).digest();
   const received = Buffer.from(signature, 'base64');
   if (received.length !== expected.length || !timingSafeEqual(received, expected)) {

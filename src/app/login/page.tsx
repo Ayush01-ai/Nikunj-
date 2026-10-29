@@ -88,7 +88,7 @@ export default function LoginPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const nextParam = params.get('next');
-    const dest = nextParam && nextParam.startsWith('/') && !nextParam.startsWith('//') ? nextParam : '/account';
+    const dest = nextParam && nextParam.startsWith('/') && !nextParam.startsWith('//') && !nextParam.startsWith('/\\') && !nextParam.includes('\\') ? nextParam : '/account';
     setNext(dest);
 
     const error = params.get('error');

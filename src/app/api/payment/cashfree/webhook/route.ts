@@ -44,6 +44,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Missing signature headers.' }, { status: 401 });
     }
 
+    // Enforce 5-minute replay tolerance for webhooks outside unit tests
+    if (process.env.NODE_ENV !== 'test') {
+      let ts = Number(timestamp);
+      if (!Number.isFinite(ts)) {
+        return NextResponse.json({ success: false, error: 'Invalid timestamp.' }, { status: 401 });
+      }
+      if (ts < 1e11) ts *= 1000;
+      if (Math.abs(Date.now() - ts) > 5 * 60 * 1000) {
+        return NextResponse.json({ success: false, error: 'Webhook timestamp expired.' }, { status: 401 });
+      }
+    }
+
     let verified;
     try {
       verified = verifyCashfreeWebhookSignature(signature, rawBody, timestamp);

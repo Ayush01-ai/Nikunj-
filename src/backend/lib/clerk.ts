@@ -42,6 +42,14 @@ async function getOrLinkMongoUser(clerkUserId: string): Promise<IUser> {
 
   if (mongoUser) {
     mongoUser.clerkUserId = clerkUserId;
+    // Drop any password planted on an unverified account (pre-hijacking prevention)
+    if (!mongoUser.emailVerified && !mongoUser.googleId && mongoUser.passwordHash) {
+      mongoUser.passwordHash = undefined;
+      mongoUser.authProviders = (mongoUser.authProviders ?? []).filter((p) => p !== 'email');
+    }
+    if (verifiedEmail) {
+      mongoUser.emailVerified = true;
+    }
     if (!mongoUser.authProviders?.includes('clerk')) {
       mongoUser.authProviders = [...(mongoUser.authProviders ?? []), 'clerk'];
     }

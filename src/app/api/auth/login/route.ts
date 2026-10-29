@@ -24,8 +24,7 @@ export async function POST(req: NextRequest) {
     await connectDB();
     const user = await User.findOne({ email }).select('+passwordHash');
     if (!user || !user.passwordHash) {
-      const hint = user?.googleId ? ' This account uses Google sign-in.' : '';
-      return NextResponse.json({ success: false, error: INVALID + hint }, { status: 401 });
+      return NextResponse.json({ success: false, error: INVALID }, { status: 401 });
     }
     const ok = await comparePassword(password, user.passwordHash);
     if (!ok) return NextResponse.json({ success: false, error: INVALID }, { status: 401 });
