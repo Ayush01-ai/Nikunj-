@@ -211,7 +211,7 @@ export const CATALOG_TYPES_QUERY = groq`
   }
 `;
 
-/** Shop mega-menu: categories → types, only those with active products */
+/** Shop mega-menu: active categories → all active types, including types awaiting products */
 export const NAV_MENU_QUERY = groq`
   *[_type == "category" && isActive == true && showInMenu != false] | order(displayOrder asc){
     _id,
@@ -225,7 +225,7 @@ export const NAV_MENU_QUERY = groq`
       name,
       "slug": slug.current,
       "productCount": count(*[_type == "product" && isActive == true && references(^._id)])
-    }[productCount > 0]
+    }
   }[productCount > 0]
 `;
 

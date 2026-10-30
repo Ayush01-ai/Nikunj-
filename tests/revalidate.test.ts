@@ -37,15 +37,21 @@ describe('/api/revalidate', () => {
   });
 
   it('revalidates with a valid bearer token or query secret', async () => {
+    const hook = 'https://api.cloudflare.com/client/v4/workers/builds/deploy_hooks/abc';
+    process.env.CLOUDFLARE_DEPLOY_HOOK_URL = hook;
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('{}', { status: 200 }));
     expect((await POST(req({ authorization: 'Bearer top-secret' }))).status).toBe(200);
     expect((await POST(req({}, '?secret=top-secret'))).status).toBe(200);
     expect(revalidatePath).toHaveBeenCalledWith('/', 'layout');
+    fetchMock.mockRestore();
   });
 
-  it('reports and logs a missing deploy hook so content changes are not silently dropped', async () => {
+  it('reports a missing deploy hook as a failure without clearing the cache', async () => {
     const err = vi.spyOn(console, 'error').mockImplementation(() => {});
     const res = await POST(req({}, '?secret=top-secret'));
-    expect(await res.json()).toMatchObject({ revalidated: true, rebuild: 'not_configured' });
+    expect(res.status).toBe(503);
+    expect(await res.json()).toMatchObject({ revalidated: false, rebuild: 'not_configured' });
+    expect(revalidatePath).not.toHaveBeenCalled();
     expect(err).toHaveBeenCalledWith(expect.stringContaining('CLOUDFLARE_DEPLOY_HOOK_URL missing'));
     err.mockRestore();
   });
@@ -58,5 +64,17 @@ describe('/api/revalidate', () => {
     expect(fetchMock).toHaveBeenCalledWith(hook, { method: 'POST' });
     expect(await res.json()).toMatchObject({ rebuild: 'triggered' });
     fetchMock.mockRestore();
+  });
+
+  it('reports a failed Cloudflare deploy hook', async () => {
+    const hook = 'https://api.cloudflare.com/client/v4/workers/builds/deploy_hooks/abc';
+    process.env.CLOUDFLARE_DEPLOY_HOOK_URL = hook;
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('{}', { status: 500 }));
+    const err = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const res = await POST(req({}, '?secret=top-secret'));
+    expect(res.status).toBe(502);
+    expect(await res.json()).toMatchObject({ revalidated: false, rebuild: 'failed' });
+    fetchMock.mockRestore();
+    err.mockRestore();
   });
 });

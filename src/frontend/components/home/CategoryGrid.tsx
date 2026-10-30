@@ -115,10 +115,8 @@ function CategoryCard({
         className={`
           group block h-full text-center p-5 border transition-all duration-300
           hover:-translate-y-1 hover:border-gold hover:shadow-gold-sm
-          ${category.isFeatured
-            ? 'border-gold bg-gradient-to-b from-cream to-cream-200'
-            : 'border-[var(--border)] bg-cream'
-          }
+          ${category.isFeatured ? 'border-gold' : 'border-[var(--border)]'}
+          bg-gradient-to-b from-cream to-cream-200
         `}
       >
         {/* Icon / Image */}

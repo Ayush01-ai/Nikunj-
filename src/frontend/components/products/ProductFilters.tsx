@@ -78,7 +78,7 @@ function FiltersContent({
   onPush,
   onNavigate,
 }: FiltersContentProps) {
-  const visibleTypes = withProducts(productTypes, activeProductType);
+  const visibleTypes = productTypes;
   return (
     <div className="space-y-5">
       {/* Categories */}

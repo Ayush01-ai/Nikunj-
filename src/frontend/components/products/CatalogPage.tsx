@@ -105,8 +105,8 @@ export async function CatalogPage({ categorySlug, typeSlug }: CatalogPageProps) 
 
   const basePath = ['/collections', categorySlug, typeSlug].filter(Boolean).join('/');
   const title = type?.name ?? category?.name ?? 'All Collections';
-  // Root shop shows every type that has products; a category page shows its own types.
-  const typeTiles = types.filter((t) => (t.productCount ?? 0) > 0);
+  // Keep active types discoverable even before products have been assigned to them.
+  const typeTiles = types;
   const allHref = categorySlug ? `/collections/${categorySlug}` : '/collections';
   const typeHref = (t: ProductType) => {
     const cat = categorySlug ?? t.category?.slug?.current;

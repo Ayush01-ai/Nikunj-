@@ -35,24 +35,34 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  revalidatePath('/', 'layout');
-
-  // The default Cloudflare static-assets cache is read-only, so also trigger a rebuild when a
-  // deploy hook is configured. This keeps the deployment on the free tier (no R2/KV needed).
-  let rebuild: 'triggered' | 'failed' | 'not_configured' = 'not_configured';
+  // Cloudflare's static-assets cache is read-only, so the deploy hook is required to publish changes.
   const hook = process.env.CLOUDFLARE_DEPLOY_HOOK_URL;
-  if (hook) {
-    try {
-      const res = await fetch(hook, { method: 'POST' });
-      rebuild = res.ok ? 'triggered' : 'failed';
-      if (!res.ok) console.error(`[revalidate] deploy hook returned HTTP ${res.status}; site not rebuilt`);
-    } catch (err) {
-      rebuild = 'failed';
-      console.error('[revalidate] deploy hook request failed; site not rebuilt', err);
-    }
-  } else {
+  if (!hook) {
     console.error('[revalidate] CLOUDFLARE_DEPLOY_HOOK_URL missing; Sanity changes will not go live until the next deploy');
+    return NextResponse.json(
+      { error: 'CLOUDFLARE_DEPLOY_HOOK_URL is not configured; Sanity changes cannot be deployed', revalidated: false, rebuild: 'not_configured' },
+      { status: 503 },
+    );
   }
 
-  return NextResponse.json({ revalidated: true, rebuild, at: Date.now() });
+  revalidatePath('/', 'layout');
+
+  try {
+    const res = await fetch(hook, { method: 'POST' });
+    if (!res.ok) {
+      console.error(`[revalidate] deploy hook returned HTTP ${res.status}; site not rebuilt`);
+      return NextResponse.json(
+        { error: 'Cloudflare deploy hook failed; Sanity changes are not live yet', revalidated: false, rebuild: 'failed' },
+        { status: 502 },
+      );
+    }
+  } catch (err) {
+    console.error('[revalidate] deploy hook request failed; site not rebuilt', err);
+    return NextResponse.json(
+      { error: 'Cloudflare deploy hook failed; Sanity changes are not live yet', revalidated: false, rebuild: 'failed' },
+      { status: 502 },
+    );
+  }
+
+  return NextResponse.json({ revalidated: true, rebuild: 'triggered', at: Date.now() });
 }
