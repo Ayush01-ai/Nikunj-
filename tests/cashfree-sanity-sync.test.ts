@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   createIfNotExists: vi.fn(),
@@ -59,6 +59,7 @@ function makePatch() {
 }
 
 beforeEach(() => {
+  process.env.SANITY_API_TOKEN = 'test-token';
   state = { order: null, revision: 0, stock: 3 };
   sentNotifications = new Set();
   for (const mock of Object.values(mocks)) mock.mockReset();
@@ -82,26 +83,32 @@ beforeEach(() => {
   });
   mocks.patch.mockImplementation(() => makePatch());
   mocks.transaction.mockImplementation(() => {
-    const staged: { id: string; change: ReturnType<typeof makePatch> | ((patch: { inc: (values: Record<string, number>) => void }) => void) }[] = [];
+    const staged: { id: string; change: unknown }[] = [];
     return {
-      patch(id: string, change: ReturnType<typeof makePatch> | ((patch: { inc: (values: Record<string, number>) => void }) => void)) {
-        staged.push({ id, change });
+      patch(id: string, change: unknown) {
+        staged.push({
+          id,
+          change: id === 'orders.NS-TEST0001' && typeof change === 'function'
+            ? (change as (patch: never) => ReturnType<typeof makePatch>)(makePatch() as never)
+            : change,
+        });
         return this;
       },
       async commit() {
         const orderChange = staged.find((item) => item.id === 'orders.NS-TEST0001')?.change;
         if (!state.order || !orderChange || typeof orderChange === 'function') throw new Error('Missing order patch.');
-        if (orderChange.expectedRevision !== `rev-${state.revision}`) {
+        const orderPatch = orderChange as ReturnType<typeof makePatch>;
+        if (orderPatch.expectedRevision !== `rev-${state.revision}`) {
           throw Object.assign(new Error('Revision conflict'), { statusCode: 409 });
         }
-        state.order = { ...state.order, ...orderChange.values };
-        for (const entry of orderChange.appended) {
+        state.order = { ...state.order, ...orderPatch.values };
+        for (const entry of orderPatch.appended) {
           state.order[entry.field] = [...((state.order[entry.field] as unknown[]) ?? []), ...entry.values];
         }
         state.revision++;
         for (const item of staged) {
           if (item.id === 'orders.NS-TEST0001' || typeof item.change !== 'function') continue;
-          item.change({
+          (item.change as (patch: { inc: (values: Record<string, number>) => void }) => void)({
             inc(values) {
               state.stock += values.stockQuantity ?? 0;
             },
@@ -116,6 +123,10 @@ beforeEach(() => {
     sentNotifications.add(key);
     return { sent: true, channel: 'email' };
   });
+});
+
+afterEach(() => {
+  delete process.env.SANITY_API_TOKEN;
 });
 
 const makeOrder = (paymentStatus: 'pending' | 'failed' | 'paid' = 'paid') => ({

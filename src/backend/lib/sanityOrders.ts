@@ -353,27 +353,28 @@ async function syncCashfreeOrderToSanity(
           ? current.status === 'pending' || current.status === 'payment_failed' ? 'confirmed' : current.status ?? 'confirmed'
           : 'payment_failed';
       const changed = current.status !== nextStatus || current.paymentStatus !== paymentStatus;
-      const orderPatch = writeClient
-        .patch(id)
-        .ifRevisionId(current._rev)
-        .set({
-          status: nextStatus,
-          paymentStatus,
-          paymentGateway: order.paymentGateway,
-          cashfreeOrderId: order.cashfreeOrderId,
-          ...(order.cashfreePaymentId ? { cashfreePaymentId: order.cashfreePaymentId } : {}),
-          stockAdjusted: paymentStatus === 'paid' ? current.stockAdjusted === true || stockPatches.length > 0 : false,
-          ...(attentionItems.length
-            ? {
-                needsAttention: true,
-                attentionNote: `Paid order exceeded tracked stock for ${attentionItems.join(', ')}. Review inventory and fulfillment manually.`,
-              }
-            : {}),
-        })
-        .setIfMissing({ statusHistory: [] });
-      if (changed) orderPatch.append('statusHistory', [{ status: nextStatus, at: now, note }]);
+      const tx = writeClient.transaction().patch(id, (patch) => {
+        patch
+          .ifRevisionId(current._rev)
+          .set({
+            status: nextStatus,
+            paymentStatus,
+            paymentGateway: order.paymentGateway,
+            cashfreeOrderId: order.cashfreeOrderId,
+            ...(order.cashfreePaymentId ? { cashfreePaymentId: order.cashfreePaymentId } : {}),
+            stockAdjusted: paymentStatus === 'paid' ? current.stockAdjusted === true || stockPatches.length > 0 : false,
+            ...(attentionItems.length
+              ? {
+                  needsAttention: true,
+                  attentionNote: `Paid order exceeded tracked stock for ${attentionItems.join(', ')}. Review inventory and fulfillment manually.`,
+                }
+              : {}),
+          })
+          .setIfMissing({ statusHistory: [] });
+        if (changed) patch.append('statusHistory', [{ status: nextStatus, at: now, note }]);
+        return patch;
+      });
 
-      const tx = writeClient.transaction().patch(id, orderPatch);
       for (const stockPatch of stockPatches) tx.patch(stockPatch.id, (patch) => patch.inc(stockPatch.inc));
 
       try {
