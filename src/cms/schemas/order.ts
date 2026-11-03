@@ -2,6 +2,7 @@ import { defineArrayMember, defineField, defineType } from 'sanity';
 
 export const ORDER_STATUS_LIST = [
   { title: '⏳ Awaiting payment', value: 'pending' },
+  { title: '⚠️ Payment failed', value: 'payment_failed' },
   { title: '🆕 New — to pack', value: 'confirmed' },
   { title: '📦 Packing / Processing', value: 'processing' },
   { title: '🚚 Shipped', value: 'shipped' },
@@ -235,6 +236,23 @@ export const order = defineType({
       description: 'Only visible to you.',
     }),
     defineField({
+      name: 'needsAttention',
+      title: 'Needs Attention',
+      type: 'boolean',
+      group: 'manage',
+      readOnly: true,
+      hidden: ({ value }) => value !== true,
+    }),
+    defineField({
+      name: 'attentionNote',
+      title: 'Attention Note',
+      type: 'text',
+      rows: 2,
+      group: 'manage',
+      readOnly: true,
+      hidden: ({ value }) => !value,
+    }),
+    defineField({
       name: 'placedAt',
       title: 'Placed At',
       type: 'datetime',
@@ -301,6 +319,7 @@ export const order = defineType({
       options: {
         list: [
           { title: 'Pending', value: 'pending' },
+          { title: 'Failed', value: 'failed' },
           { title: 'Paid', value: 'paid' },
           { title: 'Refund due', value: 'refund_due' },
           { title: 'Refunded', value: 'refunded' },

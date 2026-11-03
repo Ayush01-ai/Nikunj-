@@ -32,6 +32,7 @@ function makeRequest(body: unknown, ip = '203.0.113.1') {
 const REGISTERED_ORDER = {
   _id: 'mongo-id-1',
   orderId: 'order-reg-1',
+  createdAt: new Date(),
   userId: 'user-1',
   total: 499,
   paymentStatus: 'pending',
@@ -45,6 +46,7 @@ const REGISTERED_ORDER = {
 const GUEST_ORDER = {
   _id: 'mongo-id-2',
   orderId: 'order-guest-1',
+  createdAt: new Date(),
   userId: undefined,
   guestPhone: '9876543210',
   shippingAddress: { phone: '9876543210', fullName: 'Guest User' },
@@ -84,6 +86,9 @@ describe('POST /api/payment/cashfree/create', () => {
     expect(json.success).toBe(true);
     expect(json.data.cashfreeOrderId).toBe('order-reg-1');
     expect(createCashfreeOrder).toHaveBeenCalledTimes(1);
+    expect(createCashfreeOrder).toHaveBeenCalledWith(expect.objectContaining({
+      expiresAt: new Date(REGISTERED_ORDER.createdAt.getTime() + 30 * 60_000).toISOString(),
+    }));
   });
 
   it("denies a different authenticated customer from paying for someone else's order", async () => {
@@ -164,6 +169,22 @@ describe('POST /api/payment/cashfree/create', () => {
     expect(json.data.cashfreeOrderId).toBe('cf_existing');
     expect(createCashfreeOrder).not.toHaveBeenCalled();
     expect(findOneAndUpdate).not.toHaveBeenCalled();
+  });
+
+  it('refuses to reuse or create a Cashfree session after the 30-minute stock hold expires', async () => {
+    requireAuthHybrid.mockResolvedValue({ userId: 'user-1' });
+    findOne.mockResolvedValue({
+      ...REGISTERED_ORDER,
+      createdAt: new Date(Date.now() - 31 * 60_000),
+      cashfreeOrderId: 'cf_expired',
+      cashfreePaymentSessionId: 'cf_session_expired',
+    });
+
+    const { POST } = await import('@/app/api/payment/cashfree/create/route');
+    const res = await POST(makeRequest({ orderId: 'order-reg-1' }));
+
+    expect(res.status).toBe(409);
+    expect(createCashfreeOrder).not.toHaveBeenCalled();
   });
 
   it('refuses to start a Cashfree payment when a Razorpay order is already in flight', async () => {

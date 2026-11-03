@@ -7,8 +7,9 @@ import { GuestOtpGate } from '@/frontend/components/orders/GuestOtpGate';
 
 interface CashfreeCheckoutProps {
   orderId: string;
-  phone: string;
+  phone?: string;
   isGuest: boolean;
+  initialGuestProof?: string;
   onComplete: () => void;
   onCancel?: () => void;
 }
@@ -27,12 +28,13 @@ export function CashfreeCheckout({
   orderId,
   phone,
   isGuest,
+  initialGuestProof,
   onComplete,
   onCancel,
 }: CashfreeCheckoutProps) {
   const [scriptReady, setScriptReady] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [guestProof, setGuestProof] = useState('');
+  const [guestProof, setGuestProof] = useState(initialGuestProof ?? '');
 
   const startPayment = async () => {
     if (!window.Cashfree) {

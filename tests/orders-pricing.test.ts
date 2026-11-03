@@ -6,6 +6,12 @@ import { orderTotals, deliveryPolicy } from '@/cms/lib/pricing';
 // with delivery taken from Studio Site Settings, and must equal what the checkout showed.
 const mocks = vi.hoisted(() => {
   const settings = { current: { freeDeliveryThreshold: 599, deliveryCharge: 99 } as Record<string, unknown> | null };
+  const sanitySync = {
+    pushConfirmed: vi.fn(async () => undefined),
+    pushAwaiting: vi.fn(async () => undefined),
+  };
+  class StockLockUnavailableError extends Error {}
+  const withStockLock = vi.fn((_ids: string[], fn: () => unknown) => fn());
   const cdnFetch = vi.fn(async (query: string) => {
     if (String(query).includes('_type == "product"')) {
       return [{ _id: 'prod-1', name: 'Attar', price: 499, stock: 10, sizes: [], colors: [] }];
@@ -18,6 +24,9 @@ const mocks = vi.hoisted(() => {
   });
   return {
     settings,
+    sanitySync,
+    StockLockUnavailableError,
+    withStockLock,
     cdnFetch,
     freshFetch,
     withConfig: vi.fn(() => ({ fetch: freshFetch })),
@@ -33,17 +42,19 @@ vi.mock('@/backend/models/Order', () => ({ Order: { create: mocks.create, countD
 vi.mock('@/backend/lib/clerk', () => ({ requireAuthHybrid: vi.fn().mockRejectedValue(new Error('no session')) }));
 vi.mock('@/cms/lib/client', () => ({ client: { fetch: mocks.cdnFetch, withConfig: mocks.withConfig }, writeClient: {} }));
 vi.mock('@/backend/lib/orderNotify', () => ({ snapshotForOrder: vi.fn(async () => undefined) }));
+vi.mock('@/backend/lib/guestPaymentProof', () => ({ createGuestPaymentProof: vi.fn(() => 'session-guest-proof') }));
 vi.mock('@/backend/lib/stockHold', () => ({
+  StockLockUnavailableError: mocks.StockLockUnavailableError,
   heldQuantities: vi.fn(async () => new Map()),
   holdKey: (id: string) => id,
-  withStockLock: (_ids: string[], fn: () => unknown) => fn(),
+  withStockLock: mocks.withStockLock,
 }));
 vi.mock('@/backend/lib/sanityOrders', () => ({
   getAdminSettings: vi.fn(),
   getSanityOrderStatuses: vi.fn(),
   getSanityOrders: vi.fn(),
-  pushConfirmedOrderToSanity: vi.fn(async () => undefined),
-  pushAwaitingPaymentOrderToSanity: vi.fn(async () => undefined),
+  pushConfirmedOrderToSanity: mocks.sanitySync.pushConfirmed,
+  pushAwaitingPaymentOrderToSanity: mocks.sanitySync.pushAwaiting,
 }));
 
 let ipSeq = 0;
@@ -85,6 +96,9 @@ describe('orderTotals', () => {
 describe('POST /api/orders — delivery charge and total', () => {
   beforeEach(() => {
     mocks.create.mockClear();
+    mocks.sanitySync.pushConfirmed.mockClear();
+    mocks.sanitySync.pushAwaiting.mockClear();
+    mocks.withStockLock.mockClear().mockImplementation((_ids: string[], fn: () => unknown) => fn());
     mocks.settings.current = { freeDeliveryThreshold: 599, deliveryCharge: 99 };
   });
 
@@ -99,8 +113,10 @@ describe('POST /api/orders — delivery charge and total', () => {
   it('creates online-payment orders as pending for Cashfree checkout', async () => {
     const { POST } = await import('@/app/api/orders/route');
     const res = await POST(placeOrder({ paymentMethod: 'online', expectedTotal: 598 }));
+    const json = await res.json();
 
     expect(res.status).toBe(200);
+    expect(json.guestProof).toBe('session-guest-proof');
     expect(mocks.create).toHaveBeenCalledWith(
       expect.objectContaining({
         paymentMethod: 'online',
@@ -109,6 +125,27 @@ describe('POST /api/orders — delivery charge and total', () => {
         total: 598,
       }),
     );
+    expect(mocks.sanitySync.pushAwaiting).not.toHaveBeenCalled();
+    expect(mocks.sanitySync.pushConfirmed).not.toHaveBeenCalled();
+  });
+
+  it('keeps COD orders on the confirmed Sanity path', async () => {
+    const { POST } = await import('@/app/api/orders/route');
+    const res = await POST(placeOrder({ paymentMethod: 'cod', expectedTotal: 598 }));
+
+    expect(res.status).toBe(200);
+    expect(mocks.sanitySync.pushConfirmed).toHaveBeenCalledTimes(1);
+    expect(mocks.sanitySync.pushAwaiting).not.toHaveBeenCalled();
+  });
+
+  it('returns a retryable error instead of creating an order when stock locking fails', async () => {
+    mocks.withStockLock.mockImplementation(() => Promise.reject(new mocks.StockLockUnavailableError()));
+    const { POST } = await import('@/app/api/orders/route');
+    const res = await POST(placeOrder({ paymentMethod: 'online', expectedTotal: 598 }));
+
+    expect(res.status).toBe(503);
+    expect((await res.json()).error).toMatch(/Please try again/);
+    expect(mocks.create).not.toHaveBeenCalled();
   });
 
   it('reads delivery settings uncached, never from the CDN copy', async () => {

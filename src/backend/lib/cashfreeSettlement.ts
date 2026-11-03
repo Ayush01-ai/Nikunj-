@@ -1,6 +1,6 @@
 import { fetchCashfreeOrder, fetchCashfreeOrderPayments } from '@/backend/lib/cashfree';
 import { Order, type IOrder } from '@/backend/models/Order';
-import { pushConfirmedOrderToSanity } from '@/backend/lib/sanityOrders';
+import { pushCashfreePaymentFailureToSanity, pushConfirmedOrderToSanity } from '@/backend/lib/sanityOrders';
 
 export type CashfreeSettlement =
   /** This call confirmed the order (stock + notification ran exactly once, here). */
@@ -104,8 +104,14 @@ export async function settleCashfreeOrder(order: IOrder, note: string): Promise<
   return { state: 'paid' };
 }
 
-/** Only a still-pending order is flipped to failed; a paid order is never touched. */
+/** A paid order is never touched; failed-state synchronization is safe to retry. */
 async function markFailed(order: IOrder) {
-  if (order.paymentStatus !== 'pending') return;
-  await Order.findOneAndUpdate({ _id: order._id, paymentStatus: 'pending' }, { paymentStatus: 'failed' });
+  const failed = await Order.findOneAndUpdate(
+    { _id: order._id, paymentStatus: { $ne: 'paid' } },
+    { paymentStatus: 'failed' },
+    { new: true },
+  );
+  if (failed) {
+    await pushCashfreePaymentFailureToSanity(failed, 'Cashfree payment failed or expired');
+  }
 }

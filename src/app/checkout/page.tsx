@@ -176,7 +176,7 @@ export default function CheckoutPage() {
         setPlacing(false);
       } else {
         clearSelectedFromCart();
-        setPendingPayment({ orderId: json.orderId });
+        setPendingPayment({ orderId: json.orderId, guestProof: json.guestProof });
         setPlacing(false);
       }
     } catch (err: unknown) {
@@ -498,6 +498,7 @@ export default function CheckoutPage() {
                           orderId={pendingPayment.orderId}
                           phone={address.phone}
                           isGuest={!user}
+                          initialGuestProof={pendingPayment.guestProof}
                           onComplete={() => router.push(`/confirmation?orderId=${encodeURIComponent(pendingPayment.orderId)}`)}
                           onCancel={() => router.push(`/confirmation?orderId=${encodeURIComponent(pendingPayment.orderId)}`)}
                         />

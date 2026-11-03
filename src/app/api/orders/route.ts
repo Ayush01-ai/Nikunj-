@@ -12,10 +12,11 @@ import { getAdminSettings, getSanityOrderStatuses, getSanityOrders, pushAwaiting
 import { refundView } from '@/backend/lib/refundView';
 import { deliveryView, ensureDeliveryCode, OUT_FOR_DELIVERY } from '@/backend/lib/delivery';
 import { refundBreakdown } from '@/cms/lib/refunds';
-import { heldQuantities, holdKey, withStockLock } from '@/backend/lib/stockHold';
+import { heldQuantities, holdKey, StockLockUnavailableError, withStockLock } from '@/backend/lib/stockHold';
 import { deliveryPolicy, getVariantPricing, orderTotals } from '@/cms/lib/pricing';
 import type { Coupon, ProductSize, SiteSettings } from '@/types';
 import { clientIp, createRateLimiter } from '@/backend/lib/rateLimit';
+import { createGuestPaymentProof } from '@/backend/lib/guestPaymentProof';
 
 const MAX_LINE_ITEMS = 50;
 const MAX_QTY_PER_ITEM = 99;
@@ -303,19 +304,30 @@ export async function POST(req: NextRequest) {
 
     if (paymentMethod === 'cod') {
       await pushConfirmedOrderToSanity(order, 'Cash on Delivery order placed');
-    } else {
+    } else if (paymentMethod === 'upi') {
       // Manual UPI: the owner sees it in Studio as "Awaiting payment" and confirms once the money arrives.
       await pushAwaitingPaymentOrderToSanity(order, 'UPI order placed — awaiting manual payment verification');
     }
+
+    const guestProof = !userId && paymentMethod === 'online'
+      ? createGuestPaymentProof(order.orderId, addrPhone)
+      : undefined;
 
     return NextResponse.json({
       success: true,
       orderId: order.orderId,
       _id: order._id.toString(),
       total: order.total,
+      ...(guestProof ? { guestProof } : {}),
     });
   } catch (error) {
     console.error('[orders POST]', error);
+    if (error instanceof StockLockUnavailableError) {
+      return NextResponse.json(
+        { success: false, error: 'Checkout is busy right now. Please try again in a moment.' },
+        { status: 503, headers: { 'Retry-After': '5' } },
+      );
+    }
     if (isDbConnectionError(error)) {
       // Be honest: this is a database outage, not a problem with the order itself.
       // No order was created, so it's safe for the customer to retry shortly.

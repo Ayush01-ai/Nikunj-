@@ -138,8 +138,10 @@ export const deskStructure = (S: StructureBuilder) =>
               ordersByStatus(S, 'ordersReturns', '🔁 Returns in progress', 'status in ["return_requested", "return_approved", "returned"]'),
               ordersByStatus(S, 'ordersRefunded', '💸 Refunded', 'status == "refunded" || paymentStatus == "refunded"'),
               ordersByStatus(S, 'ordersRefundDue', '💸 Refund due', 'paymentStatus == "refund_due"'),
+              ordersByStatus(S, 'ordersNeedsAttention', '⚠️ Needs Attention', 'needsAttention == true'),
+              ordersByStatus(S, 'ordersPaymentFailed', '❌ Payment Failed', 'status == "payment_failed"'),
               S.divider(),
-              ordersByStatus(S, 'ordersAll', 'All Orders', 'true'),
+              ordersByStatus(S, 'ordersAll', 'All Orders', '!defined(status) || status != "payment_failed"'),
             ]),
         ),
       S.listItem()

@@ -10,6 +10,7 @@ const connectDB = vi.fn(async () => {});
 const findOne = vi.fn();
 const findOneAndUpdate = vi.fn();
 const pushConfirmedOrderToSanity = vi.fn(async () => {});
+const pushCashfreePaymentFailureToSanity = vi.fn(async () => {});
 
 vi.mock('@/backend/lib/cashfree', () => ({ verifyCashfreeWebhookSignature }));
 vi.mock('@/backend/lib/cashfreeConfig', () => ({ isCashfreeConfigured }));
@@ -20,7 +21,7 @@ vi.mock('@/backend/models/Order', () => ({
     findOneAndUpdate: (...args: unknown[]) => findOneAndUpdate(...args),
   },
 }));
-vi.mock('@/backend/lib/sanityOrders', () => ({ pushConfirmedOrderToSanity }));
+vi.mock('@/backend/lib/sanityOrders', () => ({ pushConfirmedOrderToSanity, pushCashfreePaymentFailureToSanity }));
 
 function makeRequest(body: string, headers: Record<string, string>) {
   return new NextRequest('https://example.test/api/payment/cashfree/webhook', {
@@ -41,6 +42,7 @@ describe('POST /api/payment/cashfree/webhook', () => {
     findOne.mockReset();
     findOneAndUpdate.mockReset();
     pushConfirmedOrderToSanity.mockClear();
+    pushCashfreePaymentFailureToSanity.mockClear();
   });
 
   afterEach(() => vi.restoreAllMocks());
@@ -134,9 +136,11 @@ describe('POST /api/payment/cashfree/webhook', () => {
 
     expect(res.status).toBe(200);
     expect(findOneAndUpdate).toHaveBeenCalledWith(
-      { cashfreeOrderId: 'order-2', paymentStatus: 'pending' },
+      { cashfreeOrderId: 'order-2', paymentStatus: { $ne: 'paid' } },
       { paymentStatus: 'failed' },
+      { new: true },
     );
+    expect(pushCashfreePaymentFailureToSanity).toHaveBeenCalledTimes(1);
   });
 
   it('acknowledges (200) but ignores event types it does not act on', async () => {
@@ -240,6 +244,10 @@ describe('POST /api/payment/cashfree/webhook', () => {
     const res = await POST(makeRequest(JSON.stringify(payload), VALID_HEADERS));
 
     expect(res.status).toBe(200);
-    expect(findOneAndUpdate).toHaveBeenCalledWith({ cashfreeOrderId: 'order-3', paymentStatus: 'pending' }, { paymentStatus: 'failed' });
+    expect(findOneAndUpdate).toHaveBeenCalledWith(
+      { cashfreeOrderId: 'order-3', paymentStatus: { $ne: 'paid' } },
+      { paymentStatus: 'failed' },
+      { new: true },
+    );
     expect(pushConfirmedOrderToSanity).not.toHaveBeenCalled();
   });});

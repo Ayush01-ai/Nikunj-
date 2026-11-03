@@ -57,9 +57,9 @@ export type PaymentAuthResult = { ok: true } | { ok: false; status: 403; error: 
  * - Guest orders: a bare phone number is no longer accepted as proof — anyone who merely
  *   knew (or guessed) the phone number on the order could otherwise initiate a payment
  *   for it. The caller must instead present a short-lived, server-issued
- *   `guestPaymentProof` token (see guestPaymentProof.ts), minted only after the guest
- *   verifies an OTP sent to that exact phone number for this exact order
- *   (POST /api/payment/guest-verify/send-otp + confirm-otp). The token is validated
+ *   `guestPaymentProof` token (see guestPaymentProof.ts), returned only with the newly
+ *   created order in the initiating checkout session, or minted after OTP verification
+ *   when a guest reopens an order later. The token is validated
  *   against every phone number on file for the order (shippingAddress.phone and
  *   guestPhone) so it works regardless of which one was used to request it.
  */

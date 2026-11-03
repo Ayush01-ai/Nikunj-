@@ -1,5 +1,5 @@
 import { writeClient } from '@/cms/lib/client';
-import { STOCK_PRODUCTS_QUERY, buildStockPatches, stockLookupIds } from '@/cms/lib/orderStock';
+import { STOCK_PRODUCTS_QUERY, buildStockPatches, findInsufficientStockLines, stockLookupIds } from '@/cms/lib/orderStock';
 import { Order, type IOrder } from '@/backend/models/Order';
 import { notifyOrder } from '@/backend/lib/orderNotify';
 import type { CancelRequestInfo } from '@/cms/lib/orderRequests';
@@ -31,6 +31,8 @@ export interface SanityOrder {
   paymentGateway?: string;
   cashfreeOrderId?: string;
   cashfreePaymentId?: string;
+  needsAttention?: boolean;
+  attentionNote?: string;
   razorpayPaymentId?: string;
   upiReference?: string;
   refund?: RefundInfo | null;
@@ -106,12 +108,17 @@ export async function getSanityOrderStatuses(orderIds: string[]): Promise<Map<st
   }
 }
 
-/**
- * Copy a confirmed order into Sanity (where the owner manages it) and reduce stock — in one transaction.
- * Idempotent: if the order already exists the create fails with 409 and stock is untouched.
- */
+/** Sync a confirmed order to Sanity; Cashfree orders use the revision-guarded paid/failure path below. */
 export async function pushConfirmedOrderToSanity(order: IOrder, note: string): Promise<boolean> {
+  if (order.paymentMethod === 'online' && order.paymentGateway === 'cashfree') {
+    return syncCashfreeOrderToSanity(order, 'paid', note);
+  }
   return pushOrderToSanity(order, note, 'confirmed');
+}
+
+/** Updates Cashfree payment failures without touching inventory unless it was previously decremented. */
+export async function pushCashfreePaymentFailureToSanity(order: IOrder, note: string): Promise<boolean> {
+  return syncCashfreeOrderToSanity(order, 'failed', note);
 }
 
 /**
@@ -136,6 +143,9 @@ export async function resyncOrderToSanity(orderId: string): Promise<boolean> {
       // Abandoned payment-gateway attempts (e.g. legacy Cashfree) are not manual-UPI orders.
       if (order.paymentGateway) return false;
       return await pushOrderToSanity(order, 'UPI order placed — awaiting manual payment verification (re-synced)', 'pending');
+    }
+    if (order.paymentGateway === 'cashfree' && order.paymentStatus === 'paid') {
+      return await pushConfirmedOrderToSanity(order, 'Cashfree payment received (re-synced)');
     }
     if (order.paymentMethod === 'cod' || order.paymentStatus === 'paid') {
       return await pushOrderToSanity(order, `${order.paymentMethod === 'cod' ? 'Cash on Delivery order placed' : 'Payment received online'} (re-synced)`, 'confirmed');
@@ -229,6 +239,165 @@ async function pushOrderToSanity(order: IOrder, note: string, status: 'confirmed
     }
     // The order is saved and confirmed on the website, so the customer must still be told.
     if (confirmed) await notifyCustomerOrderConfirmed(order);
+    return false;
+  }
+}
+
+async function syncCashfreeOrderToSanity(
+  order: IOrder,
+  paymentStatus: 'paid' | 'failed',
+  note: string,
+): Promise<boolean> {
+  if (!hasToken()) {
+    console.error('[sanity-orders] SANITY_API_TOKEN missing; Cashfree order not synced:', order.orderId);
+    if (paymentStatus === 'paid') await notifyCustomerOrderConfirmed(order);
+    return false;
+  }
+
+  const id = sanityOrderId(order.orderId);
+  const lines = order.items.map((item) => ({
+    productId: item.productId,
+    option: item.selectedSize,
+    quantity: item.quantity,
+  }));
+  const now = new Date().toISOString();
+  const address = order.shippingAddress;
+  const initialStatus = paymentStatus === 'paid' ? 'pending' : 'payment_failed';
+  const initialDocument = {
+    _id: id,
+    _type: 'order',
+    orderNumber: order.orderId,
+    status: initialStatus,
+    placedAt: (order.createdAt ?? new Date()).toISOString(),
+    customerName: address.fullName,
+    phone: address.phone,
+    shippingAddress: {
+      line1: address.line1,
+      line2: address.line2,
+      landmark: address.landmark,
+      city: address.city,
+      state: address.state,
+      pincode: address.pincode,
+    },
+    items: order.items.map((item) => ({
+      productId: item.productId,
+      productName: item.name,
+      image: item.image || undefined,
+      option: item.selectedSize,
+      colour: item.selectedColor,
+      price: item.price,
+      quantity: item.quantity,
+    })),
+    subtotal: order.subtotal,
+    deliveryCharge: order.deliveryCharge,
+    discount: order.discount,
+    couponCode: order.couponCode,
+    total: order.total,
+    paymentMethod: order.paymentMethod,
+    paymentStatus,
+    paymentGateway: order.paymentGateway,
+    cashfreeOrderId: order.cashfreeOrderId,
+    cashfreePaymentId: order.cashfreePaymentId,
+    statusHistory: [{ status: initialStatus, at: now, note }],
+    stockAdjusted: false,
+  };
+
+  try {
+    // Seed absent orders without changing stock. The following revision-guarded patch is
+    // the only operation allowed to adjust inventory, including for concurrent webhook retries.
+    await writeClient.createIfNotExists(initialDocument);
+
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const current = await writeClient.fetch<{
+        _rev: string;
+        status?: string;
+        paymentStatus?: string;
+        stockAdjusted?: boolean;
+      } | null>(`*[_id == $id][0]{_rev,status,paymentStatus,stockAdjusted}`, { id });
+      if (!current) throw new Error('Cashfree Sanity order could not be created.');
+      const protectedStatuses = new Set([
+        'confirmed',
+        'processing',
+        'shipped',
+        'delivered',
+        'cancelled',
+        'return_requested',
+        'return_approved',
+        'returned',
+        'refunded',
+      ]);
+      if (paymentStatus === 'failed' && (current.paymentStatus === 'paid' || protectedStatuses.has(current.status ?? ''))) {
+        return true;
+      }
+
+      const adjustStock = paymentStatus === 'paid' ? current.stockAdjusted !== true : current.stockAdjusted === true;
+      let stockPatches: ReturnType<typeof buildStockPatches> = [];
+      let insufficientStockLines: ReturnType<typeof findInsufficientStockLines> = [];
+      if (adjustStock) {
+        const products = await writeClient.fetch(STOCK_PRODUCTS_QUERY, { ids: stockLookupIds(lines) });
+        stockPatches = buildStockPatches(products, lines, paymentStatus === 'paid' ? -1 : 1);
+        if (paymentStatus === 'paid') insufficientStockLines = findInsufficientStockLines(products, lines);
+        if (paymentStatus === 'failed' && stockPatches.length === 0) {
+          throw new Error('Previously adjusted Cashfree stock could not be found for restoration.');
+        }
+      }
+      const attentionItems = insufficientStockLines.map((line) => {
+        const item = order.items.find(
+          (candidate) => candidate.productId === line.productId && candidate.selectedSize === line.option,
+        );
+        return `${item?.name ?? line.productId}${line.option ? ` (${line.option})` : ''}`;
+      });
+
+      const nextStatus =
+        paymentStatus === 'paid'
+          ? current.status === 'pending' || current.status === 'payment_failed' ? 'confirmed' : current.status ?? 'confirmed'
+          : 'payment_failed';
+      const changed = current.status !== nextStatus || current.paymentStatus !== paymentStatus;
+      const orderPatch = writeClient
+        .patch(id)
+        .ifRevisionId(current._rev)
+        .set({
+          status: nextStatus,
+          paymentStatus,
+          paymentGateway: order.paymentGateway,
+          cashfreeOrderId: order.cashfreeOrderId,
+          ...(order.cashfreePaymentId ? { cashfreePaymentId: order.cashfreePaymentId } : {}),
+          stockAdjusted: paymentStatus === 'paid' ? current.stockAdjusted === true || stockPatches.length > 0 : false,
+          ...(attentionItems.length
+            ? {
+                needsAttention: true,
+                attentionNote: `Paid order exceeded tracked stock for ${attentionItems.join(', ')}. Review inventory and fulfillment manually.`,
+              }
+            : {}),
+        })
+        .setIfMissing({ statusHistory: [] });
+      if (changed) orderPatch.append('statusHistory', [{ status: nextStatus, at: now, note }]);
+
+      const tx = writeClient.transaction().patch(id, orderPatch);
+      for (const stockPatch of stockPatches) tx.patch(stockPatch.id, (patch) => patch.inc(stockPatch.inc));
+
+      try {
+        await tx.commit({ autoGenerateArrayKeys: true });
+        if (paymentStatus === 'paid') {
+          await releaseStockHold(order.orderId);
+          await recordOrderPlaced({
+            orderId: order.orderId,
+            total: order.total,
+            phone: address.phone,
+            name: address.fullName,
+            placedAt: order.createdAt,
+          });
+          await notifyCustomerOrderConfirmed(order);
+        }
+        return true;
+      } catch (error) {
+        if ((error as { statusCode?: number }).statusCode !== 409 || attempt === 2) throw error;
+      }
+    }
+    return false;
+  } catch (error) {
+    console.error('[sanity-orders] Cashfree sync failed', order.orderId, error instanceof Error ? error.message : error);
+    if (paymentStatus === 'paid') await notifyCustomerOrderConfirmed(order);
     return false;
   }
 }

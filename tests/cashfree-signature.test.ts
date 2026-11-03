@@ -92,6 +92,7 @@ describe('cashfree wrapper', () => {
         customerName: 'Test',
         customerId: 'user_1',
         returnUrl: 'http://localhost:3000/confirmation?orderId=NS-1',
+        expiresAt: '2026-01-01T10:30:00.000Z',
       });
 
       const [req, requestId, idempotencyKey] = PGCreateOrder.mock.calls[0];
@@ -100,6 +101,7 @@ describe('cashfree wrapper', () => {
         order_amount: 499,
         order_currency: 'INR',
         customer_details: { customer_id: 'user_1', customer_phone: '9876543210' },
+        order_expiry_time: '2026-01-01T10:30:00.000Z',
         order_meta: { return_url: 'http://localhost:3000/confirmation?orderId=NS-1' },
       });
       expect(req.order_meta.notify_url).toBeUndefined();
