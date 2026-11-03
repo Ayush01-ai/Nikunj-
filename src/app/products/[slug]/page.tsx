@@ -18,7 +18,6 @@ import { Footer } from '@/frontend/components/layout/Footer';
 import { AnnouncementBar } from '@/frontend/components/home/AnnouncementBar';
 import { ProductDetail } from '@/frontend/components/products/ProductDetail';
 import { ProductCard } from '@/frontend/components/products/ProductCard';
-import { CartSidebar } from '@/frontend/components/cart/CartSidebar';
 import { WhatsAppFloat } from '@/frontend/components/ui/WhatsAppFloat';
 import { PortableText, type PortableTextBlock } from '@portabletext/react';
 import type { Product, SiteSettings, Testimonial } from '@/types';
@@ -163,7 +162,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
         />
       )}
       <Navbar settings={settings} />
-      <CartSidebar />
 
       {/* Structured Data */}
       <script

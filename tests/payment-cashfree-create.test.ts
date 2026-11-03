@@ -237,7 +237,7 @@ describe('POST /api/payment/cashfree/create', () => {
     await POST(makeRequest({ orderId: 'order-reg-1' }));
 
     const args = createCashfreeOrder.mock.calls[0][0];
-    expect(args.returnUrl).toBe('https://shop.example.com/confirmation?orderId=order-reg-1');
+    expect(args.returnUrl).toBe('https://shop.example.com/confirmation?orderId={order_id}');
     expect(args.notifyUrl).toBe('https://shop.example.com/api/payment/cashfree/webhook');
   });
 

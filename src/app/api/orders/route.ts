@@ -90,8 +90,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Card / net banking went through Cashfree, which is bypassed; only COD and manual UPI can be paid.
-    const validPaymentMethods = ['upi', 'cod'];
+    const validPaymentMethods = ['upi', 'cod', 'online'];
     if (!validPaymentMethods.includes(paymentMethod)) {
       return NextResponse.json({ success: false, error: 'Invalid payment method.' }, { status: 400 });
     }

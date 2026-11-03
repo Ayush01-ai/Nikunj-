@@ -14,6 +14,7 @@ import { settleCashfreeOrder } from '@/backend/lib/cashfreeSettlement';
 import { createRateLimiter } from '@/backend/lib/rateLimit';
 import { getWhatsAppHref } from '@/frontend/lib/whatsapp';
 import type { SiteSettings } from '@/types';
+import { CashfreeCheckout } from '@/app/checkout/CashfreeCheckout';
 
 export const metadata: Metadata = {
   title: 'Order Confirmation',
@@ -28,7 +29,28 @@ async function getOrderSummary(orderId: string) {
     await connectDB();
     await reconcileCashfreePayment(orderId);
     await resyncOrderToSanity(orderId);
-    return await Order.findOne({ orderId }).select('items total paymentMethod paymentStatus status shippingAddress.city').lean();
+    const order = await Order.findOne({ orderId })
+      .select('items total paymentMethod paymentStatus paymentGateway status userId guestPhone shippingAddress.city shippingAddress.phone')
+      .lean();
+    if (!order) return null;
+    return {
+      items: order.items.map(({ productId, name, selectedSize, selectedColor, quantity, price }) => ({
+        productId,
+        name,
+        selectedSize,
+        selectedColor,
+        quantity,
+        price,
+      })),
+      total: order.total,
+      paymentMethod: order.paymentMethod,
+      paymentStatus: order.paymentStatus,
+      paymentGateway: order.paymentGateway,
+      status: order.status,
+      shippingAddress: { city: order.shippingAddress?.city ?? '' },
+      isGuest: !order.userId,
+      paymentPhone: order.shippingAddress?.phone ?? order.guestPhone ?? '',
+    };
   } catch {
     return null;
   }
@@ -73,6 +95,7 @@ async function ConfirmationContent({ orderId }: { orderId: string }) {
     SITE_URL,
   );
   const awaitingPayment = order?.paymentMethod !== 'cod' && order?.paymentStatus !== 'paid';
+  const awaitingCashfreePayment = order?.paymentMethod === 'online' && order.paymentStatus !== 'paid';
 
   return (
     <div className="min-h-screen bg-cream flex items-center justify-center px-4 pt-10 pb-12">
@@ -114,6 +137,17 @@ async function ConfirmationContent({ orderId }: { orderId: string }) {
               {order.paymentMethod === 'cod' ? 'Cash on Delivery' : order.paymentStatus === 'paid' ? 'Paid online' : 'Awaiting payment'}
               {order.shippingAddress?.city && ` · Delivering to ${order.shippingAddress.city}`}
             </p>
+          </div>
+        )}
+
+        {order && awaitingCashfreePayment && (
+          <div className="bg-white border border-[var(--border)] p-6 mb-5 text-left">
+            <CashfreeCheckout
+              orderId={orderId}
+              phone={order.paymentPhone}
+              isGuest={order.isGuest}
+              onComplete={() => window.location.reload()}
+            />
           </div>
         )}
 

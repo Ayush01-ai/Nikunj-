@@ -284,6 +284,7 @@ export const order = defineType({
       options: {
         list: [
           { title: 'Cash on Delivery', value: 'cod' },
+          { title: 'Cashfree Online (UPI, Cards, Net Banking)', value: 'online' },
           { title: 'UPI', value: 'upi' },
           { title: 'Card', value: 'card' },
           { title: 'Net Banking', value: 'netbanking' },
@@ -296,7 +297,7 @@ export const order = defineType({
       title: 'Payment Status',
       type: 'string',
       group: 'items',
-      description: 'For Cash on Delivery, change this to Paid once you receive the money. For UPI, use "Payment received — Confirm" after matching the UPI credit in your bank app.',
+      description: 'Cashfree online payments are confirmed automatically. For Cash on Delivery, change this to Paid once you receive the money. For manual UPI, confirm only after matching the credit in your bank app.',
       options: {
         list: [
           { title: 'Pending', value: 'pending' },

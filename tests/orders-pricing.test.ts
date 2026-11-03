@@ -96,6 +96,21 @@ describe('POST /api/orders — delivery charge and total', () => {
     expect(mocks.create).toHaveBeenCalledWith(expect.objectContaining({ subtotal: 499, deliveryCharge: 99, discount: 0, total: 598 }));
   });
 
+  it('creates online-payment orders as pending for Cashfree checkout', async () => {
+    const { POST } = await import('@/app/api/orders/route');
+    const res = await POST(placeOrder({ paymentMethod: 'online', expectedTotal: 598 }));
+
+    expect(res.status).toBe(200);
+    expect(mocks.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        paymentMethod: 'online',
+        paymentStatus: 'pending',
+        status: 'pending',
+        total: 598,
+      }),
+    );
+  });
+
   it('reads delivery settings uncached, never from the CDN copy', async () => {
     const { POST } = await import('@/app/api/orders/route');
     await POST(placeOrder());

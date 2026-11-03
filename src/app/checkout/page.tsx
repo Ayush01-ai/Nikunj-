@@ -18,6 +18,7 @@ import { BackButton } from '@/frontend/components/ui/BackButton';
 import type { CartItem } from '@/types';
 import { trackOnce } from '@/frontend/lib/analytics';
 import toast from 'react-hot-toast';
+import { CashfreeCheckout } from './CashfreeCheckout';
 
 const STEPS = ['Cart', 'Address', 'Payment'] as const;
 type Step = typeof STEPS[number];
@@ -46,8 +47,9 @@ export default function CheckoutPage() {
     phone: user?.phone || '',
     line1: '', city: '', state: '', pincode: '',
   });
-  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'upi'>('cod');
+  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'online'>('cod');
   const [placing, setPlacing] = useState(false);
+  const [pendingPayment, setPendingPayment] = useState<{ orderId: string; guestProof?: string } | null>(null);
 
   // Checkout only ever acts on the items the customer selected in the cart/sidebar — any
   // items left deselected stay in the cart untouched (see cartStore's deselectedIds).
@@ -174,7 +176,7 @@ export default function CheckoutPage() {
         setPlacing(false);
       } else {
         clearSelectedFromCart();
-        router.push(`/checkout/success?orderId=${encodeURIComponent(json.orderId)}`);
+        setPendingPayment({ orderId: json.orderId });
         setPlacing(false);
       }
     } catch (err: unknown) {
@@ -488,11 +490,26 @@ export default function CheckoutPage() {
               {/* ── STEP 3: Payment ── */}
               {step === 'Payment' && (
                 <motion.div key="payment" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  {pendingPayment ? (
+                    <>
+                      <h2 className="font-cinzel text-base font-semibold text-deep mb-4">Complete Your Payment</h2>
+                      <div className="bg-white border border-[var(--border)] p-6">
+                        <CashfreeCheckout
+                          orderId={pendingPayment.orderId}
+                          phone={address.phone}
+                          isGuest={!user}
+                          onComplete={() => router.push(`/confirmation?orderId=${encodeURIComponent(pendingPayment.orderId)}`)}
+                          onCancel={() => router.push(`/confirmation?orderId=${encodeURIComponent(pendingPayment.orderId)}`)}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <>
                   <h2 className="font-cinzel text-base font-semibold text-deep mb-4">Payment Method</h2>
                   <div className="bg-white border border-[var(--border)] p-6 space-y-3">
                     {([
                       { id: 'cod', label: 'Cash on Delivery', icon: Banknote },
-                      { id: 'upi', label: 'UPI / Google Pay / PhonePe', icon: Smartphone },
+                      { id: 'online', label: 'Pay Online (UPI, Cards, Net Banking)', icon: Smartphone },
                     ] as const).map((method) => {
                       const Icon = method.icon;
                       return (
@@ -516,7 +533,9 @@ export default function CheckoutPage() {
 
                   <div className="flex items-center gap-3 mt-4 p-3 bg-green-50 border border-green-200">
                     <ShieldCheck size={16} className="text-green-600" />
-                    <span className="font-lato text-xs text-green-700">Pay securely via UPI after placing your order</span>
+                    <span className="font-lato text-xs text-green-700">
+                      Secure checkout powered by Cashfree. Your payment is verified before your order is confirmed.
+                    </span>
                   </div>
 
                   <div className="flex gap-3 mt-5">
@@ -525,6 +544,8 @@ export default function CheckoutPage() {
                       {placing ? 'Placing Order...' : paymentMethod === 'cod' ? '🙏 Place Order' : '🔒 Pay Now'}
                     </button>
                   </div>
+                    </>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>

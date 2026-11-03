@@ -5,7 +5,6 @@ import { Navbar } from '@/frontend/components/layout/Navbar';
 import { Footer } from '@/frontend/components/layout/Footer';
 import { AnnouncementBar } from '@/frontend/components/home/AnnouncementBar';
 import { WhatsAppFloat } from '@/frontend/components/ui/WhatsAppFloat';
-import { CartSidebar } from '@/frontend/components/cart/CartSidebar';
 import { ContactContent } from './ContactContent';
 import type { SiteSettings } from '@/types';
 
@@ -37,7 +36,6 @@ export default async function ContactPage() {
         />
       )}
       <Navbar settings={settings} />
-      <CartSidebar />
 
       <main>
         <ContactContent settings={settings} />

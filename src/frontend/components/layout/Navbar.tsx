@@ -8,6 +8,7 @@ import { ShoppingBag, Search, Heart, Menu, X, User, ChevronDown } from 'lucide-r
 import { useCartStore } from '@/frontend/store/cartStore';
 import { useAuthStore } from '@/frontend/store/authStore';
 import { useSiteSettings } from '@/frontend/providers/Providers';
+import { CartSidebar } from '@/frontend/components/cart/CartSidebar';
 import { SearchModal } from '@/frontend/components/ui/SearchModal';
 import { ShopSuggestions } from '@/frontend/components/layout/ShopSuggestions';
 import { NikunjSakhiLogo } from '@/frontend/components/ui/NikunjSakhiLogo';
@@ -419,6 +420,7 @@ export function Navbar({ settings }: NavbarProps) {
       </AnimatePresence>
 
       <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+      <CartSidebar />
     </>
   );
 }

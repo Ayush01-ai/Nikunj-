@@ -153,7 +153,7 @@ export async function POST(req: NextRequest) {
         customerId: cashfreeCustomerId(userId, order.guestPhone, orderId),
         // The return_url only brings the customer back; the confirmation page re-checks the
         // payment with Cashfree's API server-side before showing it as paid.
-        returnUrl: `${baseUrl}/confirmation?orderId=${encodeURIComponent(orderId)}`,
+        returnUrl: `${baseUrl}/confirmation?orderId={order_id}`,
         // Cashfree only accepts an https notify_url; the dashboard webhook is the primary channel.
         notifyUrl: baseUrl.startsWith('https://') ? `${baseUrl}/api/payment/cashfree/webhook` : undefined,
       });

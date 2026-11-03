@@ -43,7 +43,7 @@ async function SuccessContent({ orderId }: { orderId: string }) {
   if (!order) notFound();
   // First sync to Studio failed (e.g. missing token) — retry so the owner can see and confirm it.
   if (!managed) await resyncOrderToSanity(orderId);
-  if (order.paymentMethod === 'cod') redirect(`/confirmation?orderId=${encodeURIComponent(orderId)}`);
+  if (order.paymentMethod === 'cod' || order.paymentStatus === 'paid') redirect(`/confirmation?orderId=${encodeURIComponent(orderId)}`);
 
   // The owner's decision in Studio is the source of truth; the website copy is the fallback.
   const status = managed?.status ?? order.status;
@@ -79,6 +79,21 @@ async function SuccessContent({ orderId }: { orderId: string }) {
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link prefetch={false} href={trackHref} className="btn-gold inline-block">Track Order</Link>
           <Link prefetch={false} href="/products" className="btn-outline-gold inline-block">Continue Shopping</Link>
+        </div>
+      </Shell>
+    );
+  }
+
+  if (order.paymentMethod === 'online') {
+    return (
+      <Shell>
+        <h1 className="font-cinzel text-2xl font-semibold text-deep mb-2" data-testid="order-state">Payment not confirmed yet</h1>
+        <p className="font-lato text-sm text-[var(--text-mid)] mb-6">
+          Your order <strong>#{order.orderId}</strong> is saved. You can return to checkout and complete or retry the secure payment.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Link prefetch={false} href={`/confirmation?orderId=${encodeURIComponent(order.orderId)}`} className="btn-gold inline-block">Retry Secure Payment</Link>
+          <Link prefetch={false} href="/contact" className="btn-outline-gold inline-block">Contact Us</Link>
         </div>
       </Shell>
     );

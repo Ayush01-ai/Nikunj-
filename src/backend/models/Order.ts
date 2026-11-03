@@ -28,7 +28,7 @@ export interface IOrder extends Document {
   discount: number;
   total: number;
   couponCode?: string;
-  paymentMethod: 'upi' | 'card' | 'netbanking' | 'cod' | 'whatsapp';
+  paymentMethod: 'upi' | 'card' | 'netbanking' | 'online' | 'cod' | 'whatsapp';
   paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
   /** Gateway-agnostic field — which online gateway (if any) is handling this order's payment. Unset for COD. */
   paymentGateway?: 'razorpay' | 'cashfree';
@@ -109,7 +109,7 @@ const OrderSchema = new Schema<IOrder>(
     couponCode:    { type: String, uppercase: true },
     paymentMethod: {
       type: String,
-      enum: ['upi', 'card', 'netbanking', 'cod', 'whatsapp'],
+      enum: ['upi', 'card', 'netbanking', 'online', 'cod', 'whatsapp'],
       required: true,
     },
     paymentStatus: {

@@ -21,7 +21,6 @@ import { AboutSection } from '@/frontend/components/home/AboutSection';
 import { InstagramStrip } from '@/frontend/components/home/InstagramStrip';
 import { FeedbackForm } from '@/frontend/components/home/FeedbackForm';
 import { WhatsAppFloat } from '@/frontend/components/ui/WhatsAppFloat';
-import { CartSidebar } from '@/frontend/components/cart/CartSidebar';
 import type { HeroSlide, Category, Product, Testimonial, SiteSettings } from '@/types';
 
 export const revalidate = false; // on-demand only (see /api/revalidate); no queue for time-based ISR
@@ -66,7 +65,6 @@ export default async function HomePage() {
         />
       )}
       <Navbar settings={settings} />
-      <CartSidebar />
 
       <main>
         <HeroSection slides={heroSlides} settings={settings} />

@@ -20,7 +20,6 @@ import { Footer } from '@/frontend/components/layout/Footer';
 import { AnnouncementBar } from '@/frontend/components/home/AnnouncementBar';
 import { CollectionGrid } from '@/frontend/components/products/CollectionGrid';
 import { ProductFilters } from '@/frontend/components/products/ProductFilters';
-import { CartSidebar } from '@/frontend/components/cart/CartSidebar';
 import { WhatsAppFloat } from '@/frontend/components/ui/WhatsAppFloat';
 import { ProductTypeIcon, iconForTypeName } from '@/frontend/components/ui/ProductTypeIcon';
 import type { Product, Category, Deity, ProductType, Fragrance, SiteSettings } from '@/types';
@@ -140,7 +139,6 @@ export async function CatalogPage({ categorySlug, typeSlug }: CatalogPageProps) 
         />
       )}
       <Navbar settings={settings} />
-      <CartSidebar />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, '\\u003c') }}

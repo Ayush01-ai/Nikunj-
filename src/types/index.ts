@@ -272,7 +272,7 @@ export interface Order {
   discount: number;
   total: number;
   couponCode?: string;
-  paymentMethod: 'upi' | 'card' | 'netbanking' | 'cod' | 'whatsapp';
+  paymentMethod: 'upi' | 'card' | 'netbanking' | 'online' | 'cod' | 'whatsapp';
   paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
   paymentGateway?: 'razorpay' | 'cashfree';
   razorpayOrderId?: string;
