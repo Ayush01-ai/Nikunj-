@@ -1,5 +1,6 @@
 import { timingSafeEqual } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
+import { ORDER_ID_PATTERN } from '@/backend/lib/orderAccess';
 import { applyShiprocketStatusUpdate, type ShiprocketWebhookPayload } from '@/backend/lib/shiprocketFulfilment';
 
 /**
@@ -15,14 +16,42 @@ function validKey(given: string | null) {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
+const PING = { status: 'ok', success: true } as const;
+
+/** Reachability probes (Shiprocket "Test Webhook"/"Save") use GET/HEAD; they touch nothing. */
+export async function GET() {
+  return NextResponse.json(PING);
+}
+
+export async function HEAD() {
+  return new NextResponse(null, { status: 200 });
+}
+
+const asId = (v: unknown) => (typeof v === 'string' || typeof v === 'number' ? String(v).trim() : '');
+
 export async function POST(req: NextRequest) {
-  if (!validKey(req.headers.get('x-api-key'))) {
-    return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+  const rawText = await req.text().catch(() => '');
+  let parsed: unknown = null;
+  try {
+    parsed = rawText.trim() ? JSON.parse(rawText) : null;
+  } catch {
+    parsed = null;
   }
-  const payload = (await req.json().catch(() => null)) as ShiprocketWebhookPayload | null;
-  if (!payload || typeof payload !== 'object') {
-    return NextResponse.json({ success: false, message: 'Invalid payload' }, { status: 400 });
+  const payload = parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? (parsed as ShiprocketWebhookPayload & Record<string, unknown>) : null;
+  const authorised = validKey(req.headers.get('x-api-key'));
+
+  if (!authorised) {
+    // Only a request that targets one of our real order numbers is an attack; anything else is Shiprocket's URL test.
+    const targetsOurOrder = [payload?.order_id, payload?.channel_order_id].some((v) => ORDER_ID_PATTERN.test(asId(v)));
+    if (targetsOurOrder) return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ ...PING, handled: false, reason: 'test_ping' });
   }
+
+  const hasIdentifier = payload && [payload.order_id, payload.channel_order_id, payload.awb, payload.shipment_id].some((v) => asId(v));
+  if (!payload || !hasIdentifier) {
+    return NextResponse.json({ ...PING, handled: false, reason: 'ping_or_test_payload' });
+  }
+  if (!payload.order_id && payload.channel_order_id) payload.order_id = asId(payload.channel_order_id);
   try {
     const outcome = await applyShiprocketStatusUpdate(payload);
     // Always 200 for well-formed events so Shiprocket does not retry unknown/ignored statuses forever.
