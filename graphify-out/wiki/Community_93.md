@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- [customer.ts](file:///C:/Nikunj/src/cms/schemas/customer.ts#L1) (1 connections)
-- [customer](file:///C:/Nikunj/src/cms/schemas/customer.ts#L3) (1 connections)
+- [category.ts](file:///C:/Nikunj/src/cms/schemas/category.ts#L1) (1 connections)
+- [category](file:///C:/Nikunj/src/cms/schemas/category.ts#L3) (1 connections)
 
 ## Relationships
 
@@ -13,7 +13,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\cms\schemas\customer.ts](file:///C:/Nikunj/src/cms/schemas/customer.ts)
+- [C:\Nikunj\src\cms\schemas\category.ts](file:///C:/Nikunj/src/cms/schemas/category.ts)
 
 ## Audit Trail
 

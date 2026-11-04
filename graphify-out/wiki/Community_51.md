@@ -4,13 +4,13 @@
 
 ## Key Concepts
 
-- [refunds-process-auth.test.ts](file:///C:/Nikunj/tests/refunds-process-auth.test.ts#L1) (6 connections)
-- [fetchMock](file:///C:/Nikunj/tests/refunds-process-auth.test.ts#L65) (1 connections)
-- [mocks](file:///C:/Nikunj/tests/refunds-process-auth.test.ts#L4) (1 connections)
-- [ORDER_ID](file:///C:/Nikunj/tests/refunds-process-auth.test.ts#L16) (1 connections)
-- [request()](file:///C:/Nikunj/tests/refunds-process-auth.test.ts#L18) (1 connections)
-- [res](file:///C:/Nikunj/tests/refunds-process-auth.test.ts#L39) (1 connections)
-- [sanityMe()](file:///C:/Nikunj/tests/refunds-process-auth.test.ts#L26) (1 connections)
+- [revalidate.test.ts](file:///C:/Nikunj/tests/revalidate.test.ts#L1) (6 connections)
+- [revalidatePath](file:///C:/Nikunj/tests/revalidate.test.ts#L3) (2 connections)
+- [err](file:///C:/Nikunj/tests/revalidate.test.ts#L50) (1 connections)
+- [fetchMock](file:///C:/Nikunj/tests/revalidate.test.ts#L42) (1 connections)
+- [hook](file:///C:/Nikunj/tests/revalidate.test.ts#L40) (1 connections)
+- [req()](file:///C:/Nikunj/tests/revalidate.test.ts#L9) (1 connections)
+- [res](file:///C:/Nikunj/tests/revalidate.test.ts#L20) (1 connections)
 
 ## Relationships
 
@@ -18,12 +18,12 @@
 
 ## Source Files
 
-- [C:\Nikunj\tests\refunds-process-auth.test.ts](file:///C:/Nikunj/tests/refunds-process-auth.test.ts)
+- [C:\Nikunj\tests\revalidate.test.ts](file:///C:/Nikunj/tests/revalidate.test.ts)
 
 ## Audit Trail
 
-- EXTRACTED: 12 (100%)
-- INFERRED: 0 (0%)
+- EXTRACTED: 12 (92%)
+- INFERRED: 1 (8%)
 - AMBIGUOUS: 0 (0%)
 
 ---

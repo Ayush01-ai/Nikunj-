@@ -1,24 +1,21 @@
 # Cashfree Webhook
 
-> 15 nodes · cohesion 0.13
+> 12 nodes · cohesion 0.20
 
 ## Key Concepts
 
-- [cashfree-webhook.test.ts](file:///C:/Nikunj/tests/cashfree-webhook.test.ts#L1) (14 connections)
-- [verifyCashfreeWebhookSignature](file:///C:/Nikunj/tests/cashfree-webhook.test.ts#L7) (2 connections)
-- [connectDB](file:///C:/Nikunj/tests/cashfree-webhook.test.ts#L9) (1 connections)
-- [findOne](file:///C:/Nikunj/tests/cashfree-webhook.test.ts#L10) (1 connections)
-- [findOneAndUpdate](file:///C:/Nikunj/tests/cashfree-webhook.test.ts#L11) (1 connections)
-- [isCashfreeConfigured](file:///C:/Nikunj/tests/cashfree-webhook.test.ts#L8) (1 connections)
-- [json](file:///C:/Nikunj/tests/cashfree-webhook.test.ts#L148) (1 connections)
-- [makeRequest()](file:///C:/Nikunj/tests/cashfree-webhook.test.ts#L25) (1 connections)
-- [payload](file:///C:/Nikunj/tests/cashfree-webhook.test.ts#L66) (1 connections)
-- [{ POST }](file:///C:/Nikunj/tests/cashfree-webhook.test.ts#L49) (1 connections)
-- [pushConfirmedOrderToSanity](file:///C:/Nikunj/tests/cashfree-webhook.test.ts#L12) (1 connections)
-- [raw](file:///C:/Nikunj/tests/cashfree-webhook.test.ts#L163) (1 connections)
-- [res](file:///C:/Nikunj/tests/cashfree-webhook.test.ts#L50) (1 connections)
-- [successPayload()](file:///C:/Nikunj/tests/cashfree-webhook.test.ts#L154) (1 connections)
-- [VALID_HEADERS](file:///C:/Nikunj/tests/cashfree-webhook.test.ts#L33) (1 connections)
+- [CollectionGrid.tsx](file:///C:/Nikunj/src/frontend/components/products/CollectionGrid.tsx#L1) (12 connections)
+- [filterAndSort()](file:///C:/Nikunj/src/frontend/components/products/CollectionGrid.tsx#L27) (3 connections)
+- [tokens()](file:///C:/Nikunj/src/frontend/components/products/CollectionGrid.tsx#L14) (3 connections)
+- [haystack()](file:///C:/Nikunj/src/frontend/components/products/CollectionGrid.tsx#L18) (2 connections)
+- [pageHref()](file:///C:/Nikunj/src/frontend/components/products/CollectionGrid.tsx#L156) (2 connections)
+- [Empty()](file:///C:/Nikunj/src/frontend/components/products/CollectionGrid.tsx#L73) (1 connections)
+- [filtered](file:///C:/Nikunj/src/frontend/components/products/CollectionGrid.tsx#L150) (1 connections)
+- [page](file:///C:/Nikunj/src/frontend/components/products/CollectionGrid.tsx#L151) (1 connections)
+- [PAGE_SIZE](file:///C:/Nikunj/src/frontend/components/products/CollectionGrid.tsx#L10) (1 connections)
+- [pathname](file:///C:/Nikunj/src/frontend/components/products/CollectionGrid.tsx#L149) (1 connections)
+- [sp](file:///C:/Nikunj/src/frontend/components/products/CollectionGrid.tsx#L148) (1 connections)
+- [totalPages](file:///C:/Nikunj/src/frontend/components/products/CollectionGrid.tsx#L101) (1 connections)
 
 ## Relationships
 
@@ -26,12 +23,12 @@
 
 ## Source Files
 
-- [C:\Nikunj\tests\cashfree-webhook.test.ts](file:///C:/Nikunj/tests/cashfree-webhook.test.ts)
+- [C:\Nikunj\src\frontend\components\products\CollectionGrid.tsx](file:///C:/Nikunj/src/frontend/components/products/CollectionGrid.tsx)
 
 ## Audit Trail
 
-- EXTRACTED: 28 (97%)
-- INFERRED: 1 (3%)
+- EXTRACTED: 27 (93%)
+- INFERRED: 2 (7%)
 - AMBIGUOUS: 0 (0%)
 
 ---

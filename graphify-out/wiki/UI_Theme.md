@@ -1,19 +1,18 @@
 # UI Theme
 
-> 10 nodes · cohesion 0.20
+> 9 nodes · cohesion 0.22
 
 ## Key Concepts
 
-- [TrustBadges.tsx](file:///C:/Nikunj/src/frontend/components/home/TrustBadges.tsx#L1) (9 connections)
-- [badges](file:///C:/Nikunj/src/frontend/components/home/TrustBadges.tsx#L69) (1 connections)
-- [BlessingIcon()](file:///C:/Nikunj/src/frontend/components/home/TrustBadges.tsx#L38) (1 connections)
-- [CraftIcon()](file:///C:/Nikunj/src/frontend/components/home/TrustBadges.tsx#L13) (1 connections)
-- [DeliveryIcon()](file:///C:/Nikunj/src/frontend/components/home/TrustBadges.tsx#L50) (1 connections)
-- [GemIcon()](file:///C:/Nikunj/src/frontend/components/home/TrustBadges.tsx#L26) (1 connections)
-- [GOLD](file:///C:/Nikunj/src/frontend/components/home/TrustBadges.tsx#L9) (1 connections)
-- [GOLD_LIGHT](file:///C:/Nikunj/src/frontend/components/home/TrustBadges.tsx#L10) (1 connections)
-- [reduceMotion](file:///C:/Nikunj/src/frontend/components/home/TrustBadges.tsx#L68) (1 connections)
-- [TEAL](file:///C:/Nikunj/src/frontend/components/home/TrustBadges.tsx#L8) (1 connections)
+- [order-request-auth.test.ts](file:///C:/Nikunj/tests/order-request-auth.test.ts#L1) (8 connections)
+- [request()](file:///C:/Nikunj/tests/order-request-auth.test.ts#L27) (2 connections)
+- [accountOrder](file:///C:/Nikunj/tests/order-request-auth.test.ts#L51) (1 connections)
+- [guestOrder](file:///C:/Nikunj/tests/order-request-auth.test.ts#L50) (1 connections)
+- [mocks](file:///C:/Nikunj/tests/order-request-auth.test.ts#L4) (1 connections)
+- [ORDER_ID](file:///C:/Nikunj/tests/order-request-auth.test.ts#L23) (1 connections)
+- [PHONE](file:///C:/Nikunj/tests/order-request-auth.test.ts#L24) (1 connections)
+- [res](file:///C:/Nikunj/tests/order-request-auth.test.ts#L55) (1 connections)
+- [savedToken](file:///C:/Nikunj/tests/order-request-auth.test.ts#L25) (1 connections)
 
 ## Relationships
 
@@ -21,12 +20,12 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\frontend\components\home\TrustBadges.tsx](file:///C:/Nikunj/src/frontend/components/home/TrustBadges.tsx)
+- [C:\Nikunj\tests\order-request-auth.test.ts](file:///C:/Nikunj/tests/order-request-auth.test.ts)
 
 ## Audit Trail
 
-- EXTRACTED: 18 (100%)
-- INFERRED: 0 (0%)
+- EXTRACTED: 16 (94%)
+- INFERRED: 1 (6%)
 - AMBIGUOUS: 0 (0%)
 
 ---

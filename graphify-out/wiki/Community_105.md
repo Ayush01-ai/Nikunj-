@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- [TestimonialsSection.tsx](file:///C:/Nikunj/src/frontend/components/home/TestimonialsSection.tsx#L1) (1 connections)
-- [{ ref, inView }](file:///C:/Nikunj/src/frontend/components/home/TestimonialsSection.tsx#L16) (1 connections)
+- [AboutSection()](file:///C:/Nikunj/src/frontend/components/home/AboutSection.tsx#L9) (1 connections)
+- [AboutSection.tsx](file:///C:/Nikunj/src/frontend/components/home/AboutSection.tsx#L1) (1 connections)
 
 ## Relationships
 
@@ -13,7 +13,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\frontend\components\home\TestimonialsSection.tsx](file:///C:/Nikunj/src/frontend/components/home/TestimonialsSection.tsx)
+- [C:\Nikunj\src\frontend\components\home\AboutSection.tsx](file:///C:/Nikunj/src/frontend/components/home/AboutSection.tsx)
 
 ## Audit Trail
 

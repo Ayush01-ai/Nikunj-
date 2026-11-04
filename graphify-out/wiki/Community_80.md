@@ -4,9 +4,9 @@
 
 ## Key Concepts
 
-- [collections-filter.spec.ts](file:///C:/Nikunj/tests/collections-filter.spec.ts#L1) (2 connections)
-- [found](file:///C:/Nikunj/tests/collections-filter.spec.ts#L5) (1 connections)
-- [total](file:///C:/Nikunj/tests/collections-filter.spec.ts#L7) (1 connections)
+- [SacredIcon.tsx](file:///C:/Nikunj/src/frontend/components/ui/SacredIcon.tsx#L1) (2 connections)
+- [SacredIcon()](file:///C:/Nikunj/src/frontend/components/ui/SacredIcon.tsx#L9) (1 connections)
+- [SacredPlaceholder()](file:///C:/Nikunj/src/frontend/components/ui/SacredIcon.tsx#L109) (1 connections)
 
 ## Relationships
 
@@ -14,7 +14,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\tests\collections-filter.spec.ts](file:///C:/Nikunj/tests/collections-filter.spec.ts)
+- [C:\Nikunj\src\frontend\components\ui\SacredIcon.tsx](file:///C:/Nikunj/src/frontend/components/ui/SacredIcon.tsx)
 
 ## Audit Trail
 

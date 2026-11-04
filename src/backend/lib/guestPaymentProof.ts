@@ -2,9 +2,9 @@ import jwt from 'jsonwebtoken';
 import { sanitizePhone } from '@/backend/lib/auth';
 
 /**
- * Short-lived, server-signed proof that a guest has verified OTP ownership of the phone
- * number on a specific order. This replaces "knowing the phone number" as sufficient
- * authorization to create a payment for a guest order (see orderAccess.ts).
+ * Short-lived, server-signed capability to start a payment for one guest order.
+ * It is returned with the new order in the creating checkout session, or minted after OTP
+ * verification when a guest reopens an order later (see orderAccess.ts).
  *
  * Reuses JWT_SECRET, which the app already requires at boot (src/backend/lib/auth.ts) —
  * no new secret/env var is introduced. jsonwebtoken's `verify()` gives us tamper

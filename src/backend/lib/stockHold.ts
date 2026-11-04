@@ -17,6 +17,13 @@ export const HOLD_MINUTES = 30;
 const LOCK_TTL_MS = 15_000;
 const LOCK_WAIT_MS = 4_000;
 
+export class StockLockUnavailableError extends Error {
+  constructor() {
+    super('Checkout stock reservation is temporarily unavailable.');
+    this.name = 'StockLockUnavailableError';
+  }
+}
+
 export const holdKey = (productId: string, option?: string) => (option ? `${productId}|${option}` : productId);
 
 /** Quantities held by unconfirmed orders, keyed by productId and by productId|option. */
@@ -38,6 +45,7 @@ export async function heldQuantities(productIds: string[]): Promise<Map<string, 
     }
   } catch (error) {
     console.error('[stock-hold] could not read holds', error instanceof Error ? error.message : error);
+    throw new StockLockUnavailableError();
   }
   return held;
 }
@@ -51,15 +59,15 @@ interface LockDoc {
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /**
- * Runs `fn` while holding a lock on every product id. If MongoDB isn't connected (tests / outage)
- * or the lock can't be taken in time, `fn` still runs — the reservation check is then best-effort.
+ * Runs `fn` while holding a lock on every product id. Checkout must not proceed without these locks.
  */
 export async function withStockLock<T>(productIds: string[], fn: () => Promise<T>): Promise<T> {
   const conn = mongoose.connection;
-  if (conn.readyState !== 1 || !conn.db) return fn();
+  const keys = [...new Set(productIds)].sort().map((id) => `stock:${id}`);
+  if (keys.length === 0) return fn();
+  if (conn.readyState !== 1 || !conn.db) throw new StockLockUnavailableError();
   const col = conn.db.collection<LockDoc>('stocklocks');
   const owner = randomUUID();
-  const keys = [...new Set(productIds)].sort().map((id) => `stock:${id}`);
   const taken: string[] = [];
   const deadline = Date.now() + LOCK_WAIT_MS;
   try {
@@ -78,7 +86,9 @@ export async function withStockLock<T>(productIds: string[], fn: () => Promise<T
       }
     }
   } catch (error) {
-    console.error('[stock-hold] lock not acquired, continuing without it', error instanceof Error ? error.message : error);
+    if (taken.length) await col.deleteMany({ _id: { $in: taken }, owner }).catch(() => undefined);
+    console.error('[stock-hold] lock not acquired', error instanceof Error ? error.message : error);
+    throw new StockLockUnavailableError();
   }
   try {
     return await fn();

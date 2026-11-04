@@ -1,14 +1,15 @@
 # Delivery Status
 
-> 5 nodes · cohesion 0.40
+> 6 nodes · cohesion 0.33
 
 ## Key Concepts
 
-- [DeliveryCode.tsx](file:///C:/Nikunj/src/frontend/components/orders/DeliveryCode.tsx#L1) (4 connections)
-- [CopyCodeButton()](file:///C:/Nikunj/src/frontend/components/orders/DeliveryCode.tsx#L29) (1 connections)
-- [DeliveryCode()](file:///C:/Nikunj/src/frontend/components/orders/DeliveryCode.tsx#L60) (1 connections)
-- [deliveryStatusText()](file:///C:/Nikunj/src/frontend/components/orders/DeliveryCode.tsx#L21) (1 connections)
-- [OUT_FOR_DELIVERY_STATUSES](file:///C:/Nikunj/src/frontend/components/orders/DeliveryCode.tsx#L18) (1 connections)
+- [sanity-order-resync.test.ts](file:///C:/Nikunj/tests/sanity-order-resync.test.ts#L1) (5 connections)
+- [doc](file:///C:/Nikunj/tests/sanity-order-resync.test.ts#L58) (1 connections)
+- [mocks](file:///C:/Nikunj/tests/sanity-order-resync.test.ts#L3) (1 connections)
+- [order()](file:///C:/Nikunj/tests/sanity-order-resync.test.ts#L23) (1 connections)
+- [spy](file:///C:/Nikunj/tests/sanity-order-resync.test.ts#L92) (1 connections)
+- [tx](file:///C:/Nikunj/tests/sanity-order-resync.test.ts#L13) (1 connections)
 
 ## Relationships
 
@@ -16,11 +17,11 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\frontend\components\orders\DeliveryCode.tsx](file:///C:/Nikunj/src/frontend/components/orders/DeliveryCode.tsx)
+- [C:\Nikunj\tests\sanity-order-resync.test.ts](file:///C:/Nikunj/tests/sanity-order-resync.test.ts)
 
 ## Audit Trail
 
-- EXTRACTED: 8 (100%)
+- EXTRACTED: 10 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

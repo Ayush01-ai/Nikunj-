@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- [tailwind.config.ts](file:///C:/Nikunj/tailwind.config.ts#L1) (1 connections)
-- [config](file:///C:/Nikunj/tailwind.config.ts#L5) (1 connections)
+- [playwright.config.ts](file:///C:/Nikunj/playwright.config.ts#L1) (1 connections)
+- [PORT](file:///C:/Nikunj/playwright.config.ts#L3) (1 connections)
 
 ## Relationships
 
@@ -13,7 +13,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\tailwind.config.ts](file:///C:/Nikunj/tailwind.config.ts)
+- [C:\Nikunj\playwright.config.ts](file:///C:/Nikunj/playwright.config.ts)
 
 ## Audit Trail
 

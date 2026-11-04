@@ -295,6 +295,11 @@ n c_nikunj_src_app_api_webhooks_whatsapp_route_ts FUNCTION route.ts
 n route_rank FUNCTION RANK
 n route_safeeq FUNCTION safeEq()
 n route_validsignature FUNCTION validSignature()
+n c_nikunj_src_app_checkout_cashfreecheckout_tsx FUNCTION CashfreeCheckout.tsx
+n cashfreecheckout_scriptready_setscriptready FUNCTION [scriptReady,_setScriptReady]
+n cashfreecheckout_busy_setbusy FUNCTION [busy,_setBusy]
+n cashfreecheckout_guestproof_setguestproof FUNCTION [guestProof,_setGuestProof]
+n cashfreecheckout_startpayment FUNCTION startPayment()
 n c_nikunj_src_app_checkout_page_tsx FUNCTION page.tsx
 n page_steps FUNCTION STEPS
 n page_items_updatequantity_updateitemoptions_removeitem_removeitems_clearcart_selecteditems_selectedsubtotal FUNCTION {_items,_updateQuantity,_updateItemOptions,_removeItem,_removeItems,_clearCart,_selectedItems,_selectedSubtotal_}
@@ -306,6 +311,7 @@ n page_validatingcoupon_setvalidatingcoupon FUNCTION [validatingCoupon,_setValid
 n page_address_setaddress FUNCTION [address,_setAddress]
 n page_paymentmethod_setpaymentmethod FUNCTION [paymentMethod,_setPaymentMethod]
 n page_placing_setplacing FUNCTION [placing,_setPlacing]
+n page_pendingpayment_setpendingpayment FUNCTION [pendingPayment,_setPendingPayment]
 n page_checkoutitems FUNCTION checkoutItems
 n page_sub FUNCTION sub
 n page_clearselectedfromcart FUNCTION clearSelectedFromCart()
@@ -358,6 +364,7 @@ n page_shopwhatsapp FUNCTION shopWhatsApp
 n page_items FUNCTION items
 n page_message FUNCTION message
 n page_awaitingpayment FUNCTION awaitingPayment
+n page_awaitingcashfreepayment FUNCTION awaitingCashfreePayment
 n page_orderid_raworderid FUNCTION {_orderId:_rawOrderId_=_''_}
 n c_nikunj_src_app_contact_contactcontent_tsx FUNCTION ContactContent.tsx
 n contactcontent_faqs FUNCTION FAQS
@@ -2445,6 +2452,12 @@ e route_safeeq collectiongrid_from calls
 e route_safeeq db:Order QUERIES_MODEL
 e route_validsignature otphash_digest calls
 e route_validsignature db:Order QUERIES_MODEL
+e c_nikunj_src_app_checkout_cashfreecheckout_tsx cashfreecheckout_scriptready_setscriptready contains
+e c_nikunj_src_app_checkout_cashfreecheckout_tsx cashfreecheckout_busy_setbusy contains
+e c_nikunj_src_app_checkout_cashfreecheckout_tsx cashfreecheckout_guestproof_setguestproof contains
+e c_nikunj_src_app_checkout_cashfreecheckout_tsx cashfreecheckout_startpayment contains
+e cashfreecheckout_startpayment page_error calls
+e cashfreecheckout_startpayment payment_create_test_json calls
 e c_nikunj_src_app_checkout_page_tsx page_steps contains
 e c_nikunj_src_app_checkout_page_tsx page_items_updatequantity_updateitemoptions_removeitem_removeitems_clearcart_selecteditems_selectedsubtotal contains
 e c_nikunj_src_app_checkout_page_tsx page_user contains
@@ -2455,6 +2468,7 @@ e c_nikunj_src_app_checkout_page_tsx page_validatingcoupon_setvalidatingcoupon c
 e c_nikunj_src_app_checkout_page_tsx page_address_setaddress contains
 e c_nikunj_src_app_checkout_page_tsx page_paymentmethod_setpaymentmethod contains
 e c_nikunj_src_app_checkout_page_tsx page_placing_setplacing contains
+e c_nikunj_src_app_checkout_page_tsx page_pendingpayment_setpendingpayment contains
 e c_nikunj_src_app_checkout_page_tsx page_checkoutitems contains
 e c_nikunj_src_app_checkout_page_tsx page_sub contains
 e c_nikunj_src_app_checkout_page_tsx page_clearselectedfromcart contains
@@ -2502,6 +2516,7 @@ e page_inr c_nikunj_src_app_track_order_page_tsx contains
 e page_successcontent sanityorders_getsanityorder calls
 e page_successcontent sanityorders_resyncordertosanity calls
 e page_orderid c_nikunj_src_app_confirmation_page_tsx contains
+e page_orderid db:Order QUERIES_MODEL
 e c_nikunj_src_app_checkout_success_upipayment_tsx upipayment_inr contains
 e c_nikunj_src_app_checkout_success_upipayment_tsx upipayment_upilink contains
 e c_nikunj_src_app_checkout_success_upipayment_tsx upipayment_utr_setutr contains
@@ -2535,6 +2550,7 @@ e c_nikunj_src_app_confirmation_page_tsx page_shopwhatsapp contains
 e c_nikunj_src_app_confirmation_page_tsx page_items contains
 e c_nikunj_src_app_confirmation_page_tsx page_message contains
 e c_nikunj_src_app_confirmation_page_tsx page_awaitingpayment contains
+e c_nikunj_src_app_confirmation_page_tsx page_awaitingcashfreepayment contains
 e c_nikunj_src_app_confirmation_page_tsx page_orderid_raworderid contains
 e page_getordersummary page_reconcilecashfreepayment calls
 e page_getordersummary payment_cashfree_verify_test_connectdb calls

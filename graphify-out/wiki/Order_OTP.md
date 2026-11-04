@@ -1,26 +1,25 @@
 # Order OTP
 
-> 17 nodes · cohesion 0.12
+> 13 nodes · cohesion 0.15
 
 ## Key Concepts
 
-- [guestVerifySendOtp.test.ts](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L1) (18 connections)
-- [allLoggedText](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L110) (1 connections)
-- [connectDB](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L7) (1 connections)
-- [createdOtp](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L109) (1 connections)
-- [errorSpy](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L95) (1 connections)
-- [GUEST_ORDER](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L30) (1 connections)
-- [i](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L134) (1 connections)
-- [json](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L81) (1 connections)
-- [last](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L133) (1 connections)
-- [logSpy](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L94) (1 connections)
-- [makeRequest()](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L22) (1 connections)
-- [orderFindOne](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L8) (1 connections)
-- [otpCreate](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L11) (1 connections)
-- [otpDeleteMany](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L10) (1 connections)
-- [otpFindOne](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L9) (1 connections)
-- [{ POST }](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L65) (1 connections)
-- [res](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L66) (1 connections)
+- [CartSidebar.tsx](file:///C:/Nikunj/src/frontend/components/cart/CartSidebar.tsx#L1) (12 connections)
+- [allSelected](file:///C:/Nikunj/src/frontend/components/cart/CartSidebar.tsx#L47) (1 connections)
+- [{ freeDeliveryThreshold: FREE_THRESHOLD, deliveryCharge }](file:///C:/Nikunj/src/frontend/components/cart/CartSidebar.tsx#L50) (1 connections)
+- [handleKey()](file:///C:/Nikunj/src/frontend/components/cart/CartSidebar.tsx#L28) (1 connections)
+- [{
+    items, isOpen, closeCart, removeItem, updateQuantity, deselectedIds,
+    toggleSelected, selectAll, deselectAll, selectedItems, selectedSubtotal,
+  }](file:///C:/Nikunj/src/frontend/components/cart/CartSidebar.tsx#L15) (1 connections)
+- [[mounted, setMounted]](file:///C:/Nikunj/src/frontend/components/cart/CartSidebar.tsx#L19) (1 connections)
+- [remaining](file:///C:/Nikunj/src/frontend/components/cart/CartSidebar.tsx#L51) (1 connections)
+- [safeIsOpen](file:///C:/Nikunj/src/frontend/components/cart/CartSidebar.tsx#L44) (1 connections)
+- [safeItems](file:///C:/Nikunj/src/frontend/components/cart/CartSidebar.tsx#L43) (1 connections)
+- [safeSelectedItems](file:///C:/Nikunj/src/frontend/components/cart/CartSidebar.tsx#L45) (1 connections)
+- [selectedCount](file:///C:/Nikunj/src/frontend/components/cart/CartSidebar.tsx#L46) (1 connections)
+- [{ settings }](file:///C:/Nikunj/src/frontend/components/cart/CartSidebar.tsx#L49) (1 connections)
+- [total](file:///C:/Nikunj/src/frontend/components/cart/CartSidebar.tsx#L48) (1 connections)
 
 ## Relationships
 
@@ -28,11 +27,11 @@
 
 ## Source Files
 
-- [C:\Nikunj\tests\guestVerifySendOtp.test.ts](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts)
+- [C:\Nikunj\src\frontend\components\cart\CartSidebar.tsx](file:///C:/Nikunj/src/frontend/components/cart/CartSidebar.tsx)
 
 ## Audit Trail
 
-- EXTRACTED: 34 (100%)
+- EXTRACTED: 24 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

@@ -1,18 +1,17 @@
 # Community 35
 
-> 9 nodes · cohesion 0.28
+> 8 nodes · cohesion 0.25
 
 ## Key Concepts
 
-- [GuestOtpGate.tsx](file:///C:/Nikunj/src/frontend/components/orders/GuestOtpGate.tsx#L1) (8 connections)
-- [post()](file:///C:/Nikunj/src/frontend/components/orders/GuestOtpGate.tsx#L26) (5 connections)
-- [confirmOtp()](file:///C:/Nikunj/src/frontend/components/orders/GuestOtpGate.tsx#L47) (2 connections)
-- [sendOtp()](file:///C:/Nikunj/src/frontend/components/orders/GuestOtpGate.tsx#L32) (2 connections)
-- [[busy, setBusy]](file:///C:/Nikunj/src/frontend/components/orders/GuestOtpGate.tsx#L22) (1 connections)
-- [[error, setError]](file:///C:/Nikunj/src/frontend/components/orders/GuestOtpGate.tsx#L23) (1 connections)
-- [[info, setInfo]](file:///C:/Nikunj/src/frontend/components/orders/GuestOtpGate.tsx#L24) (1 connections)
-- [[otp, setOtp]](file:///C:/Nikunj/src/frontend/components/orders/GuestOtpGate.tsx#L21) (1 connections)
-- [[otpSent, setOtpSent]](file:///C:/Nikunj/src/frontend/components/orders/GuestOtpGate.tsx#L20) (1 connections)
+- [fonts.ts](file:///C:/Nikunj/src/app/fonts.ts#L1) (7 connections)
+- [cinzel](file:///C:/Nikunj/src/app/fonts.ts#L6) (1 connections)
+- [cinzelDecorative](file:///C:/Nikunj/src/app/fonts.ts#L18) (1 connections)
+- [crimsonText](file:///C:/Nikunj/src/app/fonts.ts#L28) (1 connections)
+- [greatVibes](file:///C:/Nikunj/src/app/fonts.ts#L64) (1 connections)
+- [lato](file:///C:/Nikunj/src/app/fonts.ts#L41) (1 connections)
+- [montserrat](file:///C:/Nikunj/src/app/fonts.ts#L52) (1 connections)
+- [yatraOne](file:///C:/Nikunj/src/app/fonts.ts#L71) (1 connections)
 
 ## Relationships
 
@@ -20,12 +19,12 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\frontend\components\orders\GuestOtpGate.tsx](file:///C:/Nikunj/src/frontend/components/orders/GuestOtpGate.tsx)
+- [C:\Nikunj\src\app\fonts.ts](file:///C:/Nikunj/src/app/fonts.ts)
 
 ## Audit Trail
 
-- EXTRACTED: 20 (91%)
-- INFERRED: 2 (9%)
+- EXTRACTED: 14 (100%)
+- INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 
 ---

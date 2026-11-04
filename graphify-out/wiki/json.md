@@ -1,6 +1,6 @@
 # json
 
-> God node · 28 connections · [C:\Nikunj\tests\payment-create.test.ts](file:///C:/Nikunj/tests/payment-create.test.ts#L10)
+> God node · 29 connections · [C:\Nikunj\tests\payment-create.test.ts](file:///C:/Nikunj/tests/payment-create.test.ts#L10)
 
 ## Call Trace Diagram
 
@@ -155,10 +155,11 @@ sequenceDiagram
     participant P146 as saveProfile()
     participant P147 as deleteAddress()
     participant P148 as setDefaultAddress()
-    participant P149 as submit()
-    participant P150 as handleSubmit()
-    participant P151 as onSubmit()
-    participant P152 as requestOtp()
+    participant P149 as startPayment()
+    participant P150 as submit()
+    participant P151 as handleSubmit()
+    participant P152 as onSubmit()
+    participant P153 as requestOtp()
     P0->>+ P1: calls
     P1-->>- P0: return
     P1->>+ P2: calls
@@ -523,6 +524,8 @@ sequenceDiagram
     P151-->>- P0: return
     P0->>+ P152: calls
     P152-->>- P0: return
+    P0->>+ P153: calls
+    P153-->>- P0: return
 ```
 
 ## Connections by Relation

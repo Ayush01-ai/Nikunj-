@@ -4,10 +4,10 @@
 
 ## Key Concepts
 
-- [WhyUs.tsx](file:///C:/Nikunj/src/frontend/components/home/WhyUs.tsx#L1) (3 connections)
-- [Icon](file:///C:/Nikunj/src/frontend/components/home/WhyUs.tsx#L80) (1 connections)
-- [{ ref, inView }](file:///C:/Nikunj/src/frontend/components/home/WhyUs.tsx#L14) (1 connections)
-- [whyItems](file:///C:/Nikunj/src/frontend/components/home/WhyUs.tsx#L16) (1 connections)
+- [sanity.config.ts](file:///C:/Nikunj/sanity.config.ts#L1) (3 connections)
+- [dataset](file:///C:/Nikunj/sanity.config.ts#L19) (1 connections)
+- [projectId](file:///C:/Nikunj/sanity.config.ts#L18) (1 connections)
+- [SINGLETON_TYPES](file:///C:/Nikunj/sanity.config.ts#L16) (1 connections)
 
 ## Relationships
 
@@ -15,7 +15,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\frontend\components\home\WhyUs.tsx](file:///C:/Nikunj/src/frontend/components/home/WhyUs.tsx)
+- [C:\Nikunj\sanity.config.ts](file:///C:/Nikunj/sanity.config.ts)
 
 ## Audit Trail
 

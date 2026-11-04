@@ -27,16 +27,18 @@ describe('stockHold', () => {
     expect(pipeline[0].$match.stockHeld).toBe(true);
   });
 
-  it('treats a failed read as no holds rather than blocking checkout', async () => {
+  it('fails closed when the held-quantity read fails', async () => {
     aggregate.mockRejectedValue(new Error('db down'));
     vi.spyOn(console, 'error').mockImplementation(() => {});
     const { heldQuantities } = await import('@/backend/lib/stockHold');
-    expect((await heldQuantities(['p1'])).size).toBe(0);
+    await expect(heldQuantities(['p1'])).rejects.toMatchObject({ name: 'StockLockUnavailableError' });
   });
 
-  it('runs the callback even when MongoDB is not connected', async () => {
+  it('does not run checkout without a MongoDB stock lock', async () => {
     const { withStockLock } = await import('@/backend/lib/stockHold');
-    await expect(withStockLock(['p1'], async () => 'ok')).resolves.toBe('ok');
+    const callback = vi.fn(async () => 'ok');
+    await expect(withStockLock(['p1'], callback)).rejects.toMatchObject({ name: 'StockLockUnavailableError' });
+    expect(callback).not.toHaveBeenCalled();
   });
 
   it('releases the hold for a confirmed order', async () => {

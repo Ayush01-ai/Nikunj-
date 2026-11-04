@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- [index.ts](file:///C:/Nikunj/src/cms/schemas/index.ts#L1) (1 connections)
-- [schema](file:///C:/Nikunj/src/cms/schemas/index.ts#L15) (1 connections)
+- [fragrance.ts](file:///C:/Nikunj/src/cms/schemas/fragrance.ts#L1) (1 connections)
+- [fragrance](file:///C:/Nikunj/src/cms/schemas/fragrance.ts#L3) (1 connections)
 
 ## Relationships
 
@@ -13,7 +13,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\cms\schemas\index.ts](file:///C:/Nikunj/src/cms/schemas/index.ts)
+- [C:\Nikunj\src\cms\schemas\fragrance.ts](file:///C:/Nikunj/src/cms/schemas/fragrance.ts)
 
 ## Audit Trail
 

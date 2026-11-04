@@ -4,12 +4,12 @@
 
 ## Key Concepts
 
-- [CookieConsent.tsx](file:///C:/Nikunj/src/frontend/components/ui/CookieConsent.tsx#L1) (5 connections)
-- [choose()](file:///C:/Nikunj/src/frontend/components/ui/CookieConsent.tsx#L23) (1 connections)
-- [[consent, setConsent]](file:///C:/Nikunj/src/frontend/components/ui/CookieConsent.tsx#L15) (1 connections)
-- [STORAGE_KEY](file:///C:/Nikunj/src/frontend/components/ui/CookieConsent.tsx#L7) (1 connections)
-- [stored](file:///C:/Nikunj/src/frontend/components/ui/CookieConsent.tsx#L19) (1 connections)
-- [validGaId](file:///C:/Nikunj/src/frontend/components/ui/CookieConsent.tsx#L29) (1 connections)
+- [HeroSection.tsx](file:///C:/Nikunj/src/frontend/components/home/HeroSection.tsx#L1) (5 connections)
+- [hasSlides](file:///C:/Nikunj/src/frontend/components/home/HeroSection.tsx#L32) (1 connections)
+- [heroRef](file:///C:/Nikunj/src/frontend/components/home/HeroSection.tsx#L28) (1 connections)
+- [opacity](file:///C:/Nikunj/src/frontend/components/home/HeroSection.tsx#L30) (1 connections)
+- [Scene3D](file:///C:/Nikunj/src/frontend/components/home/HeroSection.tsx#L20) (1 connections)
+- [{ scrollYProgress }](file:///C:/Nikunj/src/frontend/components/home/HeroSection.tsx#L29) (1 connections)
 
 ## Relationships
 
@@ -17,7 +17,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\frontend\components\ui\CookieConsent.tsx](file:///C:/Nikunj/src/frontend/components/ui/CookieConsent.tsx)
+- [C:\Nikunj\src\frontend\components\home\HeroSection.tsx](file:///C:/Nikunj/src/frontend/components/home/HeroSection.tsx)
 
 ## Audit Trail
 

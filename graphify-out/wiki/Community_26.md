@@ -1,27 +1,24 @@
 # Community 26
 
-> 18 nodes · cohesion 0.11
+> 15 nodes · cohesion 0.13
 
 ## Key Concepts
 
-- [user-changes.spec.ts](file:///C:/Nikunj/tests/user-changes.spec.ts#L1) (17 connections)
-- [activeCard](file:///C:/Nikunj/tests/user-changes.spec.ts#L65) (1 connections)
-- [announcement](file:///C:/Nikunj/tests/user-changes.spec.ts#L40) (1 connections)
-- [buyNowBtn](file:///C:/Nikunj/tests/user-changes.spec.ts#L59) (1 connections)
-- [contactLink](file:///C:/Nikunj/tests/user-changes.spec.ts#L117) (1 connections)
-- [emailLink](file:///C:/Nikunj/tests/user-changes.spec.ts#L11) (1 connections)
-- [footer](file:///C:/Nikunj/tests/user-changes.spec.ts#L7) (1 connections)
-- [headerContactLink](file:///C:/Nikunj/tests/user-changes.spec.ts#L84) (1 connections)
-- [mobileMenu](file:///C:/Nikunj/tests/user-changes.spec.ts#L116) (1 connections)
-- [nameBounds](file:///C:/Nikunj/tests/user-changes.spec.ts#L73) (1 connections)
-- [priceBounds](file:///C:/Nikunj/tests/user-changes.spec.ts#L74) (1 connections)
-- [productName](file:///C:/Nikunj/tests/user-changes.spec.ts#L68) (1 connections)
-- [productPrice](file:///C:/Nikunj/tests/user-changes.spec.ts#L69) (1 connections)
-- [sacredHeading](file:///C:/Nikunj/tests/user-changes.spec.ts#L55) (1 connections)
-- [viewDetailsBtn](file:///C:/Nikunj/tests/user-changes.spec.ts#L62) (1 connections)
-- [waHref](file:///C:/Nikunj/tests/user-changes.spec.ts#L19) (1 connections)
-- [waLink](file:///C:/Nikunj/tests/user-changes.spec.ts#L17) (1 connections)
-- [whyUsSection](file:///C:/Nikunj/tests/user-changes.spec.ts#L28) (1 connections)
+- [cashfree-webhook.test.ts](file:///C:/Nikunj/tests/cashfree-webhook.test.ts#L1) (14 connections)
+- [verifyCashfreeWebhookSignature](file:///C:/Nikunj/tests/cashfree-webhook.test.ts#L7) (2 connections)
+- [connectDB](file:///C:/Nikunj/tests/cashfree-webhook.test.ts#L9) (1 connections)
+- [findOne](file:///C:/Nikunj/tests/cashfree-webhook.test.ts#L10) (1 connections)
+- [findOneAndUpdate](file:///C:/Nikunj/tests/cashfree-webhook.test.ts#L11) (1 connections)
+- [isCashfreeConfigured](file:///C:/Nikunj/tests/cashfree-webhook.test.ts#L8) (1 connections)
+- [json](file:///C:/Nikunj/tests/cashfree-webhook.test.ts#L148) (1 connections)
+- [makeRequest()](file:///C:/Nikunj/tests/cashfree-webhook.test.ts#L25) (1 connections)
+- [payload](file:///C:/Nikunj/tests/cashfree-webhook.test.ts#L66) (1 connections)
+- [{ POST }](file:///C:/Nikunj/tests/cashfree-webhook.test.ts#L49) (1 connections)
+- [pushConfirmedOrderToSanity](file:///C:/Nikunj/tests/cashfree-webhook.test.ts#L12) (1 connections)
+- [raw](file:///C:/Nikunj/tests/cashfree-webhook.test.ts#L163) (1 connections)
+- [res](file:///C:/Nikunj/tests/cashfree-webhook.test.ts#L50) (1 connections)
+- [successPayload()](file:///C:/Nikunj/tests/cashfree-webhook.test.ts#L154) (1 connections)
+- [VALID_HEADERS](file:///C:/Nikunj/tests/cashfree-webhook.test.ts#L33) (1 connections)
 
 ## Relationships
 
@@ -29,12 +26,12 @@
 
 ## Source Files
 
-- [C:\Nikunj\tests\user-changes.spec.ts](file:///C:/Nikunj/tests/user-changes.spec.ts)
+- [C:\Nikunj\tests\cashfree-webhook.test.ts](file:///C:/Nikunj/tests/cashfree-webhook.test.ts)
 
 ## Audit Trail
 
-- EXTRACTED: 34 (100%)
-- INFERRED: 0 (0%)
+- EXTRACTED: 28 (97%)
+- INFERRED: 1 (3%)
 - AMBIGUOUS: 0 (0%)
 
 ---

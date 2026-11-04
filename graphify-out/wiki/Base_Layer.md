@@ -4,10 +4,10 @@
 
 ## Key Concepts
 
-- [refunds-rules.test.ts](file:///C:/Nikunj/tests/refunds-rules.test.ts#L1) (3 connections)
-- [b](file:///C:/Nikunj/tests/refunds-rules.test.ts#L106) (1 connections)
-- [base](file:///C:/Nikunj/tests/refunds-rules.test.ts#L74) (1 connections)
-- [cod](file:///C:/Nikunj/tests/refunds-rules.test.ts#L45) (1 connections)
+- [Providers.tsx](file:///C:/Nikunj/src/frontend/providers/Providers.tsx#L1) (3 connections)
+- [Providers()](file:///C:/Nikunj/src/frontend/providers/Providers.tsx#L24) (1 connections)
+- [SiteSettingsContext](file:///C:/Nikunj/src/frontend/providers/Providers.tsx#L17) (1 connections)
+- [useSiteSettings()](file:///C:/Nikunj/src/frontend/providers/Providers.tsx#L19) (1 connections)
 
 ## Relationships
 
@@ -15,7 +15,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\tests\refunds-rules.test.ts](file:///C:/Nikunj/tests/refunds-rules.test.ts)
+- [C:\Nikunj\src\frontend\providers\Providers.tsx](file:///C:/Nikunj/src/frontend/providers/Providers.tsx)
 
 ## Audit Trail
 

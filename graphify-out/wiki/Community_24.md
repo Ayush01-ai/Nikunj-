@@ -1,28 +1,27 @@
 # Community 24
 
-> 19 nodes · cohesion 0.12
+> 18 nodes · cohesion 0.11
 
 ## Key Concepts
 
-- [check-mongodb.mjs](file:///C:/Nikunj/scripts/check-mongodb.mjs#L1) (12 connections)
-- [mongodb.ts](file:///C:/Nikunj/src/backend/lib/mongodb.ts#L1) (5 connections)
-- [connectDB()](file:///C:/Nikunj/src/backend/lib/mongodb.ts#L32) (4 connections)
-- [pingOk()](file:///C:/Nikunj/src/backend/lib/mongodb.ts#L18) (3 connections)
-- [admin](file:///C:/Nikunj/scripts/check-mongodb.mjs#L44) (2 connections)
-- [isDbConnectionError()](file:///C:/Nikunj/src/backend/lib/mongodb.ts#L74) (2 connections)
-- [isWorkersRuntime()](file:///C:/Nikunj/src/backend/lib/mongodb.ts#L15) (2 connections)
-- [classification](file:///C:/Nikunj/scripts/check-mongodb.mjs#L61) (1 connections)
-- [elapsedMs](file:///C:/Nikunj/scripts/check-mongodb.mjs#L43) (1 connections)
-- [loadEnvLocal()](file:///C:/Nikunj/scripts/check-mongodb.mjs#L14) (1 connections)
-- [message](file:///C:/Nikunj/scripts/check-mongodb.mjs#L58) (1 connections)
-- [name](file:///C:/Nikunj/scripts/check-mongodb.mjs#L57) (1 connections)
-- [pingResult](file:///C:/Nikunj/scripts/check-mongodb.mjs#L45) (1 connections)
-- [redact()](file:///C:/Nikunj/scripts/check-mongodb.mjs#L68) (1 connections)
-- [serverErrors](file:///C:/Nikunj/scripts/check-mongodb.mjs#L69) (1 connections)
-- [servers](file:///C:/Nikunj/scripts/check-mongodb.mjs#L71) (1 connections)
-- [start](file:///C:/Nikunj/scripts/check-mongodb.mjs#L37) (1 connections)
-- [uri](file:///C:/Nikunj/scripts/check-mongodb.mjs#L31) (1 connections)
-- [cached](file:///C:/Nikunj/src/backend/lib/mongodb.ts#L12) (1 connections)
+- [user-changes.spec.ts](file:///C:/Nikunj/tests/user-changes.spec.ts#L1) (17 connections)
+- [activeCard](file:///C:/Nikunj/tests/user-changes.spec.ts#L65) (1 connections)
+- [announcement](file:///C:/Nikunj/tests/user-changes.spec.ts#L40) (1 connections)
+- [buyNowBtn](file:///C:/Nikunj/tests/user-changes.spec.ts#L59) (1 connections)
+- [contactLink](file:///C:/Nikunj/tests/user-changes.spec.ts#L117) (1 connections)
+- [emailLink](file:///C:/Nikunj/tests/user-changes.spec.ts#L11) (1 connections)
+- [footer](file:///C:/Nikunj/tests/user-changes.spec.ts#L7) (1 connections)
+- [headerContactLink](file:///C:/Nikunj/tests/user-changes.spec.ts#L84) (1 connections)
+- [mobileMenu](file:///C:/Nikunj/tests/user-changes.spec.ts#L116) (1 connections)
+- [nameBounds](file:///C:/Nikunj/tests/user-changes.spec.ts#L73) (1 connections)
+- [priceBounds](file:///C:/Nikunj/tests/user-changes.spec.ts#L74) (1 connections)
+- [productName](file:///C:/Nikunj/tests/user-changes.spec.ts#L68) (1 connections)
+- [productPrice](file:///C:/Nikunj/tests/user-changes.spec.ts#L69) (1 connections)
+- [sacredHeading](file:///C:/Nikunj/tests/user-changes.spec.ts#L55) (1 connections)
+- [viewDetailsBtn](file:///C:/Nikunj/tests/user-changes.spec.ts#L62) (1 connections)
+- [waHref](file:///C:/Nikunj/tests/user-changes.spec.ts#L19) (1 connections)
+- [waLink](file:///C:/Nikunj/tests/user-changes.spec.ts#L17) (1 connections)
+- [whyUsSection](file:///C:/Nikunj/tests/user-changes.spec.ts#L28) (1 connections)
 
 ## Relationships
 
@@ -30,13 +29,12 @@
 
 ## Source Files
 
-- [C:\Nikunj\scripts\check-mongodb.mjs](file:///C:/Nikunj/scripts/check-mongodb.mjs)
-- [C:\Nikunj\src\backend\lib\mongodb.ts](file:///C:/Nikunj/src/backend/lib/mongodb.ts)
+- [C:\Nikunj\tests\user-changes.spec.ts](file:///C:/Nikunj/tests/user-changes.spec.ts)
 
 ## Audit Trail
 
-- EXTRACTED: 38 (90%)
-- INFERRED: 4 (10%)
+- EXTRACTED: 34 (100%)
+- INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 
 ---

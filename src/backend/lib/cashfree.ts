@@ -50,6 +50,8 @@ export interface CreateCashfreeOrderOptions {
   /** Cashfree requires a non-empty, alphanumeric customer_id. */
   customerId: string;
   returnUrl: string;
+  /** Absolute ISO timestamp matching the MongoDB stock-hold expiry. */
+  expiresAt?: string;
   /** Only sent when set — Cashfree requires notify_url to be https. */
   notifyUrl?: string;
 }
@@ -67,6 +69,7 @@ export async function createCashfreeOrder(options: CreateCashfreeOrderOptions) {
         customer_phone: options.customerPhone,
         customer_name: options.customerName,
       },
+      ...(options.expiresAt ? { order_expiry_time: options.expiresAt } : {}),
       order_meta: {
         return_url: options.returnUrl,
         ...(options.notifyUrl ? { notify_url: options.notifyUrl } : {}),

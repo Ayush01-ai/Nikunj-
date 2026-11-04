@@ -4,9 +4,9 @@
 
 ## Key Concepts
 
-- [productType.ts](file:///C:/Nikunj/src/cms/schemas/productType.ts#L1) (2 connections)
-- [PRODUCT_FACETS](file:///C:/Nikunj/src/cms/schemas/productType.ts#L3) (1 connections)
-- [productType](file:///C:/Nikunj/src/cms/schemas/productType.ts#L12) (1 connections)
+- [FacetField.tsx](file:///C:/Nikunj/src/cms/components/FacetField.tsx#L1) (2 connections)
+- [facetCache](file:///C:/Nikunj/src/cms/components/FacetField.tsx#L4) (1 connections)
+- [facetField()](file:///C:/Nikunj/src/cms/components/FacetField.tsx#L7) (1 connections)
 
 ## Relationships
 
@@ -14,7 +14,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\cms\schemas\productType.ts](file:///C:/Nikunj/src/cms/schemas/productType.ts)
+- [C:\Nikunj\src\cms\components\FacetField.tsx](file:///C:/Nikunj/src/cms/components/FacetField.tsx)
 
 ## Audit Trail
 

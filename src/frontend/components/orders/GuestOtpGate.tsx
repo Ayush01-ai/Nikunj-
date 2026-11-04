@@ -13,15 +13,17 @@ export function GuestOtpGate({
   onVerified,
 }: {
   orderId: string;
-  phone: string;
+  phone?: string;
   prompt?: string;
   onVerified: (proof: string) => void;
 }) {
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState('');
+  const [enteredPhone, setEnteredPhone] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
+  const verificationPhone = phone ?? enteredPhone;
 
   const post = async (url: string, body: unknown) => {
     const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
@@ -33,7 +35,7 @@ export function GuestOtpGate({
     setBusy(true);
     setError('');
     try {
-      const { ok, json } = await post('/api/payment/guest-verify/send-otp', { orderId, phone });
+      const { ok, json } = await post('/api/payment/guest-verify/send-otp', { orderId, phone: verificationPhone });
       if (!ok) return setError(json.error || 'Could not send the code. Please try again.');
       setOtpSent(true);
       setInfo(json.message || 'Verification code sent.');
@@ -49,7 +51,7 @@ export function GuestOtpGate({
     setBusy(true);
     setError('');
     try {
-      const { ok, json } = await post('/api/payment/guest-verify/confirm-otp', { orderId, phone, otp });
+      const { ok, json } = await post('/api/payment/guest-verify/confirm-otp', { orderId, phone: verificationPhone, otp });
       if (!ok || !json.guestProof) return setError(json.error || 'Incorrect code. Please try again.');
       onVerified(json.guestProof);
     } catch {
@@ -62,6 +64,18 @@ export function GuestOtpGate({
   return (
     <div className="space-y-2 max-w-sm" data-testid="guest-otp-gate">
       <p className="text-xs">{prompt}</p>
+      {!phone && (
+        <input
+          value={enteredPhone}
+          onChange={(event) => setEnteredPhone(event.target.value.replace(/\D/g, '').slice(0, 10))}
+          inputMode="tel"
+          autoComplete="tel"
+          aria-label="Phone number on the order"
+          placeholder="10-digit phone number on the order"
+          className="divine-input w-full text-sm"
+          disabled={otpSent || busy}
+        />
+      )}
       {!otpSent ? (
         <button type="button" onClick={sendOtp} disabled={busy} className="btn-gold text-[11px] px-4 py-2 disabled:opacity-60">
           {busy ? 'Sending…' : 'Send verification code'}

@@ -1,35 +1,35 @@
 # Community 5
 
-> 72 nodes · cohesion 0.04
+> 80 nodes · cohesion 0.03
 
 ## Key Concepts
 
-- [RefundPanel.tsx](file:///C:/Nikunj/src/frontend/components/orders/RefundPanel.tsx#L1) (20 connections)
-- [refunds.ts](file:///C:/Nikunj/src/cms/lib/refunds.ts#L1) (18 connections)
-- [max](file:///C:/Nikunj/src/cms/tools/AnalyticsDashboard.tsx#L80) (17 connections)
-- [ProductOptions.tsx](file:///C:/Nikunj/src/frontend/components/products/ProductOptions.tsx#L1) (13 connections)
-- [pricing.ts](file:///C:/Nikunj/src/cms/lib/pricing.ts#L1) (12 connections)
-- [getVariantPricing()](file:///C:/Nikunj/src/cms/lib/pricing.ts#L46) (7 connections)
-- [refundExpected()](file:///C:/Nikunj/src/cms/lib/refunds.ts#L77) (7 connections)
-- [refundActions()](file:///C:/Nikunj/src/cms/tools/OrdersDashboard.tsx#L459) (6 connections)
-- [post()](file:///C:/Nikunj/src/frontend/components/orders/RefundPanel.tsx#L64) (6 connections)
-- [canSubmitPayoutDetails()](file:///C:/Nikunj/src/cms/lib/refunds.ts#L89) (6 connections)
-- [refundSource()](file:///C:/Nikunj/src/cms/lib/refunds.ts#L68) (6 connections)
-- [refundView()](file:///C:/Nikunj/src/backend/lib/refundView.ts#L5) (6 connections)
-- [describePayout()](file:///C:/Nikunj/src/cms/lib/refunds.ts#L140) (5 connections)
-- [deliveryPolicy()](file:///C:/Nikunj/src/cms/lib/pricing.ts#L110) (4 connections)
-- [orderTotals()](file:///C:/Nikunj/src/cms/lib/pricing.ts#L122) (4 connections)
-- [variantStock()](file:///C:/Nikunj/src/cms/lib/pricing.ts#L40) (4 connections)
-- [refundLocked()](file:///C:/Nikunj/src/cms/lib/refunds.ts#L86) (4 connections)
-- [validatePayoutDetails()](file:///C:/Nikunj/src/cms/lib/refunds.ts#L102) (4 connections)
-- [refundNeedsAction()](file:///C:/Nikunj/src/cms/tools/OrdersDashboard.tsx#L104) (3 connections)
-- [clamp()](file:///C:/Nikunj/src/frontend/components/products/ProductOptions.tsx#L169) (3 connections)
-- [submit()](file:///C:/Nikunj/src/frontend/components/orders/RefundPanel.tsx#L101) (3 connections)
-- [maskAccount()](file:///C:/Nikunj/src/cms/lib/refunds.ts#L131) (3 connections)
-- [maskUpi()](file:///C:/Nikunj/src/cms/lib/refunds.ts#L133) (3 connections)
-- [keptCharges()](file:///C:/Nikunj/src/cms/tools/OrdersDashboard.tsx#L99) (2 connections)
-- [refundOpen()](file:///C:/Nikunj/src/cms/tools/OrdersDashboard.tsx#L106) (2 connections)
-- *... and 47 more nodes in this community*
+- [push](file:///C:/Nikunj/src/frontend/components/products/ProductFilters.tsx#L322) (22 connections)
+- [ProductFilters.tsx](file:///C:/Nikunj/src/frontend/components/products/ProductFilters.tsx#L1) (21 connections)
+- [run()](file:///C:/Nikunj/scripts/import-products.mjs#L174) (15 connections)
+- [import-products.mjs](file:///C:/Nikunj/scripts/import-products.mjs#L1) (12 connections)
+- [seed.mjs](file:///C:/Nikunj/scripts/seed.mjs#L1) (12 connections)
+- [static-html-assets.test.ts](file:///C:/Nikunj/tests/static-html-assets.test.ts#L1) (11 connections)
+- [static-html-assets.mjs](file:///C:/Nikunj/scripts/static-html-assets.mjs#L1) (8 connections)
+- [run()](file:///C:/Nikunj/scripts/static-html-assets.mjs#L69) (6 connections)
+- [log()](file:///C:/Nikunj/tests/static-html-assets.test.ts#L55) (6 connections)
+- [pickDiverse()](file:///C:/Nikunj/src/cms/lib/suggestions.ts#L25) (6 connections)
+- [addRestockPatches()](file:///C:/Nikunj/src/cms/lib/orderOps.ts#L24) (5 connections)
+- [parseCsv()](file:///C:/Nikunj/scripts/import-products.mjs#L67) (4 connections)
+- [uploadImageFromUrl()](file:///C:/Nikunj/scripts/import-products.mjs#L123) (4 connections)
+- [buildStockPatches()](file:///C:/Nikunj/src/cms/lib/orderStock.ts#L28) (4 connections)
+- [orderOps.ts](file:///C:/Nikunj/src/cms/lib/orderOps.ts#L1) (3 connections)
+- [orderStock.ts](file:///C:/Nikunj/src/cms/lib/orderStock.ts#L1) (3 connections)
+- [suggestions.ts](file:///C:/Nikunj/src/cms/lib/suggestions.ts#L1) (3 connections)
+- [getSlugMap()](file:///C:/Nikunj/scripts/import-products.mjs#L159) (3 connections)
+- [parseCsvLine()](file:///C:/Nikunj/scripts/import-products.mjs#L35) (3 connections)
+- [usage()](file:///C:/Nikunj/scripts/import-products.mjs#L170) (3 connections)
+- [setOrderStatus()](file:///C:/Nikunj/src/cms/lib/orderOps.ts#L34) (3 connections)
+- [stockLookupIds()](file:///C:/Nikunj/src/cms/lib/orderStock.ts#L24) (3 connections)
+- [getData()](file:///C:/Nikunj/src/app/products/%5Bslug%5D/page.tsx#L59) (3 connections)
+- [handleLogout()](file:///C:/Nikunj/src/app/account/page.tsx#L208) (3 connections)
+- [buildHeadersFile()](file:///C:/Nikunj/scripts/static-html-assets.mjs#L55) (3 connections)
+- *... and 55 more nodes in this community*
 
 ## Relationships
 
@@ -37,18 +37,21 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\backend\lib\refundView.ts](file:///C:/Nikunj/src/backend/lib/refundView.ts)
-- [C:\Nikunj\src\cms\lib\pricing.ts](file:///C:/Nikunj/src/cms/lib/pricing.ts)
-- [C:\Nikunj\src\cms\lib\refunds.ts](file:///C:/Nikunj/src/cms/lib/refunds.ts)
-- [C:\Nikunj\src\cms\tools\AnalyticsDashboard.tsx](file:///C:/Nikunj/src/cms/tools/AnalyticsDashboard.tsx)
-- [C:\Nikunj\src\cms\tools\OrdersDashboard.tsx](file:///C:/Nikunj/src/cms/tools/OrdersDashboard.tsx)
-- [C:\Nikunj\src\frontend\components\orders\RefundPanel.tsx](file:///C:/Nikunj/src/frontend/components/orders/RefundPanel.tsx)
-- [C:\Nikunj\src\frontend\components\products\ProductOptions.tsx](file:///C:/Nikunj/src/frontend/components/products/ProductOptions.tsx)
+- [C:\Nikunj\scripts\import-products.mjs](file:///C:/Nikunj/scripts/import-products.mjs)
+- [C:\Nikunj\scripts\seed.mjs](file:///C:/Nikunj/scripts/seed.mjs)
+- [C:\Nikunj\scripts\static-html-assets.mjs](file:///C:/Nikunj/scripts/static-html-assets.mjs)
+- [C:\Nikunj\src\app\account\page.tsx](file:///C:/Nikunj/src/app/account/page.tsx)
+- [C:\Nikunj\src\app\products\[slug]\page.tsx](file:///C:/Nikunj/src/app/products/%5Bslug%5D/page.tsx)
+- [C:\Nikunj\src\cms\lib\orderOps.ts](file:///C:/Nikunj/src/cms/lib/orderOps.ts)
+- [C:\Nikunj\src\cms\lib\orderStock.ts](file:///C:/Nikunj/src/cms/lib/orderStock.ts)
+- [C:\Nikunj\src\cms\lib\suggestions.ts](file:///C:/Nikunj/src/cms/lib/suggestions.ts)
+- [C:\Nikunj\src\frontend\components\products\ProductFilters.tsx](file:///C:/Nikunj/src/frontend/components/products/ProductFilters.tsx)
+- [C:\Nikunj\tests\static-html-assets.test.ts](file:///C:/Nikunj/tests/static-html-assets.test.ts)
 
 ## Audit Trail
 
-- EXTRACTED: 161 (71%)
-- INFERRED: 65 (29%)
+- EXTRACTED: 179 (76%)
+- INFERRED: 58 (24%)
 - AMBIGUOUS: 0 (0%)
 
 ---

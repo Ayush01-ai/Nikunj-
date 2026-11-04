@@ -1,51 +1,64 @@
 # Community 9
 
-> 56 nodes · cohesion 0.04
+> 71 nodes · cohesion 0.04
 
 ## Key Concepts
 
-- [Navbar.tsx](file:///C:/Nikunj/src/frontend/components/layout/Navbar.tsx#L1) (29 connections)
-- [CatalogPage.tsx](file:///C:/Nikunj/src/frontend/components/products/CatalogPage.tsx#L1) (18 connections)
-- [deskStructure()](file:///C:/Nikunj/src/cms/deskStructure.ts#L72) (9 connections)
-- [id](file:///C:/Nikunj/src/frontend/components/layout/Navbar.tsx#L65) (8 connections)
-- [title](file:///C:/Nikunj/src/frontend/components/products/CatalogPage.tsx#L106) (6 connections)
-- [deskStructure.ts](file:///C:/Nikunj/src/cms/deskStructure.ts#L1) (5 connections)
-- [filteredProducts()](file:///C:/Nikunj/src/cms/deskStructure.ts#L3) (4 connections)
-- [filteredReviews()](file:///C:/Nikunj/src/cms/deskStructure.ts#L15) (4 connections)
-- [ordersByStatus()](file:///C:/Nikunj/src/cms/deskStructure.ts#L28) (4 connections)
-- [productsByCategory()](file:///C:/Nikunj/src/cms/deskStructure.ts#L42) (4 connections)
-- [generateCatalogMetadata()](file:///C:/Nikunj/src/frontend/components/products/CatalogPage.tsx#L46) (3 connections)
-- [getCatalogContext()](file:///C:/Nikunj/src/frontend/components/products/CatalogPage.tsx#L36) (3 connections)
-- [list()](file:///C:/Nikunj/src/cms/tools/BulkProductImport.tsx#L70) (2 connections)
-- [allHref](file:///C:/Nikunj/src/frontend/components/products/CatalogPage.tsx#L109) (1 connections)
-- [basePath](file:///C:/Nikunj/src/frontend/components/products/CatalogPage.tsx#L105) (1 connections)
-- [breadcrumbJsonLd](file:///C:/Nikunj/src/frontend/components/products/CatalogPage.tsx#L121) (1 connections)
-- [breadcrumbs](file:///C:/Nikunj/src/frontend/components/products/CatalogPage.tsx#L115) (1 connections)
-- [{ categories, types, category, type }](file:///C:/Nikunj/src/frontend/components/products/CatalogPage.tsx#L72) (1 connections)
-- [facets](file:///C:/Nikunj/src/frontend/components/products/CatalogPage.tsx#L101) (1 connections)
-- [isLast](file:///C:/Nikunj/src/frontend/components/products/CatalogPage.tsx#L154) (1 connections)
-- [MAX_PRODUCTS](file:///C:/Nikunj/src/frontend/components/products/CatalogPage.tsx#L32) (1 connections)
-- [params](file:///C:/Nikunj/src/frontend/components/products/CatalogPage.tsx#L78) (1 connections)
-- [[products, deities, fragrances, settings]](file:///C:/Nikunj/src/frontend/components/products/CatalogPage.tsx#L94) (1 connections)
-- [showDeity](file:///C:/Nikunj/src/frontend/components/products/CatalogPage.tsx#L102) (1 connections)
-- [showFragrance](file:///C:/Nikunj/src/frontend/components/products/CatalogPage.tsx#L103) (1 connections)
-- *... and 31 more nodes in this community*
+- [page.tsx](file:///C:/Nikunj/src/app/products/%5Bslug%5D/page.tsx#L1) (18 connections)
+- [page.tsx](file:///C:/Nikunj/src/app/confirmation/page.tsx#L1) (14 connections)
+- [requireAuthHybrid()](file:///C:/Nikunj/src/backend/lib/clerk.ts#L110) (11 connections)
+- [page.tsx](file:///C:/Nikunj/src/app/policies/%5Bslug%5D/page.tsx#L1) (8 connections)
+- [clerkPublishableKey()](file:///C:/Nikunj/src/backend/lib/clerkConfig.ts#L18) (8 connections)
+- [isClerkConfigured()](file:///C:/Nikunj/src/backend/lib/clerkConfig.ts#L23) (7 connections)
+- [getClerkServerClient()](file:///C:/Nikunj/src/backend/lib/clerkServer.ts#L5) (7 connections)
+- [fetchCache](file:///C:/Nikunj/src/app/products/%5Bslug%5D/page.tsx#L27) (7 connections)
+- [revalidate](file:///C:/Nikunj/src/app/products/%5Bslug%5D/page.tsx#L26) (7 connections)
+- [page.tsx](file:///C:/Nikunj/src/app/checkout/success/page.tsx#L1) (6 connections)
+- [getOrLinkMongoUser()](file:///C:/Nikunj/src/backend/lib/clerk.ts#L21) (6 connections)
+- [generateMetadata()](file:///C:/Nikunj/src/app/products/%5Bslug%5D/page.tsx#L40) (6 connections)
+- [generateStaticParams()](file:///C:/Nikunj/src/app/sign-up/%5B%5B...sign-up%5D%5D/page.tsx#L8) (6 connections)
+- [page.tsx](file:///C:/Nikunj/src/app/collections/%5Bcollection%5D/page.tsx#L1) (5 connections)
+- [page.tsx](file:///C:/Nikunj/src/app/collections/%5Bcollection%5D/%5Btype%5D/page.tsx#L1) (5 connections)
+- [page.tsx](file:///C:/Nikunj/src/app/contact/page.tsx#L1) (5 connections)
+- [page.tsx](file:///C:/Nikunj/src/app/page.tsx#L1) (5 connections)
+- [clerk.ts](file:///C:/Nikunj/src/backend/lib/clerk.ts#L1) (5 connections)
+- [clerkSecretKey()](file:///C:/Nikunj/src/backend/lib/clerkConfig.ts#L21) (5 connections)
+- [SuccessContent()](file:///C:/Nikunj/src/app/checkout/success/page.tsx#L41) (5 connections)
+- [page.tsx](file:///C:/Nikunj/src/app/collections/page.tsx#L1) (4 connections)
+- [clerkConfig.ts](file:///C:/Nikunj/src/backend/lib/clerkConfig.ts#L1) (4 connections)
+- [requireAdminHybrid()](file:///C:/Nikunj/src/backend/lib/clerk.ts#L152) (4 connections)
+- [loadOrder()](file:///C:/Nikunj/src/app/checkout/success/page.tsx#L28) (4 connections)
+- [{ settings }](file:///C:/Nikunj/src/app/track-order/page.tsx#L44) (4 connections)
+- *... and 46 more nodes in this community*
 
 ## Relationships
 
-- No strong cross-community connections detected
+- [[Community 999]] (2 shared connections)
 
 ## Source Files
 
-- [C:\Nikunj\src\cms\deskStructure.ts](file:///C:/Nikunj/src/cms/deskStructure.ts)
-- [C:\Nikunj\src\cms\tools\BulkProductImport.tsx](file:///C:/Nikunj/src/cms/tools/BulkProductImport.tsx)
-- [C:\Nikunj\src\frontend\components\layout\Navbar.tsx](file:///C:/Nikunj/src/frontend/components/layout/Navbar.tsx)
-- [C:\Nikunj\src\frontend\components\products\CatalogPage.tsx](file:///C:/Nikunj/src/frontend/components/products/CatalogPage.tsx)
+- [C:\Nikunj\src\app\checkout\success\page.tsx](file:///C:/Nikunj/src/app/checkout/success/page.tsx)
+- [C:\Nikunj\src\app\collections\[collection]\[type]\page.tsx](file:///C:/Nikunj/src/app/collections/%5Bcollection%5D/%5Btype%5D/page.tsx)
+- [C:\Nikunj\src\app\collections\[collection]\page.tsx](file:///C:/Nikunj/src/app/collections/%5Bcollection%5D/page.tsx)
+- [C:\Nikunj\src\app\collections\page.tsx](file:///C:/Nikunj/src/app/collections/page.tsx)
+- [C:\Nikunj\src\app\confirmation\page.tsx](file:///C:/Nikunj/src/app/confirmation/page.tsx)
+- [C:\Nikunj\src\app\contact\page.tsx](file:///C:/Nikunj/src/app/contact/page.tsx)
+- [C:\Nikunj\src\app\not-found.tsx](file:///C:/Nikunj/src/app/not-found.tsx)
+- [C:\Nikunj\src\app\page.tsx](file:///C:/Nikunj/src/app/page.tsx)
+- [C:\Nikunj\src\app\policies\[slug]\page.tsx](file:///C:/Nikunj/src/app/policies/%5Bslug%5D/page.tsx)
+- [C:\Nikunj\src\app\products\[slug]\page.tsx](file:///C:/Nikunj/src/app/products/%5Bslug%5D/page.tsx)
+- [C:\Nikunj\src\app\sign-in\[[...sign-in]]\page.tsx](file:///C:/Nikunj/src/app/sign-in/%5B%5B...sign-in%5D%5D/page.tsx)
+- [C:\Nikunj\src\app\sign-up\[[...sign-up]]\page.tsx](file:///C:/Nikunj/src/app/sign-up/%5B%5B...sign-up%5D%5D/page.tsx)
+- [C:\Nikunj\src\app\track-order\page.tsx](file:///C:/Nikunj/src/app/track-order/page.tsx)
+- [C:\Nikunj\src\backend\lib\clerk.ts](file:///C:/Nikunj/src/backend/lib/clerk.ts)
+- [C:\Nikunj\src\backend\lib\clerkConfig.ts](file:///C:/Nikunj/src/backend/lib/clerkConfig.ts)
+- [C:\Nikunj\src\backend\lib\clerkServer.ts](file:///C:/Nikunj/src/backend/lib/clerkServer.ts)
+- [C:\Nikunj\src\frontend\providers\ClerkAppProvider.tsx](file:///C:/Nikunj/src/frontend/providers/ClerkAppProvider.tsx)
 
 ## Audit Trail
 
-- EXTRACTED: 115 (81%)
-- INFERRED: 27 (19%)
+- EXTRACTED: 192 (82%)
+- INFERRED: 43 (18%)
 - AMBIGUOUS: 0 (0%)
 
 ---

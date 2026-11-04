@@ -6,6 +6,7 @@ import { connectDB } from '@/backend/lib/mongodb';
 import { Order } from '@/backend/models/Order';
 import { authorizeOrderForPayment } from '@/backend/lib/orderAccess';
 import { clientIp, createRateLimiter } from '@/backend/lib/rateLimit';
+import { HOLD_MINUTES } from '@/backend/lib/stockHold';
 
 // Mirrors the limiter in /api/payment/create — see that file for the rationale.
 const isOrderLimited = createRateLimiter(10, 5 * 60 * 1000, 'api/payment/cashfree/create:isOrderLimited');
@@ -138,6 +139,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'This order cannot be paid online.' }, { status: 400 });
     }
 
+    const expiresAt = new Date(order.createdAt.getTime() + HOLD_MINUTES * 60_000);
+    if (!Number.isFinite(expiresAt.getTime()) || expiresAt <= new Date()) {
+      return NextResponse.json(
+        { success: false, error: 'This payment window expired. Please place a new order.' },
+        { status: 409 },
+      );
+    }
+
     if (order.cashfreeOrderId && order.cashfreePaymentSessionId) {
       return buildPaymentResponse(order.cashfreeOrderId, order.cashfreePaymentSessionId);
     }
@@ -151,6 +160,7 @@ export async function POST(req: NextRequest) {
         customerPhone: order.shippingAddress.phone,
         customerName: order.shippingAddress.fullName,
         customerId: cashfreeCustomerId(userId, order.guestPhone, orderId),
+        expiresAt: expiresAt.toISOString(),
         // The return_url only brings the customer back; the confirmation page re-checks the
         // payment with Cashfree's API server-side before showing it as paid.
         returnUrl: `${baseUrl}/confirmation?orderId={order_id}`,

@@ -1,21 +1,19 @@
 # Community 32
 
-> 12 nodes · cohesion 0.17
+> 10 nodes · cohesion 0.20
 
 ## Key Concepts
 
-- [bulk-import-spreadsheet.test.ts](file:///C:/Nikunj/tests/bulk-import-spreadsheet.test.ts#L1) (11 connections)
-- [bytes](file:///C:/Nikunj/tests/bulk-import-spreadsheet.test.ts#L19) (1 connections)
-- [csv](file:///C:/Nikunj/tests/bulk-import-spreadsheet.test.ts#L91) (1 connections)
-- [good](file:///C:/Nikunj/tests/bulk-import-spreadsheet.test.ts#L115) (1 connections)
-- [header](file:///C:/Nikunj/tests/bulk-import-spreadsheet.test.ts#L11) (1 connections)
-- [ole](file:///C:/Nikunj/tests/bulk-import-spreadsheet.test.ts#L119) (1 connections)
-- [out](file:///C:/Nikunj/tests/bulk-import-spreadsheet.test.ts#L32) (1 connections)
-- [[row]](file:///C:/Nikunj/tests/bulk-import-spreadsheet.test.ts#L77) (1 connections)
-- [rows](file:///C:/Nikunj/tests/bulk-import-spreadsheet.test.ts#L12) (1 connections)
-- [toAB()](file:///C:/Nikunj/tests/bulk-import-spreadsheet.test.ts#L5) (1 connections)
-- [wb](file:///C:/Nikunj/tests/bulk-import-spreadsheet.test.ts#L24) (1 connections)
-- [ws](file:///C:/Nikunj/tests/bulk-import-spreadsheet.test.ts#L68) (1 connections)
+- [formSchemas.ts](file:///C:/Nikunj/src/frontend/lib/formSchemas.ts#L1) (9 connections)
+- [feedbackApiSchema](file:///C:/Nikunj/src/frontend/lib/formSchemas.ts#L48) (1 connections)
+- [feedbackFormSchema](file:///C:/Nikunj/src/frontend/lib/formSchemas.ts#L39) (1 connections)
+- [forgotSchema](file:///C:/Nikunj/src/frontend/lib/formSchemas.ts#L28) (1 connections)
+- [otpSchema](file:///C:/Nikunj/src/frontend/lib/formSchemas.ts#L7) (1 connections)
+- [passwordRule](file:///C:/Nikunj/src/frontend/lib/formSchemas.ts#L11) (1 connections)
+- [phoneSchema](file:///C:/Nikunj/src/frontend/lib/formSchemas.ts#L3) (1 connections)
+- [resetPasswordSchema](file:///C:/Nikunj/src/frontend/lib/formSchemas.ts#L32) (1 connections)
+- [signInSchema](file:///C:/Nikunj/src/frontend/lib/formSchemas.ts#L17) (1 connections)
+- [signUpSchema](file:///C:/Nikunj/src/frontend/lib/formSchemas.ts#L22) (1 connections)
 
 ## Relationships
 
@@ -23,11 +21,11 @@
 
 ## Source Files
 
-- [C:\Nikunj\tests\bulk-import-spreadsheet.test.ts](file:///C:/Nikunj/tests/bulk-import-spreadsheet.test.ts)
+- [C:\Nikunj\src\frontend\lib\formSchemas.ts](file:///C:/Nikunj/src/frontend/lib/formSchemas.ts)
 
 ## Audit Trail
 
-- EXTRACTED: 22 (100%)
+- EXTRACTED: 18 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

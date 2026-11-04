@@ -1,52 +1,43 @@
 # Auth & Guest Payment
 
-> 148 nodes · cohesion 0.02
+> 200 nodes · cohesion 0.02
 
 ## Key Concepts
 
 - [POST()](file:///C:/Nikunj/src/app/api/webhooks/whatsapp/route.ts#L40) (145 connections)
 - [GET()](file:///C:/Nikunj/src/app/api/webhooks/whatsapp/route.ts#L28) (55 connections)
-- [auth.ts](file:///C:/Nikunj/src/backend/lib/auth.ts#L1) (15 connections)
+- [error](file:///C:/Nikunj/src/app/login/page.tsx#L94) (45 connections)
+- [PATCH()](file:///C:/Nikunj/src/app/api/orders/%5Bid%5D/route.ts#L38) (33 connections)
+- [catch()](file:///C:/Nikunj/src/app/login/whatsapp/page.tsx#L228) (30 connections)
+- [set()](file:///C:/Nikunj/src/frontend/components/products/ProductOptions.tsx#L170) (25 connections)
+- [Boolean()](file:///C:/Nikunj/src/frontend/components/orders/DeliveryConfirmForm.tsx#L105) (24 connections)
+- [delivery.ts](file:///C:/Nikunj/src/backend/lib/delivery.ts#L1) (16 connections)
+- [notifyOrder()](file:///C:/Nikunj/src/backend/lib/orderNotify.ts#L118) (16 connections)
+- [connectDB](file:///C:/Nikunj/tests/payment-cashfree-verify.test.ts#L12) (16 connections)
+- [now](file:///C:/Nikunj/src/cms/tools/AnalyticsDashboard.tsx#L220) (15 connections)
+- [assignDelivery()](file:///C:/Nikunj/src/backend/lib/delivery.ts#L144) (15 connections)
+- [verifyDelivery()](file:///C:/Nikunj/src/backend/lib/delivery.ts#L224) (15 connections)
+- [findOne](file:///C:/Nikunj/tests/payment-cashfree-verify.test.ts#L13) (14 connections)
+- [sanityOrders.ts](file:///C:/Nikunj/src/backend/lib/sanityOrders.ts#L1) (13 connections)
+- [pushOrderToSanity()](file:///C:/Nikunj/src/backend/lib/sanityOrders.ts#L150) (13 connections)
+- [ensureDeliveryCode()](file:///C:/Nikunj/src/backend/lib/delivery.ts#L79) (11 connections)
+- [sendDeliveryCode()](file:///C:/Nikunj/src/backend/lib/delivery.ts#L44) (11 connections)
+- [recordOutcome()](file:///C:/Nikunj/src/backend/lib/refunds.ts#L153) (11 connections)
 - [session.ts](file:///C:/Nikunj/src/backend/lib/session.ts#L1) (10 connections)
+- [DELETE()](file:///C:/Nikunj/src/app/api/account/addresses/route.ts#L112) (10 connections)
+- [recordOrderPlaced()](file:///C:/Nikunj/src/backend/lib/analytics.ts#L69) (9 connections)
 - [verifyOrderAccess()](file:///C:/Nikunj/src/backend/lib/orderAccess.ts#L18) (9 connections)
+- [findOneAndUpdate](file:///C:/Nikunj/tests/payment-cashfree-verify.test.ts#L14) (9 connections)
 - [isIpLimited](file:///C:/Nikunj/src/app/api/payment/guest-verify/send-otp/route.ts#L16) (9 connections)
-- [isRateLimited](file:///C:/Nikunj/src/app/api/track-order/route.ts#L10) (9 connections)
-- [verifySanityStudioToken()](file:///C:/Nikunj/src/backend/lib/studioAuth.ts#L18) (9 connections)
-- [studioAuth.ts](file:///C:/Nikunj/src/backend/lib/studioAuth.ts#L1) (8 connections)
-- [route.ts](file:///C:/Nikunj/src/app/api/payment/cashfree/create/route.ts#L1) (7 connections)
-- [parseAddress()](file:///C:/Nikunj/src/app/api/account/addresses/route.ts#L23) (7 connections)
-- [runtime](file:///C:/Nikunj/src/app/api/refunds/process/route.ts#L7) (7 connections)
-- [route.ts](file:///C:/Nikunj/src/app/api/analytics/track/route.ts#L1) (6 connections)
-- [route.ts](file:///C:/Nikunj/src/app/api/orders/request/route.ts#L1) (6 connections)
-- [route.ts](file:///C:/Nikunj/src/app/api/orders/route.ts#L1) (6 connections)
-- [route.ts](file:///C:/Nikunj/src/app/api/webhooks/order-status/route.ts#L1) (6 connections)
-- [route.ts](file:///C:/Nikunj/src/app/api/webhooks/whatsapp/route.ts#L1) (6 connections)
-- [revalidate.test.ts](file:///C:/Nikunj/tests/revalidate.test.ts#L1) (6 connections)
-- [requireAuthHybrid](file:///C:/Nikunj/tests/payment-cashfree-verify.test.ts#L11) (6 connections)
-- [dynamic](file:///C:/Nikunj/src/app/api/webhooks/whatsapp/route.ts#L6) (6 connections)
-- [publicUser()](file:///C:/Nikunj/src/backend/lib/session.ts#L9) (6 connections)
-- [setSessionCookie()](file:///C:/Nikunj/src/backend/lib/session.ts#L38) (6 connections)
-- [requireAuth()](file:///C:/Nikunj/src/backend/lib/auth.ts#L72) (5 connections)
-- [route.ts](file:///C:/Nikunj/src/app/api/account/addresses/route.ts#L1) (5 connections)
-- [route.ts](file:///C:/Nikunj/src/app/api/auth/whatsapp/send-otp/route.ts#L1) (5 connections)
-- *... and 123 more nodes in this community*
-
-## Class Diagram
-
-```mermaid
-classDiagram
-    class AuthError {
-        +auth.ts()
-        +.constructor()
-    }
-```
+- *... and 175 more nodes in this community*
 
 ## Relationships
 
-- [[Community 999]] (13 shared connections)
+- [[Community 999]] (24 shared connections)
 
 ## Source Files
 
+- [C:\Nikunj\src\app\account\page.tsx](file:///C:/Nikunj/src/app/account/page.tsx)
 - [C:\Nikunj\src\app\api\account\addresses\route.ts](file:///C:/Nikunj/src/app/api/account/addresses/route.ts)
 - [C:\Nikunj\src\app\api\account\profile\route.ts](file:///C:/Nikunj/src/app/api/account/profile/route.ts)
 - [C:\Nikunj\src\app\api\analytics\track\route.ts](file:///C:/Nikunj/src/app/api/analytics/track/route.ts)
@@ -66,12 +57,11 @@ classDiagram
 - [C:\Nikunj\src\app\api\delivery\assign\route.ts](file:///C:/Nikunj/src/app/api/delivery/assign/route.ts)
 - [C:\Nikunj\src\app\api\delivery\resend\route.ts](file:///C:/Nikunj/src/app/api/delivery/resend/route.ts)
 - [C:\Nikunj\src\app\api\delivery\verify\route.ts](file:///C:/Nikunj/src/app/api/delivery/verify/route.ts)
-- [C:\Nikunj\src\app\api\feedback\route.ts](file:///C:/Nikunj/src/app/api/feedback/route.ts)
 
 ## Audit Trail
 
-- EXTRACTED: 451 (68%)
-- INFERRED: 214 (32%)
+- EXTRACTED: 603 (50%)
+- INFERRED: 595 (50%)
 - AMBIGUOUS: 0 (0%)
 
 ---

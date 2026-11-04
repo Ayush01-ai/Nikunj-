@@ -4,9 +4,9 @@
 
 ## Key Concepts
 
-- [FacetField.tsx](file:///C:/Nikunj/src/cms/components/FacetField.tsx#L1) (2 connections)
-- [facetCache](file:///C:/Nikunj/src/cms/components/FacetField.tsx#L4) (1 connections)
-- [facetField()](file:///C:/Nikunj/src/cms/components/FacetField.tsx#L7) (1 connections)
+- [Otp.ts](file:///C:/Nikunj/src/backend/models/Otp.ts#L1) (2 connections)
+- [Otp](file:///C:/Nikunj/src/backend/models/Otp.ts#L41) (1 connections)
+- [OtpSchema](file:///C:/Nikunj/src/backend/models/Otp.ts#L25) (1 connections)
 
 ## Relationships
 
@@ -14,7 +14,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\cms\components\FacetField.tsx](file:///C:/Nikunj/src/cms/components/FacetField.tsx)
+- [C:\Nikunj\src\backend\models\Otp.ts](file:///C:/Nikunj/src/backend/models/Otp.ts)
 
 ## Audit Trail
 

@@ -1,35 +1,33 @@
 # Community 19
 
-> 26 nodes · cohesion 0.08
+> 24 nodes · cohesion 0.08
 
 ## Key Concepts
 
-- [payment-cashfree-create.test.ts](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L1) (25 connections)
-- [createCashfreeOrder](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L8) (2 connections)
-- [args](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L239) (1 connections)
-- [connectDB](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L12) (1 connections)
-- [errorSpy](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L302) (1 connections)
-- [fetchCashfreeOrder](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L9) (1 connections)
-- [findOne](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L13) (1 connections)
-- [findOneAndUpdate](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L14) (1 connections)
-- [gatewayError](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L305) (1 connections)
-- [GUEST_ORDER](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L45) (1 connections)
-- [guestProof](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L108) (1 connections)
-- [i](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L187) (1 connections)
-- [isCashfreeConfigured](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L10) (1 connections)
-- [json](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L81) (1 connections)
-- [last](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L186) (1 connections)
-- [makeRequest()](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L24) (1 connections)
-- [{ POST }](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L79) (1 connections)
-- [REGISTERED_ORDER](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L32) (1 connections)
-- [requireAuthHybrid](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L11) (1 connections)
-- [res](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L80) (1 connections)
-- [resMismatch](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L128) (1 connections)
-- [resMissing](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L123) (1 connections)
-- [resTampered](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L137) (1 connections)
-- [resWrongOrder](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L133) (1 connections)
-- [wrongOrderProof](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L132) (1 connections)
-- *... and 1 more nodes in this community*
+- [sync-orders-to-sanity.mjs](file:///C:/Nikunj/scripts/sync-orders-to-sanity.mjs#L1) (14 connections)
+- [whatsapp-otp.spec.ts](file:///C:/Nikunj/tests/auth/whatsapp-otp.spec.ts#L1) (8 connections)
+- [requestOtp()](file:///C:/Nikunj/tests/auth/whatsapp-otp.spec.ts#L6) (3 connections)
+- [status](file:///C:/Nikunj/scripts/sync-orders-to-sanity.mjs#L59) (2 connections)
+- [a](file:///C:/Nikunj/scripts/sync-orders-to-sanity.mjs#L61) (1 connections)
+- [APPLY](file:///C:/Nikunj/scripts/sync-orders-to-sanity.mjs#L24) (1 connections)
+- [at](file:///C:/Nikunj/scripts/sync-orders-to-sanity.mjs#L60) (1 connections)
+- [client](file:///C:/Nikunj/scripts/sync-orders-to-sanity.mjs#L30) (1 connections)
+- [envPath](file:///C:/Nikunj/scripts/sync-orders-to-sanity.mjs#L14) (1 connections)
+- [existing](file:///C:/Nikunj/scripts/sync-orders-to-sanity.mjs#L50) (1 connections)
+- [isManualUpiPending()](file:///C:/Nikunj/scripts/sync-orders-to-sanity.mjs#L35) (1 connections)
+- [key](file:///C:/Nikunj/scripts/sync-orders-to-sanity.mjs#L19) (1 connections)
+- [line](file:///C:/Nikunj/scripts/sync-orders-to-sanity.mjs#L17) (1 connections)
+- [missing](file:///C:/Nikunj/scripts/sync-orders-to-sanity.mjs#L53) (1 connections)
+- [orders](file:///C:/Nikunj/scripts/sync-orders-to-sanity.mjs#L36) (1 connections)
+- [res](file:///C:/Nikunj/scripts/sync-orders-to-sanity.mjs#L97) (1 connections)
+- [tx](file:///C:/Nikunj/scripts/sync-orders-to-sanity.mjs#L57) (1 connections)
+- [goodPhone](file:///C:/Nikunj/tests/auth/whatsapp-otp.spec.ts#L4) (1 connections)
+- [me](file:///C:/Nikunj/tests/auth/whatsapp-otp.spec.ts#L41) (1 connections)
+- [otp](file:///C:/Nikunj/tests/auth/whatsapp-otp.spec.ts#L20) (1 connections)
+- [replay](file:///C:/Nikunj/tests/auth/whatsapp-otp.spec.ts#L45) (1 connections)
+- [[res]](file:///C:/Nikunj/tests/auth/whatsapp-otp.spec.ts#L23) (1 connections)
+- [wrong](file:///C:/Nikunj/tests/auth/whatsapp-otp.spec.ts#L21) (1 connections)
+- [wrongPhone](file:///C:/Nikunj/tests/auth/whatsapp-otp.spec.ts#L3) (1 connections)
 
 ## Relationships
 
@@ -37,12 +35,13 @@
 
 ## Source Files
 
-- [C:\Nikunj\tests\payment-cashfree-create.test.ts](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts)
+- [C:\Nikunj\scripts\sync-orders-to-sanity.mjs](file:///C:/Nikunj/scripts/sync-orders-to-sanity.mjs)
+- [C:\Nikunj\tests\auth\whatsapp-otp.spec.ts](file:///C:/Nikunj/tests/auth/whatsapp-otp.spec.ts)
 
 ## Audit Trail
 
-- EXTRACTED: 50 (98%)
-- INFERRED: 1 (2%)
+- EXTRACTED: 44 (94%)
+- INFERRED: 3 (6%)
 - AMBIGUOUS: 0 (0%)
 
 ---

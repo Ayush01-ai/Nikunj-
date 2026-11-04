@@ -1,35 +1,35 @@
 # Community 12
 
-> 43 nodes · cohesion 0.09
+> 38 nodes · cohesion 0.05
 
 ## Key Concepts
 
-- [Boolean()](file:///C:/Nikunj/src/frontend/components/orders/DeliveryConfirmForm.tsx#L105) (24 connections)
-- [notifyOrder()](file:///C:/Nikunj/src/backend/lib/orderNotify.ts#L118) (16 connections)
-- [whatsapp.ts](file:///C:/Nikunj/src/backend/lib/whatsapp.ts#L1) (12 connections)
-- [DeliveryConfirmForm.tsx](file:///C:/Nikunj/src/frontend/components/orders/DeliveryConfirmForm.tsx#L1) (10 connections)
-- [sanitizePhone()](file:///C:/Nikunj/src/backend/lib/auth.ts#L113) (9 connections)
-- [sendOrderWhatsApp()](file:///C:/Nikunj/src/backend/lib/whatsapp.ts#L53) (9 connections)
-- [orderNotify.ts](file:///C:/Nikunj/src/backend/lib/orderNotify.ts#L1) (8 connections)
-- [sendDeliveryOtpWhatsApp()](file:///C:/Nikunj/src/backend/lib/whatsapp.ts#L186) (8 connections)
-- [email.ts](file:///C:/Nikunj/src/backend/lib/email.ts#L1) (7 connections)
-- [text](file:///C:/Nikunj/tests/delivery.test.ts#L312) (7 connections)
-- [buildNotificationSnapshot()](file:///C:/Nikunj/src/backend/lib/orderNotify.ts#L60) (7 connections)
-- [isWhatsAppConfigured()](file:///C:/Nikunj/src/backend/lib/whatsapp.ts#L23) (7 connections)
-- [sendWhatsAppOtp()](file:///C:/Nikunj/src/backend/lib/whatsapp.ts#L117) (7 connections)
-- [post()](file:///C:/Nikunj/src/frontend/components/orders/DeliveryConfirmForm.tsx#L22) (5 connections)
-- [isEmailConfigured()](file:///C:/Nikunj/src/backend/lib/email.ts#L6) (5 connections)
-- [sendEmail()](file:///C:/Nikunj/src/backend/lib/email.ts#L10) (5 connections)
-- [whatsappTokens()](file:///C:/Nikunj/src/backend/lib/whatsapp.ts#L34) (5 connections)
-- [orderConfirmationEmail()](file:///C:/Nikunj/src/backend/lib/email.ts#L49) (4 connections)
-- [hasVerifiedEmail()](file:///C:/Nikunj/src/backend/lib/orderNotify.ts#L40) (4 connections)
-- [hasVerifiedPhone()](file:///C:/Nikunj/src/backend/lib/orderNotify.ts#L42) (4 connections)
-- [snapshotForOrder()](file:///C:/Nikunj/src/backend/lib/orderNotify.ts#L83) (4 connections)
-- [whatsappSnapshot()](file:///C:/Nikunj/src/backend/lib/orderNotify.ts#L50) (4 connections)
-- [toE164India()](file:///C:/Nikunj/src/backend/lib/whatsapp.ts#L48) (4 connections)
-- [escapeHtml()](file:///C:/Nikunj/src/backend/lib/email.ts#L32) (3 connections)
-- [orderStatusEmail()](file:///C:/Nikunj/src/backend/lib/email.ts#L88) (3 connections)
-- *... and 18 more nodes in this community*
+- [migrate-taxonomy.mjs](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L1) (37 connections)
+- [ACCESSORY_FACETS](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L43) (1 connections)
+- [activeCategorySlugs](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L150) (1 connections)
+- [APPLY](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L24) (1 connections)
+- [categoryId](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L127) (1 connections)
+- [categoryIdBySlug](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L101) (1 connections)
+- [clean](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L199) (1 connections)
+- [client](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L36) (1 connections)
+- [current](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L175) (1 connections)
+- [data](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L92) (1 connections)
+- [dataset](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L28) (1 connections)
+- [existing](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L107) (1 connections)
+- [FRAGRANCE_FACETS](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L42) (1 connections)
+- [id](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L108) (1 connections)
+- [keywordIndex](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L103) (1 connections)
+- [loadEnvLocal()](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L8) (1 connections)
+- [log](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L100) (1 connections)
+- [movedFrom](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L149) (1 connections)
+- [name](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L155) (1 connections)
+- [oldImage](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L176) (1 connections)
+- [patch](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L177) (1 connections)
+- [projectId](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L27) (1 connections)
+- [publishedId()](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L89) (1 connections)
+- [ref()](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L90) (1 connections)
+- [res](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L214) (1 connections)
+- *... and 13 more nodes in this community*
 
 ## Relationships
 
@@ -37,17 +37,12 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\backend\lib\auth.ts](file:///C:/Nikunj/src/backend/lib/auth.ts)
-- [C:\Nikunj\src\backend\lib\email.ts](file:///C:/Nikunj/src/backend/lib/email.ts)
-- [C:\Nikunj\src\backend\lib\orderNotify.ts](file:///C:/Nikunj/src/backend/lib/orderNotify.ts)
-- [C:\Nikunj\src\backend\lib\whatsapp.ts](file:///C:/Nikunj/src/backend/lib/whatsapp.ts)
-- [C:\Nikunj\src\frontend\components\orders\DeliveryConfirmForm.tsx](file:///C:/Nikunj/src/frontend/components/orders/DeliveryConfirmForm.tsx)
-- [C:\Nikunj\tests\delivery.test.ts](file:///C:/Nikunj/tests/delivery.test.ts)
+- [C:\Nikunj\scripts\migrate-taxonomy.mjs](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs)
 
 ## Audit Trail
 
-- EXTRACTED: 128 (61%)
-- INFERRED: 81 (39%)
+- EXTRACTED: 74 (100%)
+- INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 
 ---

@@ -14,7 +14,7 @@ import { settleCashfreeOrder } from '@/backend/lib/cashfreeSettlement';
 import { createRateLimiter } from '@/backend/lib/rateLimit';
 import { getWhatsAppHref } from '@/frontend/lib/whatsapp';
 import type { SiteSettings } from '@/types';
-import { CashfreeCheckout } from '@/app/checkout/CashfreeCheckout';
+import { ConfirmationPayment } from '@/app/confirmation/ConfirmationPayment';
 
 export const metadata: Metadata = {
   title: 'Order Confirmation',
@@ -30,7 +30,7 @@ async function getOrderSummary(orderId: string) {
     await reconcileCashfreePayment(orderId);
     await resyncOrderToSanity(orderId);
     const order = await Order.findOne({ orderId })
-      .select('items total paymentMethod paymentStatus paymentGateway status userId guestPhone shippingAddress.city shippingAddress.phone')
+      .select('items total paymentMethod paymentStatus paymentGateway status userId shippingAddress.city')
       .lean();
     if (!order) return null;
     return {
@@ -49,7 +49,6 @@ async function getOrderSummary(orderId: string) {
       status: order.status,
       shippingAddress: { city: order.shippingAddress?.city ?? '' },
       isGuest: !order.userId,
-      paymentPhone: order.shippingAddress?.phone ?? order.guestPhone ?? '',
     };
   } catch {
     return null;
@@ -142,12 +141,7 @@ async function ConfirmationContent({ orderId }: { orderId: string }) {
 
         {order && awaitingCashfreePayment && (
           <div className="bg-white border border-[var(--border)] p-6 mb-5 text-left">
-            <CashfreeCheckout
-              orderId={orderId}
-              phone={order.paymentPhone}
-              isGuest={order.isGuest}
-              onComplete={() => window.location.reload()}
-            />
+            <ConfirmationPayment orderId={orderId} isGuest={order.isGuest} />
           </div>
         )}
 

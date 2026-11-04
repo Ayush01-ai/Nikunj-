@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- [playwright.config.ts](file:///C:/Nikunj/playwright.config.ts#L1) (1 connections)
-- [PORT](file:///C:/Nikunj/playwright.config.ts#L3) (1 connections)
+- [eslint.config.mjs](file:///C:/Nikunj/eslint.config.mjs#L1) (1 connections)
+- [eslintConfig](file:///C:/Nikunj/eslint.config.mjs#L5) (1 connections)
 
 ## Relationships
 
@@ -13,7 +13,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\playwright.config.ts](file:///C:/Nikunj/playwright.config.ts)
+- [C:\Nikunj\eslint.config.mjs](file:///C:/Nikunj/eslint.config.mjs)
 
 ## Audit Trail
 

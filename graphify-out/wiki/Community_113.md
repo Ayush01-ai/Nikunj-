@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- [cartStore.ts](file:///C:/Nikunj/src/frontend/store/cartStore.ts#L1) (1 connections)
-- [useCartStore](file:///C:/Nikunj/src/frontend/store/cartStore.ts#L36) (1 connections)
+- [AnalyticsTracker()](file:///C:/Nikunj/src/frontend/providers/AnalyticsTracker.tsx#L8) (1 connections)
+- [AnalyticsTracker.tsx](file:///C:/Nikunj/src/frontend/providers/AnalyticsTracker.tsx#L1) (1 connections)
 
 ## Relationships
 
@@ -13,7 +13,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\frontend\store\cartStore.ts](file:///C:/Nikunj/src/frontend/store/cartStore.ts)
+- [C:\Nikunj\src\frontend\providers\AnalyticsTracker.tsx](file:///C:/Nikunj/src/frontend/providers/AnalyticsTracker.tsx)
 
 ## Audit Trail
 

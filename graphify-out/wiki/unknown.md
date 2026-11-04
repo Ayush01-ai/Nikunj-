@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- [whatsappUrl.test.ts](file:///C:/Nikunj/tests/whatsappUrl.test.ts#L1) (0 connections)
+- [index.ts](file:///C:/Nikunj/src/types/index.ts#L1) (0 connections)
 
 ## Relationships
 
@@ -12,7 +12,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\tests\whatsappUrl.test.ts](file:///C:/Nikunj/tests/whatsappUrl.test.ts)
+- [C:\Nikunj\src\types\index.ts](file:///C:/Nikunj/src/types/index.ts)
 
 ## Audit Trail
 

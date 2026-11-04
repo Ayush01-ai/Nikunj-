@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- [CategoryGrid.tsx](file:///C:/Nikunj/src/frontend/components/home/CategoryGrid.tsx#L1) (1 connections)
-- [{ ref, inView }](file:///C:/Nikunj/src/frontend/components/home/CategoryGrid.tsx#L19) (1 connections)
+- [clerkAppearance.ts](file:///C:/Nikunj/src/frontend/components/auth/clerkAppearance.ts#L1) (1 connections)
+- [clerkAppearance](file:///C:/Nikunj/src/frontend/components/auth/clerkAppearance.ts#L6) (1 connections)
 
 ## Relationships
 
@@ -13,7 +13,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\frontend\components\home\CategoryGrid.tsx](file:///C:/Nikunj/src/frontend/components/home/CategoryGrid.tsx)
+- [C:\Nikunj\src\frontend\components\auth\clerkAppearance.ts](file:///C:/Nikunj/src/frontend/components/auth/clerkAppearance.ts)
 
 ## Audit Trail
 

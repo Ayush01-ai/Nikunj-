@@ -3,7 +3,7 @@ import { verifyCashfreeWebhookSignature } from '@/backend/lib/cashfree';
 import { isCashfreeConfigured } from '@/backend/lib/cashfreeConfig';
 import { connectDB } from '@/backend/lib/mongodb';
 import { Order } from '@/backend/models/Order';
-import { pushConfirmedOrderToSanity } from '@/backend/lib/sanityOrders';
+import { pushCashfreePaymentFailureToSanity, pushConfirmedOrderToSanity } from '@/backend/lib/sanityOrders';
 
 interface CashfreeWebhookPayload {
   type?: string;
@@ -69,17 +69,21 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    // A dropped/failed payment only flips a still-pending order to failed — it never
-    // touches an order that's already paid, and never syncs to Sanity.
+    // A dropped/failed attempt never touches a paid order. Sanity sync is idempotent
+    // and restores stock only for legacy orders whose stockAdjusted flag is true.
     if (eventType === 'PAYMENT_FAILED_WEBHOOK' || eventType === 'PAYMENT_USER_DROPPED_WEBHOOK') {
       const failedOrderId = event.data?.order?.order_id;
       if (!failedOrderId) {
         return NextResponse.json({ success: false, error: 'Malformed webhook payload.' }, { status: 400 });
       }
-      await Order.findOneAndUpdate(
-        { cashfreeOrderId: failedOrderId, paymentStatus: 'pending' },
+      const failedOrder = await Order.findOneAndUpdate(
+        { cashfreeOrderId: failedOrderId, paymentStatus: { $ne: 'paid' } },
         { paymentStatus: 'failed' },
+        { new: true },
       );
+      if (failedOrder) {
+        await pushCashfreePaymentFailureToSanity(failedOrder, 'Cashfree payment failed or was abandoned');
+      }
       return NextResponse.json({ success: true });
     }
 

@@ -13,12 +13,13 @@ const connectDB = vi.fn(async () => {});
 const findOne = vi.fn();
 const findOneAndUpdate = vi.fn();
 const pushConfirmedOrderToSanity = vi.fn(async () => {});
+const pushCashfreePaymentFailureToSanity = vi.fn(async () => {});
 
 vi.mock('@/backend/lib/cashfree', () => ({ fetchCashfreeOrder, fetchCashfreeOrderPayments }));
 vi.mock('@/backend/lib/cashfreeConfig', () => ({ isCashfreeConfigured }));
 vi.mock('@/backend/lib/clerk', () => ({ requireAuthHybrid }));
 vi.mock('@/backend/lib/mongodb', () => ({ connectDB }));
-vi.mock('@/backend/lib/sanityOrders', () => ({ pushConfirmedOrderToSanity }));
+vi.mock('@/backend/lib/sanityOrders', () => ({ pushConfirmedOrderToSanity, pushCashfreePaymentFailureToSanity }));
 vi.mock('@/backend/models/Order', () => ({ Order: { findOne, findOneAndUpdate } }));
 
 function makeRequest(body: unknown) {
@@ -77,6 +78,7 @@ describe('POST /api/payment/cashfree/verify', () => {
     findOne.mockReset();
     findOneAndUpdate.mockReset();
     pushConfirmedOrderToSanity.mockClear();
+    pushCashfreePaymentFailureToSanity.mockClear();
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
@@ -141,19 +143,25 @@ describe('POST /api/payment/cashfree/verify', () => {
     expect(pushConfirmedOrderToSanity).not.toHaveBeenCalled();
   });
 
-  it('reports failure (402) and marks only a pending order failed when the latest attempt failed', async () => {
+  it('reports failure (402), marks the order failed and syncs Sanity', async () => {
     requireAuthHybrid.mockResolvedValue({ userId: 'user-1' });
     findOne.mockResolvedValue({ ...REGISTERED_ORDER });
     fetchCashfreeOrder.mockResolvedValue(paidCfOrder('NS-REG00001', 499, { order_status: 'ACTIVE' }));
     fetchCashfreeOrderPayments.mockResolvedValue([
       successPayment('NS-REG00001', 499, { payment_status: 'FAILED', payment_time: '2026-01-01T10:05:00+05:30' }),
     ]);
+    findOneAndUpdate.mockResolvedValue({ ...REGISTERED_ORDER, paymentStatus: 'failed' });
 
     const { res, json } = await verify({ orderId: 'NS-REG00001' });
 
     expect(res.status).toBe(402);
     expect(json.status).toBe('failed');
-    expect(findOneAndUpdate).toHaveBeenCalledWith({ _id: 'mongo-1', paymentStatus: 'pending' }, { paymentStatus: 'failed' });
+    expect(findOneAndUpdate).toHaveBeenCalledWith(
+      { _id: 'mongo-1', paymentStatus: { $ne: 'paid' } },
+      { paymentStatus: 'failed' },
+      { new: true },
+    );
+    expect(pushCashfreePaymentFailureToSanity).toHaveBeenCalledTimes(1);
     expect(pushConfirmedOrderToSanity).not.toHaveBeenCalled();
   });
 

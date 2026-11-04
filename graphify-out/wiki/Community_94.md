@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- [deity.ts](file:///C:/Nikunj/src/cms/schemas/deity.ts#L1) (1 connections)
-- [deity](file:///C:/Nikunj/src/cms/schemas/deity.ts#L3) (1 connections)
+- [coupon.ts](file:///C:/Nikunj/src/cms/schemas/coupon.ts#L1) (1 connections)
+- [coupon](file:///C:/Nikunj/src/cms/schemas/coupon.ts#L3) (1 connections)
 
 ## Relationships
 
@@ -13,7 +13,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\cms\schemas\deity.ts](file:///C:/Nikunj/src/cms/schemas/deity.ts)
+- [C:\Nikunj\src\cms\schemas\coupon.ts](file:///C:/Nikunj/src/cms/schemas/coupon.ts)
 
 ## Audit Trail
 

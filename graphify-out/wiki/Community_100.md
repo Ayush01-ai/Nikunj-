@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- [testimonial.ts](file:///C:/Nikunj/src/cms/schemas/testimonial.ts#L1) (1 connections)
-- [testimonial](file:///C:/Nikunj/src/cms/schemas/testimonial.ts#L3) (1 connections)
+- [lead.ts](file:///C:/Nikunj/src/cms/schemas/lead.ts#L1) (1 connections)
+- [lead](file:///C:/Nikunj/src/cms/schemas/lead.ts#L4) (1 connections)
 
 ## Relationships
 
@@ -13,7 +13,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\cms\schemas\testimonial.ts](file:///C:/Nikunj/src/cms/schemas/testimonial.ts)
+- [C:\Nikunj\src\cms\schemas\lead.ts](file:///C:/Nikunj/src/cms/schemas/lead.ts)
 
 ## Audit Trail
 
