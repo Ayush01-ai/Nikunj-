@@ -36,7 +36,7 @@ import {
 } from '@/backend/lib/shiprocket';
 import { applyShiprocketStatusUpdate, ensureShiprocketOrder, isShiprocketEligible } from '@/backend/lib/shiprocketFulfilment';
 import { buildMongoStatusUpdate } from '@/backend/lib/orderStatusSync';
-import { POST as shiprocketWebhook } from '@/app/api/webhooks/courier-status/route';
+import { GET as shiprocketGet, HEAD as shiprocketHead, POST as shiprocketWebhook } from '@/app/api/webhooks/courier-status/route';
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
@@ -335,12 +335,38 @@ describe('POST /api/webhooks/courier-status', () => {
       headers: { 'Content-Type': 'application/json', ...(key ? { 'x-api-key': key } : {}) },
     }));
 
-  it('fails closed without a configured secret and rejects a wrong key', async () => {
+  const raw = (method: string, body?: string, key?: string) =>
+    new NextRequest('http://localhost/api/webhooks/courier-status', { method, ...(body === undefined ? {} : { body }), headers: key ? { 'x-api-key': key } : {} });
+
+  it('fails closed for real orders without a configured secret or with a wrong key', async () => {
     delete process.env.SHIPROCKET_WEBHOOK_SECRET;
-    expect((await call('anything', {})).status).toBe(401);
+    expect((await call('anything', { order_id: 'NS-AB12CD34', current_status: 'DELIVERED' })).status).toBe(401);
     process.env.SHIPROCKET_WEBHOOK_SECRET = 'sr-secret';
-    expect((await call('wrong', {})).status).toBe(401);
-    expect((await call(null, {})).status).toBe(401);
+    expect((await call('wrong', { order_id: 'NS-AB12CD34', current_status: 'DELIVERED' })).status).toBe(401);
+    expect((await call(null, { channel_order_id: 'NS-AB12CD34' })).status).toBe(401);
+    expect(mocks.findOne).not.toHaveBeenCalled();
+  });
+
+  it('answers Shiprocket URL tests with 200 and never touches the database', async () => {
+    process.env.SHIPROCKET_WEBHOOK_SECRET = 'sr-secret';
+    expect(await (await shiprocketGet()).json()).toEqual({ status: 'ok', success: true });
+    expect((await shiprocketHead()).status).toBe(200);
+    expect((await shiprocketWebhook(raw('POST', ''))).status).toBe(200);
+    expect((await shiprocketWebhook(raw('POST', 'a=1&b=2'))).status).toBe(200);
+    const sample = await shiprocketWebhook(raw('POST', JSON.stringify({ order_id: '1234', awb: '99', current_status: 'DELIVERED' })));
+    expect(sample.status).toBe(200);
+    expect(await sample.json()).toMatchObject({ handled: false, reason: 'test_ping' });
+    expect(mocks.findOne).not.toHaveBeenCalled();
+  });
+
+  it('with a valid key, empty or identifier-less bodies are acknowledged without side effects', async () => {
+    process.env.SHIPROCKET_WEBHOOK_SECRET = 'sr-secret';
+    for (const body of ['', '[]', '{}', 'not json']) {
+      const res = await shiprocketWebhook(raw('POST', body, 'sr-secret'));
+      expect(res.status).toBe(200);
+      expect(await res.json()).toMatchObject({ handled: false, reason: 'ping_or_test_payload' });
+    }
+    expect(mocks.findOne).not.toHaveBeenCalled();
   });
 
   it('applies a valid event', async () => {
