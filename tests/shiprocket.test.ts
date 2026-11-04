@@ -36,7 +36,7 @@ import {
 } from '@/backend/lib/shiprocket';
 import { applyShiprocketStatusUpdate, ensureShiprocketOrder, isShiprocketEligible } from '@/backend/lib/shiprocketFulfilment';
 import { buildMongoStatusUpdate } from '@/backend/lib/orderStatusSync';
-import { POST as shiprocketWebhook } from '@/app/api/webhooks/shiprocket/route';
+import { POST as shiprocketWebhook } from '@/app/api/webhooks/courier-status/route';
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
@@ -61,7 +61,7 @@ beforeEach(() => {
   process.env.SHIPROCKET_EMAIL = 'ops@example.test';
   process.env.SHIPROCKET_PASSWORD = 'pw';
   process.env.SHIPROCKET_PICKUP_LOCATION = 'Warehouse';
-  delete process.env.SHIPROCKET_ENABLED;
+  process.env.SHIPROCKET_ENABLED = 'true';
   delete process.env.AUTO_SHIP_AWB;
   delete process.env.SANITY_API_TOKEN;
   resetShiprocketTokenCache();
@@ -168,6 +168,18 @@ describe('ensureShiprocketOrder', () => {
     );
   });
 
+  it('is fully inert (no DB, no HTTP) when SHIPROCKET_ENABLED is unset or false, even with credentials', async () => {
+    mocks.findOne.mockResolvedValue(baseOrder());
+    for (const v of [undefined, 'false', '']) {
+      if (v === undefined) delete process.env.SHIPROCKET_ENABLED;
+      else process.env.SHIPROCKET_ENABLED = v;
+      expect(await ensureShiprocketOrder('NS-AB12CD34')).toEqual({ ok: true, created: false, reason: 'disabled' });
+    }
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(mocks.findOne).not.toHaveBeenCalled();
+    expect(mocks.updateOne).not.toHaveBeenCalled();
+  });
+
   it('eligibility rules', () => {
     expect(isShiprocketEligible({ status: 'confirmed', paymentMethod: 'online', paymentStatus: 'paid' })).toBe(true);
     expect(isShiprocketEligible({ status: 'pending', paymentMethod: 'cod', paymentStatus: 'pending' })).toBe(true);
@@ -238,9 +250,9 @@ describe('applyShiprocketStatusUpdate', () => {
   });
 });
 
-describe('POST /api/webhooks/shiprocket', () => {
+describe('POST /api/webhooks/courier-status', () => {
   const call = (key: string | null, body: unknown) =>
-    shiprocketWebhook(new NextRequest('http://localhost/api/webhooks/shiprocket', {
+    shiprocketWebhook(new NextRequest('http://localhost/api/webhooks/courier-status', {
       method: 'POST',
       body: JSON.stringify(body),
       headers: { 'Content-Type': 'application/json', ...(key ? { 'x-api-key': key } : {}) },

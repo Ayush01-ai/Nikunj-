@@ -14,8 +14,8 @@ export class ShiprocketError extends Error {
 
 export const isShiprocketConfigured = () => Boolean(process.env.SHIPROCKET_EMAIL && process.env.SHIPROCKET_PASSWORD);
 
-/** On when credentials exist, unless explicitly switched off with SHIPROCKET_ENABLED=false. */
-export const isShiprocketEnabled = () => process.env.SHIPROCKET_ENABLED !== 'false' && isShiprocketConfigured();
+/** Opt-in: Shiprocket is only used when SHIPROCKET_ENABLED=true AND credentials exist. Unset/false = fully inert. */
+export const isShiprocketEnabled = () => process.env.SHIPROCKET_ENABLED === 'true' && isShiprocketConfigured();
 
 export const shouldAutoAssignAwb = () => process.env.AUTO_SHIP_AWB === 'true';
 

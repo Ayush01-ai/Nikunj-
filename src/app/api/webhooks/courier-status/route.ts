@@ -4,7 +4,7 @@ import { applyShiprocketStatusUpdate, type ShiprocketWebhookPayload } from '@/ba
 
 /**
  * Shiprocket tracking webhook. Configure in Shiprocket → Settings → API → Webhooks:
- *   URL: {SITE_URL}/api/webhooks/shiprocket   Token: the value of SHIPROCKET_WEBHOOK_SECRET (sent as `x-api-key`).
+ *   URL: {SITE_URL}/api/webhooks/courier-status   Token: the value of SHIPROCKET_WEBHOOK_SECRET (sent as `x-api-key`).
  * Fails closed: without a configured secret nobody can move orders to Delivered.
  */
 function validKey(given: string | null) {
