@@ -5,14 +5,29 @@ const BASE_URL = 'https://apiv2.shiprocket.in/v1/external';
 const TOKEN_TTL_MS = 9 * 24 * 60 * 60 * 1000;
 const REQUEST_TIMEOUT_MS = 20_000;
 
+// Shiprocket blocks accounts after repeated failed logins, so a rejected login is never retried inside this window.
+const LOGIN_COOLDOWN_MS = 30 * 60 * 1000;
+export const LOGIN_FAILED_NOTE = 'Shiprocket login failed: check credentials';
+
 export class ShiprocketError extends Error {
-  constructor(message: string, readonly status?: number) {
+  constructor(message: string, readonly status?: number, readonly loginFailure = false) {
     super(message);
     this.name = 'ShiprocketError';
   }
 }
 
-export const isShiprocketConfigured = () => Boolean(process.env.SHIPROCKET_EMAIL && process.env.SHIPROCKET_PASSWORD);
+/** Password from SHIPROCKET_PASSWORD_B64 (UTF-8 Base64, immune to .env special-character mangling), else SHIPROCKET_PASSWORD. */
+export function getShiprocketPassword(): string | undefined {
+  const b64 = process.env.SHIPROCKET_PASSWORD_B64?.trim();
+  if (b64) {
+    if (!/^[A-Za-z0-9+/]+={0,2}$/.test(b64) || b64.length % 4 !== 0) return undefined;
+    const decoded = Buffer.from(b64, 'base64').toString('utf8').trim();
+    return decoded || undefined;
+  }
+  return process.env.SHIPROCKET_PASSWORD || undefined;
+}
+
+export const isShiprocketConfigured = () => Boolean(process.env.SHIPROCKET_EMAIL && getShiprocketPassword());
 
 /** Opt-in: Shiprocket is only used when SHIPROCKET_ENABLED=true AND credentials exist. Unset/false = fully inert. */
 export const isShiprocketEnabled = () => process.env.SHIPROCKET_ENABLED === 'true' && isShiprocketConfigured();
@@ -20,20 +35,36 @@ export const isShiprocketEnabled = () => process.env.SHIPROCKET_ENABLED === 'tru
 export const shouldAutoAssignAwb = () => process.env.AUTO_SHIP_AWB === 'true';
 
 let cachedToken: { value: string; expiresAt: number } | null = null;
+let loginBlockedUntil = 0;
 
 export function resetShiprocketTokenCache() {
   cachedToken = null;
 }
 
+/** Test helper: also clears the login cooldown. */
+export function resetShiprocketLoginState() {
+  cachedToken = null;
+  loginBlockedUntil = 0;
+}
+
 async function login(): Promise<string> {
+  if (loginBlockedUntil > Date.now()) {
+    throw new ShiprocketError(`${LOGIN_FAILED_NOTE} (login paused for ${Math.ceil((loginBlockedUntil - Date.now()) / 60000)} min to avoid an account lock)`, 403, true);
+  }
+  const password = getShiprocketPassword();
+  if (!process.env.SHIPROCKET_EMAIL || !password) throw new ShiprocketError(`${LOGIN_FAILED_NOTE} (credentials missing or invalid)`, undefined, true);
   const res = await fetch(`${BASE_URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: process.env.SHIPROCKET_EMAIL, password: process.env.SHIPROCKET_PASSWORD }),
+    body: JSON.stringify({ email: process.env.SHIPROCKET_EMAIL, password }),
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
   const data = (await res.json().catch(() => null)) as { token?: string; message?: string } | null;
-  if (!res.ok || !data?.token) throw new ShiprocketError(`Shiprocket login failed (${res.status})${data?.message ? `: ${data.message}` : ''}`, res.status);
+  if (res.status === 400 || res.status === 403) {
+    loginBlockedUntil = Date.now() + LOGIN_COOLDOWN_MS;
+    throw new ShiprocketError(`${LOGIN_FAILED_NOTE} (${res.status})`, res.status, true);
+  }
+  if (!res.ok || !data?.token) throw new ShiprocketError(`Shiprocket login failed (${res.status})${data?.message ? `: ${data.message}` : ''}`, res.status, true);
   cachedToken = { value: data.token, expiresAt: Date.now() + TOKEN_TTL_MS };
   return data.token;
 }

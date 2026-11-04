@@ -10,6 +10,8 @@ import {
   generatePickup,
   generateShiprocketLabel,
   isShiprocketEnabled,
+  LOGIN_FAILED_NOTE,
+  ShiprocketError,
   mapShiprocketStatus,
   shiprocketTrackingUrl,
   shouldAutoAssignAwb,
@@ -90,7 +92,7 @@ export async function ensureShiprocketOrder(orderId: string): Promise<FulfilResu
     try {
       created = await createShiprocketOrder(order);
     } catch (e) {
-      const note = `Shiprocket booking failed: ${errMsg(e)}. Book it manually in Shiprocket or retry from the dashboard.`;
+      const note = e instanceof ShiprocketError && e.loginFailure ? LOGIN_FAILED_NOTE : `Shiprocket booking failed: ${errMsg(e)}. Book it manually in Shiprocket or retry from the dashboard.`;
       await flagAttention(orderId, note);
       return { ok: false, error: note };
     }
@@ -145,7 +147,7 @@ export async function autoShip(orderId: string, shipmentId: string): Promise<str
     );
     return awb.awbCode;
   } catch (e) {
-    await flagAttention(orderId, `Shiprocket AWB not assigned: ${errMsg(e)}. Assign a courier in the Shiprocket panel.`);
+    await flagAttention(orderId, e instanceof ShiprocketError && e.loginFailure ? LOGIN_FAILED_NOTE : `Shiprocket AWB not assigned: ${errMsg(e)}. Assign a courier in the Shiprocket panel.`);
     return undefined;
   }
 }

@@ -32,7 +32,7 @@ vi.mock('@/cms/lib/client', () => {
 vi.mock('@/cms/lib/orderOps', () => ({ historyEntry: (status: string, note: string) => ({ status, note }) }));
 
 import {
-  buildShiprocketPayload, createShiprocketOrder, mapShiprocketStatus, resetShiprocketTokenCache, shiprocketRequest,
+  buildShiprocketPayload, createShiprocketOrder, getShiprocketPassword, isShiprocketEnabled, mapShiprocketStatus, resetShiprocketLoginState, shiprocketRequest,
 } from '@/backend/lib/shiprocket';
 import { applyShiprocketStatusUpdate, ensureShiprocketOrder, isShiprocketEligible } from '@/backend/lib/shiprocketFulfilment';
 import { buildMongoStatusUpdate } from '@/backend/lib/orderStatusSync';
@@ -64,7 +64,8 @@ beforeEach(() => {
   process.env.SHIPROCKET_ENABLED = 'true';
   delete process.env.AUTO_SHIP_AWB;
   delete process.env.SANITY_API_TOKEN;
-  resetShiprocketTokenCache();
+  delete process.env.SHIPROCKET_PASSWORD_B64;
+  resetShiprocketLoginState();
   fetchMock = vi.fn();
   vi.stubGlobal('fetch', fetchMock);
   mocks.findOne.mockReset();
@@ -92,6 +93,82 @@ describe('Shiprocket client: auth', () => {
     });
     await expect(shiprocketRequest('/x')).resolves.toEqual({ done: true });
     expect(tokens).toBe(2);
+  });
+});
+
+describe('Shiprocket client: password sources', () => {
+  const b64 = (s: string) => Buffer.from(s, 'utf8').toString('base64');
+
+  it('prefers SHIPROCKET_PASSWORD_B64 and falls back to SHIPROCKET_PASSWORD', () => {
+    expect(getShiprocketPassword()).toBe('pw');
+    process.env.SHIPROCKET_PASSWORD_B64 = b64('from-b64');
+    expect(getShiprocketPassword()).toBe('from-b64');
+  });
+
+  it('preserves special characters through Base64', () => {
+    const tricky = `a$b#c"d'e\\f@g%h^i`;
+    process.env.SHIPROCKET_PASSWORD_B64 = b64(tricky);
+    expect(getShiprocketPassword()).toBe(tricky);
+  });
+
+  it('treats invalid or empty Base64 as no credentials (no fallback to the plain password)', () => {
+    process.env.SHIPROCKET_ENABLED = 'true';
+    for (const bad of ['not base64!!', '@@@@']) {
+      process.env.SHIPROCKET_PASSWORD_B64 = bad;
+      expect(getShiprocketPassword()).toBeUndefined();
+      expect(isShiprocketEnabled()).toBe(false);
+    }
+    process.env.SHIPROCKET_PASSWORD_B64 = b64('   ');
+    expect(isShiprocketEnabled()).toBe(false);
+  });
+
+  it('sends the decoded password to the login endpoint', async () => {
+    process.env.SHIPROCKET_PASSWORD_B64 = b64('real$pw#1');
+    fetchMock.mockImplementation(async (url: string) => (String(url).endsWith('/auth/login') ? json({ token: 't' }) : json({})));
+    await shiprocketRequest('/x');
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body as string);
+    expect(body.password).toBe('real$pw#1');
+  });
+});
+
+describe('Shiprocket client: login lockout protection', () => {
+  it.each([400, 403])('does not retry after a %i login and blocks further logins for the cooldown', async (status) => {
+    fetchMock.mockResolvedValue(json({ message: 'Invalid email and password combination' }, status));
+    await expect(shiprocketRequest('/x')).rejects.toMatchObject({ loginFailure: true });
+    await expect(shiprocketRequest('/y')).rejects.toMatchObject({ loginFailure: true });
+    await expect(shiprocketRequest('/z')).rejects.toThrow(/login failed/i);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('allows a login again after the 30 minute cooldown', async () => {
+    vi.useFakeTimers();
+    try {
+      fetchMock.mockResolvedValueOnce(json({}, 403));
+      await expect(shiprocketRequest('/x')).rejects.toBeTruthy();
+      vi.advanceTimersByTime(31 * 60 * 1000);
+      fetchMock.mockImplementation(async (url: string) => (String(url).endsWith('/auth/login') ? json({ token: 't' }) : json({ ok: 1 })));
+      await expect(shiprocketRequest('/x')).resolves.toEqual({ ok: 1 });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('re-logs in only once when every call keeps returning 401', async () => {
+    fetchMock.mockImplementation(async (url: string) => (String(url).endsWith('/auth/login') ? json({ token: 't' }) : json({ message: 'nope' }, 401)));
+    await expect(shiprocketRequest('/x')).rejects.toMatchObject({ status: 401 });
+    expect(fetchMock.mock.calls.filter(([u]) => String(u).endsWith('/auth/login'))).toHaveLength(2);
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+  });
+
+  it('flags needsAttention with the login note and does not throw from ensureShiprocketOrder', async () => {
+    fetchMock.mockResolvedValue(json({}, 403));
+    mocks.findOne.mockResolvedValue(baseOrder());
+    const res = await ensureShiprocketOrder('NS-AB12CD34');
+    expect(res).toMatchObject({ ok: false });
+    expect(mocks.updateOne).toHaveBeenCalledWith(
+      { orderId: 'NS-AB12CD34' },
+      expect.objectContaining({ $set: expect.objectContaining({ needsAttention: true, attentionNote: 'Shiprocket login failed: check credentials' }) }),
+    );
   });
 });
 

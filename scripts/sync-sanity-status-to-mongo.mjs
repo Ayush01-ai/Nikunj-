@@ -21,6 +21,10 @@ if (fs.existsSync(envPath)) {
 }
 
 const APPLY = process.argv.includes('--apply');
+// --exclude NS-A,NS-B (or --exclude=NS-A,NS-B): orders to leave untouched.
+const excludeIdx = process.argv.findIndex((a) => a === '--exclude' || a.startsWith('--exclude='));
+const excludeRaw = excludeIdx === -1 ? '' : process.argv[excludeIdx].includes('=') ? process.argv[excludeIdx].split('=')[1] : (process.argv[excludeIdx + 1] ?? '');
+const EXCLUDE = new Set(excludeRaw.split(',').map((s) => s.trim()).filter(Boolean));
 if (!process.env.MONGODB_URI) {
   console.error('MONGODB_URI missing in .env.local');
   process.exit(1);
@@ -42,11 +46,14 @@ const sanityOrders = await client.fetch(
 const sanityById = new Map(sanityOrders.map((o) => [o.orderNumber, o]));
 
 console.log(`Mode: ${APPLY ? 'APPLY' : 'DRY RUN'}`);
-console.log(`Mongo orders scanned: ${mongoOrders.length} | found in Sanity: ${sanityById.size}\n`);
+console.log(`Mongo orders scanned: ${mongoOrders.length} | found in Sanity: ${sanityById.size}`);
+if (EXCLUDE.size) console.log(`Excluded (left untouched): ${[...EXCLUDE].join(', ')}`);
+console.log('');
 
 const changes = [];
 const notes = [];
 for (const mongoOrder of mongoOrders) {
+  if (EXCLUDE.has(mongoOrder.orderId)) continue;
   const sanity = sanityById.get(mongoOrder.orderId);
   if (!sanity) continue;
   // Sanity-only states have no Mongo equivalent (and no 'pending' regression): never copied.
@@ -59,12 +66,13 @@ for (const mongoOrder of mongoOrders) {
     }),
   );
   if (sanity.paymentStatus === 'refund_due') notes.push(`${mongoOrder.orderId}: Sanity paymentStatus=refund_due (Mongo has no such state; stays "${mongoOrder.paymentStatus}" until refunded)`);
-  if (Object.keys(diff).length) changes.push({ orderId: mongoOrder.orderId, from: `${mongoOrder.status}/${mongoOrder.paymentStatus}`, to: `${diff.status ?? mongoOrder.status}/${diff.paymentStatus ?? mongoOrder.paymentStatus}`, diff });
+  if (Object.keys(diff).length) changes.push({ orderId: mongoOrder.orderId, from: `${mongoOrder.status}/${mongoOrder.paymentStatus}`, sanity: `${sanity.status}/${sanity.paymentStatus}`, to: `${diff.status ?? mongoOrder.status}/${diff.paymentStatus ?? mongoOrder.paymentStatus}`, diff });
 }
 
 if (!changes.length) console.log('Nothing to sync: MongoDB already matches Sanity.');
+else console.log(`${'orderNumber'.padEnd(13)}| ${'Mongo status/payment'.padEnd(26)}| ${'Sanity status/payment'.padEnd(26)}| Mongo after apply`);
 for (const c of changes) {
-  console.log(`  ${c.orderId} | ${c.from}  ->  ${c.to}${Object.keys(c.diff).some((k) => k.startsWith('tracking') || k === 'awbCode') ? ' (+ tracking)' : ''}`);
+  console.log(`${c.orderId.padEnd(13)}| ${c.from.padEnd(26)}| ${c.sanity.padEnd(26)}| ${c.to}${Object.keys(c.diff).some((k) => k.startsWith('tracking') || k === 'awbCode') ? ' (+ tracking)' : ''}`);
   if (APPLY) {
     const res = await orders.updateOne({ orderId: c.orderId }, { $set: c.diff });
     console.log(`    APPLY ${c.orderId}: ${res.modifiedCount ? 'updated' : 'unchanged'}`);
