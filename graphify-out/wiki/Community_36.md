@@ -1,18 +1,17 @@
 # Community 36
 
-> 9 nodes · cohesion 0.22
+> 8 nodes · cohesion 0.25
 
 ## Key Concepts
 
-- [rateLimit.test.ts](file:///C:/Nikunj/tests/rateLimit.test.ts#L1) (8 connections)
-- [first](file:///C:/Nikunj/tests/rateLimit.test.ts#L51) (1 connections)
-- [isLimited](file:///C:/Nikunj/tests/rateLimit.test.ts#L6) (1 connections)
-- [req](file:///C:/Nikunj/tests/rateLimit.test.ts#L60) (1 connections)
-- [retryAfter](file:///C:/Nikunj/tests/rateLimit.test.ts#L42) (1 connections)
-- [second](file:///C:/Nikunj/tests/rateLimit.test.ts#L53) (1 connections)
-- [windowMs](file:///C:/Nikunj/tests/rateLimit.test.ts#L31) (1 connections)
-- [withNeither](file:///C:/Nikunj/tests/rateLimit.test.ts#L70) (1 connections)
-- [withRealIp](file:///C:/Nikunj/tests/rateLimit.test.ts#L67) (1 connections)
+- [Order.ts](file:///C:/Nikunj/src/backend/models/Order.ts#L1) (4 connections)
+- [order.ts](file:///C:/Nikunj/src/cms/schemas/order.ts#L1) (3 connections)
+- [order](file:///C:/Nikunj/src/cms/schemas/order.ts#L20) (2 connections)
+- [ORDER_STATUS_LIST](file:///C:/Nikunj/src/cms/schemas/order.ts#L3) (1 connections)
+- [OrderItemSchema](file:///C:/Nikunj/src/backend/models/Order.ts#L77) (1 connections)
+- [OrderSchema](file:///C:/Nikunj/src/backend/models/Order.ts#L98) (1 connections)
+- [ShippingAddressSchema](file:///C:/Nikunj/src/backend/models/Order.ts#L87) (1 connections)
+- [statusTitle()](file:///C:/Nikunj/src/cms/schemas/order.ts#L16) (1 connections)
 
 ## Relationships
 
@@ -20,11 +19,12 @@
 
 ## Source Files
 
-- [C:\Nikunj\tests\rateLimit.test.ts](file:///C:/Nikunj/tests/rateLimit.test.ts)
+- [C:\Nikunj\src\backend\models\Order.ts](file:///C:/Nikunj/src/backend/models/Order.ts)
+- [C:\Nikunj\src\cms\schemas\order.ts](file:///C:/Nikunj/src/cms/schemas/order.ts)
 
 ## Audit Trail
 
-- EXTRACTED: 16 (100%)
+- EXTRACTED: 14 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

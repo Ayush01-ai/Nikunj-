@@ -4,14 +4,14 @@
 
 ## Key Concepts
 
-- [orderNotify.test.ts](file:///C:/Nikunj/tests/orderNotify.test.ts#L1) (7 connections)
-- [both](file:///C:/Nikunj/tests/orderNotify.test.ts#L51) (1 connections)
-- [mocks](file:///C:/Nikunj/tests/orderNotify.test.ts#L3) (1 connections)
-- [order()](file:///C:/Nikunj/tests/orderNotify.test.ts#L98) (1 connections)
-- [res](file:///C:/Nikunj/tests/orderNotify.test.ts#L103) (1 connections)
-- [snap](file:///C:/Nikunj/tests/orderNotify.test.ts#L70) (1 connections)
-- [verifiedEmail](file:///C:/Nikunj/tests/orderNotify.test.ts#L32) (1 connections)
-- [verifiedPhone](file:///C:/Nikunj/tests/orderNotify.test.ts#L33) (1 connections)
+- [stockHold.test.ts](file:///C:/Nikunj/tests/stockHold.test.ts#L1) (8 connections)
+- [aggregate](file:///C:/Nikunj/tests/stockHold.test.ts#L3) (1 connections)
+- [held](file:///C:/Nikunj/tests/stockHold.test.ts#L20) (1 connections)
+- [{ heldQuantities }](file:///C:/Nikunj/tests/stockHold.test.ts#L33) (1 connections)
+- [{ heldQuantities, holdKey }](file:///C:/Nikunj/tests/stockHold.test.ts#L19) (1 connections)
+- [pipeline](file:///C:/Nikunj/tests/stockHold.test.ts#L26) (1 connections)
+- [{ releaseStockHold }](file:///C:/Nikunj/tests/stockHold.test.ts#L44) (1 connections)
+- [{ withStockLock }](file:///C:/Nikunj/tests/stockHold.test.ts#L38) (1 connections)
 
 ## Relationships
 
@@ -19,11 +19,11 @@
 
 ## Source Files
 
-- [C:\Nikunj\tests\orderNotify.test.ts](file:///C:/Nikunj/tests/orderNotify.test.ts)
+- [C:\Nikunj\tests\stockHold.test.ts](file:///C:/Nikunj/tests/stockHold.test.ts)
 
 ## Audit Trail
 
-- EXTRACTED: 14 (100%)
+- EXTRACTED: 15 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

@@ -4,9 +4,9 @@
 
 ## Key Concepts
 
-- [adminSettings.ts](file:///C:/Nikunj/src/cms/schemas/adminSettings.ts#L1) (2 connections)
-- [adminSettings](file:///C:/Nikunj/src/cms/schemas/adminSettings.ts#L6) (1 connections)
-- [MOBILE](file:///C:/Nikunj/src/cms/schemas/adminSettings.ts#L3) (1 connections)
+- [reviewActions.ts](file:///C:/Nikunj/src/cms/actions/reviewActions.ts#L1) (2 connections)
+- [ApproveReviewAction()](file:///C:/Nikunj/src/cms/actions/reviewActions.ts#L5) (1 connections)
+- [RejectReviewAction()](file:///C:/Nikunj/src/cms/actions/reviewActions.ts#L22) (1 connections)
 
 ## Relationships
 
@@ -14,7 +14,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\cms\schemas\adminSettings.ts](file:///C:/Nikunj/src/cms/schemas/adminSettings.ts)
+- [C:\Nikunj\src\cms\actions\reviewActions.ts](file:///C:/Nikunj/src/cms/actions/reviewActions.ts)
 
 ## Audit Trail
 

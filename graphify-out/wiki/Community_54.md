@@ -4,12 +4,12 @@
 
 ## Key Concepts
 
-- [ShopSuggestions.tsx](file:///C:/Nikunj/src/frontend/components/layout/ShopSuggestions.tsx#L1) (5 connections)
-- [alive](file:///C:/Nikunj/src/frontend/components/layout/ShopSuggestions.tsx#L24) (1 connections)
-- [[day]](file:///C:/Nikunj/src/frontend/components/layout/ShopSuggestions.tsx#L21) (1 connections)
-- [[index, setIndex]](file:///C:/Nikunj/src/frontend/components/layout/ShopSuggestions.tsx#L19) (1 connections)
-- [pathname](file:///C:/Nikunj/src/frontend/components/layout/ShopSuggestions.tsx#L18) (1 connections)
-- [picks](file:///C:/Nikunj/src/frontend/components/layout/ShopSuggestions.tsx#L33) (1 connections)
+- [client.ts](file:///C:/Nikunj/src/cms/lib/client.ts#L1) (5 connections)
+- [apiVersion](file:///C:/Nikunj/src/cms/lib/client.ts#L5) (1 connections)
+- [client](file:///C:/Nikunj/src/cms/lib/client.ts#L7) (1 connections)
+- [dataset](file:///C:/Nikunj/src/cms/lib/client.ts#L4) (1 connections)
+- [projectId](file:///C:/Nikunj/src/cms/lib/client.ts#L3) (1 connections)
+- [writeClient](file:///C:/Nikunj/src/cms/lib/client.ts#L17) (1 connections)
 
 ## Relationships
 
@@ -17,7 +17,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\frontend\components\layout\ShopSuggestions.tsx](file:///C:/Nikunj/src/frontend/components/layout/ShopSuggestions.tsx)
+- [C:\Nikunj\src\cms\lib\client.ts](file:///C:/Nikunj/src/cms/lib/client.ts)
 
 ## Audit Trail
 

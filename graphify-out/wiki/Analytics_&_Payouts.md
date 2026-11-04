@@ -1,70 +1,57 @@
 # Analytics & Payouts
 
-> 68 nodes · cohesion 0.05
+> 74 nodes · cohesion 0.03
 
 ## Key Concepts
 
-- [PATCH()](file:///C:/Nikunj/src/app/api/orders/%5Bid%5D/route.ts#L38) (33 connections)
-- [catch()](file:///C:/Nikunj/src/app/login/whatsapp/page.tsx#L228) (30 connections)
-- [set()](file:///C:/Nikunj/src/frontend/components/products/ProductOptions.tsx#L170) (25 connections)
-- [sendApproved()](file:///C:/Nikunj/src/backend/lib/refunds.ts#L255) (14 connections)
-- [refunds.ts](file:///C:/Nikunj/src/backend/lib/refunds.ts#L1) (12 connections)
-- [recordOutcome()](file:///C:/Nikunj/src/backend/lib/refunds.ts#L153) (11 connections)
-- [recordOrderPlaced()](file:///C:/Nikunj/src/backend/lib/analytics.ts#L69) (9 connections)
-- [cashfreePayouts.ts](file:///C:/Nikunj/src/backend/lib/cashfreePayouts.ts#L1) (9 connections)
-- [razorpay.ts](file:///C:/Nikunj/src/backend/lib/razorpay.ts#L1) (9 connections)
-- [order-request-auth.test.ts](file:///C:/Nikunj/tests/order-request-auth.test.ts#L1) (8 connections)
-- [createPayoutTransfer()](file:///C:/Nikunj/src/backend/lib/cashfreePayouts.ts#L98) (8 connections)
-- [getPayoutTransfer()](file:///C:/Nikunj/src/backend/lib/cashfreePayouts.ts#L131) (8 connections)
-- [lookupAtGateway()](file:///C:/Nikunj/src/backend/lib/refunds.ts#L131) (8 connections)
-- [getClient()](file:///C:/Nikunj/src/backend/lib/razorpay.ts#L26) (7 connections)
-- [failApproved()](file:///C:/Nikunj/src/backend/lib/refunds.ts#L226) (7 connections)
-- [sendToGateway()](file:///C:/Nikunj/src/backend/lib/refunds.ts#L109) (7 connections)
-- [syncProcessing()](file:///C:/Nikunj/src/backend/lib/refunds.ts#L208) (7 connections)
-- [analytics.ts](file:///C:/Nikunj/src/backend/lib/analytics.ts#L1) (6 connections)
-- [processRefund()](file:///C:/Nikunj/src/backend/lib/refunds.ts#L238) (6 connections)
-- [recordDayUpdate()](file:///C:/Nikunj/src/backend/lib/analytics.ts#L22) (5 connections)
-- [addRestockPatches()](file:///C:/Nikunj/src/cms/lib/orderOps.ts#L24) (5 connections)
-- [verifyPaymentSignature()](file:///C:/Nikunj/src/backend/lib/razorpay.ts#L77) (5 connections)
-- [analyticsEnabled()](file:///C:/Nikunj/src/backend/lib/analytics.ts#L16) (4 connections)
-- [leadId()](file:///C:/Nikunj/src/backend/lib/analytics.ts#L19) (4 connections)
-- [recordLead()](file:///C:/Nikunj/src/backend/lib/analytics.ts#L50) (4 connections)
-- *... and 43 more nodes in this community*
-
-## Class Diagram
-
-```mermaid
-classDiagram
-    class PayoutRequestError {
-        +cashfreePayouts.ts()
-        +.constructor()
-    }
-```
+- [Navbar.tsx](file:///C:/Nikunj/src/frontend/components/layout/Navbar.tsx#L1) (29 connections)
+- [CatalogPage.tsx](file:///C:/Nikunj/src/frontend/components/products/CatalogPage.tsx#L1) (18 connections)
+- [deskStructure()](file:///C:/Nikunj/src/cms/deskStructure.ts#L72) (9 connections)
+- [id](file:///C:/Nikunj/src/frontend/components/layout/Navbar.tsx#L65) (8 connections)
+- [layout.tsx](file:///C:/Nikunj/src/app/layout.tsx#L1) (6 connections)
+- [title](file:///C:/Nikunj/src/frontend/components/products/CatalogPage.tsx#L106) (6 connections)
+- [sanityFetch()](file:///C:/Nikunj/src/cms/lib/sanityFetch.ts#L12) (6 connections)
+- [deskStructure.ts](file:///C:/Nikunj/src/cms/deskStructure.ts#L1) (5 connections)
+- [image.ts](file:///C:/Nikunj/src/cms/lib/image.ts#L1) (5 connections)
+- [image](file:///C:/Nikunj/src/frontend/components/ui/3-d-coverflow-carousel.tsx#L108) (4 connections)
+- [width](file:///C:/Nikunj/src/cms/tools/AnalyticsDashboard.tsx#L71) (4 connections)
+- [filteredProducts()](file:///C:/Nikunj/src/cms/deskStructure.ts#L3) (4 connections)
+- [filteredReviews()](file:///C:/Nikunj/src/cms/deskStructure.ts#L15) (4 connections)
+- [ordersByStatus()](file:///C:/Nikunj/src/cms/deskStructure.ts#L28) (4 connections)
+- [productsByCategory()](file:///C:/Nikunj/src/cms/deskStructure.ts#L42) (4 connections)
+- [getImageUrl()](file:///C:/Nikunj/src/cms/lib/image.ts#L32) (4 connections)
+- [generateMetadata()](file:///C:/Nikunj/src/app/layout.tsx#L16) (4 connections)
+- [getSiteSettings()](file:///C:/Nikunj/src/app/layout.tsx#L13) (4 connections)
+- [generateCatalogMetadata()](file:///C:/Nikunj/src/frontend/components/products/CatalogPage.tsx#L46) (3 connections)
+- [getCatalogContext()](file:///C:/Nikunj/src/frontend/components/products/CatalogPage.tsx#L36) (3 connections)
+- [safeImageUrl()](file:///C:/Nikunj/src/cms/lib/image.ts#L14) (3 connections)
+- [urlFor()](file:///C:/Nikunj/src/cms/lib/image.ts#L7) (3 connections)
+- [getNavMenu()](file:///C:/Nikunj/src/app/layout.tsx#L14) (3 connections)
+- [RootLayout()](file:///C:/Nikunj/src/app/layout.tsx#L80) (3 connections)
+- [list()](file:///C:/Nikunj/src/cms/tools/BulkProductImport.tsx#L70) (2 connections)
+- *... and 49 more nodes in this community*
 
 ## Relationships
 
-- [[Community 999]] (4 shared connections)
+- No strong cross-community connections detected
 
 ## Source Files
 
-- [C:\Nikunj\src\app\api\orders\[id]\route.ts](file:///C:/Nikunj/src/app/api/orders/%5Bid%5D/route.ts)
-- [C:\Nikunj\src\app\api\payment\webhook\route.ts](file:///C:/Nikunj/src/app/api/payment/webhook/route.ts)
-- [C:\Nikunj\src\app\login\whatsapp\page.tsx](file:///C:/Nikunj/src/app/login/whatsapp/page.tsx)
-- [C:\Nikunj\src\app\not-found.tsx](file:///C:/Nikunj/src/app/not-found.tsx)
-- [C:\Nikunj\src\backend\lib\analytics.ts](file:///C:/Nikunj/src/backend/lib/analytics.ts)
-- [C:\Nikunj\src\backend\lib\cashfreePayouts.ts](file:///C:/Nikunj/src/backend/lib/cashfreePayouts.ts)
-- [C:\Nikunj\src\backend\lib\razorpay.ts](file:///C:/Nikunj/src/backend/lib/razorpay.ts)
-- [C:\Nikunj\src\backend\lib\refunds.ts](file:///C:/Nikunj/src/backend/lib/refunds.ts)
-- [C:\Nikunj\src\cms\lib\orderOps.ts](file:///C:/Nikunj/src/cms/lib/orderOps.ts)
-- [C:\Nikunj\src\cms\lib\orderStock.ts](file:///C:/Nikunj/src/cms/lib/orderStock.ts)
+- [C:\Nikunj\src\app\layout.tsx](file:///C:/Nikunj/src/app/layout.tsx)
+- [C:\Nikunj\src\app\page.tsx](file:///C:/Nikunj/src/app/page.tsx)
+- [C:\Nikunj\src\cms\deskStructure.ts](file:///C:/Nikunj/src/cms/deskStructure.ts)
+- [C:\Nikunj\src\cms\lib\image.ts](file:///C:/Nikunj/src/cms/lib/image.ts)
+- [C:\Nikunj\src\cms\lib\sanityFetch.ts](file:///C:/Nikunj/src/cms/lib/sanityFetch.ts)
+- [C:\Nikunj\src\cms\tools\AnalyticsDashboard.tsx](file:///C:/Nikunj/src/cms/tools/AnalyticsDashboard.tsx)
 - [C:\Nikunj\src\cms\tools\BulkProductImport.tsx](file:///C:/Nikunj/src/cms/tools/BulkProductImport.tsx)
-- [C:\Nikunj\src\frontend\components\products\ProductOptions.tsx](file:///C:/Nikunj/src/frontend/components/products/ProductOptions.tsx)
-- [C:\Nikunj\tests\order-request-auth.test.ts](file:///C:/Nikunj/tests/order-request-auth.test.ts)
+- [C:\Nikunj\src\frontend\components\layout\Navbar.tsx](file:///C:/Nikunj/src/frontend/components/layout/Navbar.tsx)
+- [C:\Nikunj\src\frontend\components\products\CatalogPage.tsx](file:///C:/Nikunj/src/frontend/components/products/CatalogPage.tsx)
+- [C:\Nikunj\src\frontend\components\ui\3-d-coverflow-carousel.tsx](file:///C:/Nikunj/src/frontend/components/ui/3-d-coverflow-carousel.tsx)
 
 ## Audit Trail
 
-- EXTRACTED: 201 (57%)
-- INFERRED: 154 (43%)
+- EXTRACTED: 148 (75%)
+- INFERRED: 50 (25%)
 - AMBIGUOUS: 0 (0%)
 
 ---

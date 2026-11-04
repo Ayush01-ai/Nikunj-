@@ -4,9 +4,9 @@
 
 ## Key Concepts
 
-- [Otp.ts](file:///C:/Nikunj/src/backend/models/Otp.ts#L1) (2 connections)
-- [Otp](file:///C:/Nikunj/src/backend/models/Otp.ts#L41) (1 connections)
-- [OtpSchema](file:///C:/Nikunj/src/backend/models/Otp.ts#L25) (1 connections)
+- [sitemap.ts](file:///C:/Nikunj/src/app/sitemap.ts#L1) (2 connections)
+- [BASE_URL](file:///C:/Nikunj/src/app/sitemap.ts#L5) (1 connections)
+- [sitemap()](file:///C:/Nikunj/src/app/sitemap.ts#L7) (1 connections)
 
 ## Relationships
 
@@ -14,7 +14,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\backend\models\Otp.ts](file:///C:/Nikunj/src/backend/models/Otp.ts)
+- [C:\Nikunj\src\app\sitemap.ts](file:///C:/Nikunj/src/app/sitemap.ts)
 
 ## Audit Trail
 

@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- [lead.ts](file:///C:/Nikunj/src/cms/schemas/lead.ts#L1) (1 connections)
-- [lead](file:///C:/Nikunj/src/cms/schemas/lead.ts#L4) (1 connections)
+- [heroSlide.ts](file:///C:/Nikunj/src/cms/schemas/heroSlide.ts#L1) (1 connections)
+- [heroSlide](file:///C:/Nikunj/src/cms/schemas/heroSlide.ts#L3) (1 connections)
 
 ## Relationships
 
@@ -13,7 +13,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\cms\schemas\lead.ts](file:///C:/Nikunj/src/cms/schemas/lead.ts)
+- [C:\Nikunj\src\cms\schemas\heroSlide.ts](file:///C:/Nikunj/src/cms/schemas/heroSlide.ts)
 
 ## Audit Trail
 

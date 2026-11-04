@@ -25,21 +25,9 @@ export function discountPercent(mrp: number | undefined | null, price: number): 
   return Math.floor(((mrp - price) / mrp) * 100);
 }
 
-/**
- * When every variant is set to 0 stock but the product itself has stock, the
- * variant stock was never filled in — fall back to the product stock.
- */
-function variantStockTracked(product: PricedProduct): boolean {
-  const sizes = product.sizes ?? [];
-  const withStock = sizes.filter((s) => typeof s.stock === 'number');
-  if (withStock.length === 0) return false;
-  const allZero = withStock.every((s) => s.stock === 0);
-  return !(allZero && (product.stock ?? 0) > 0);
-}
-
 export function variantStock(product: PricedProduct, variant?: ProductSize): number {
   const productStock = Math.max(0, product.stock ?? 0);
-  if (!variant || typeof variant.stock !== 'number' || !variantStockTracked(product)) return productStock;
+  if (!variant || variant.stock === null || variant.stock === undefined) return productStock;
   return Math.max(0, variant.stock);
 }
 

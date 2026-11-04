@@ -1,44 +1,35 @@
 # Community 17
 
-> 30 nodes · cohesion 0.08
+> 26 nodes · cohesion 0.08
 
 ## Key Concepts
 
-- [cashfree-signature.test.ts](file:///C:/Nikunj/tests/cashfree-signature.test.ts#L1) (14 connections)
-- [cashfree.ts](file:///C:/Nikunj/src/backend/lib/cashfree.ts#L1) (11 connections)
-- [getClient()](file:///C:/Nikunj/src/backend/lib/cashfree.ts#L22) (9 connections)
-- [cashfreeEnvironment()](file:///C:/Nikunj/src/backend/lib/cashfreeConfig.ts#L28) (4 connections)
-- [cashfreeConfig.ts](file:///C:/Nikunj/src/backend/lib/cashfreeConfig.ts#L1) (3 connections)
-- [createCashfreeOrder()](file:///C:/Nikunj/src/backend/lib/cashfree.ts#L58) (3 connections)
-- [createCashfreeRefund()](file:///C:/Nikunj/src/backend/lib/cashfree.ts#L101) (3 connections)
-- [fetchCashfreeRefund()](file:///C:/Nikunj/src/backend/lib/cashfree.ts#L116) (3 connections)
-- [cashfreeApiVersion()](file:///C:/Nikunj/src/backend/lib/cashfree.ts#L10) (2 connections)
-- [fetchCashfreeOrder()](file:///C:/Nikunj/src/backend/lib/cashfree.ts#L83) (2 connections)
-- [fetchCashfreeOrderPayments()](file:///C:/Nikunj/src/backend/lib/cashfree.ts#L90) (2 connections)
-- [constructor()](file:///C:/Nikunj/tests/cashfree-signature.test.ts#L14) (2 connections)
-- [PGCreateOrder](file:///C:/Nikunj/tests/cashfree-signature.test.ts#L6) (2 connections)
-- [sign()](file:///C:/Nikunj/tests/cashfree-signature.test.ts#L21) (2 connections)
-- [isCashfreeConfigured()](file:///C:/Nikunj/src/backend/lib/cashfreeConfig.ts#L10) (2 connections)
-- [CashfreeSignatureError](file:///C:/Nikunj/src/backend/lib/cashfree.ts#L122) (1 connections)
-- [client](file:///C:/Nikunj/src/backend/lib/cashfree.ts#L5) (1 connections)
-- [DEFAULT_CASHFREE_API_VERSION](file:///C:/Nikunj/src/backend/lib/cashfree.ts#L7) (1 connections)
-- [body](file:///C:/Nikunj/tests/cashfree-signature.test.ts#L42) (1 connections)
-- [{ createCashfreeOrder }](file:///C:/Nikunj/tests/cashfree-signature.test.ts#L87) (1 connections)
-- [ctorArgs](file:///C:/Nikunj/tests/cashfree-signature.test.ts#L7) (1 connections)
-- [good](file:///C:/Nikunj/tests/cashfree-signature.test.ts#L54) (1 connections)
-- [reformatted](file:///C:/Nikunj/tests/cashfree-signature.test.ts#L62) (1 connections)
-- [[req, requestId, idempotencyKey]](file:///C:/Nikunj/tests/cashfree-signature.test.ts#L97) (1 connections)
-- [result](file:///C:/Nikunj/tests/cashfree-signature.test.ts#L47) (1 connections)
-- *... and 5 more nodes in this community*
-
-## Class Diagram
-
-```mermaid
-classDiagram
-    class CashfreeSignatureError {
-        +cashfree.ts()
-    }
-```
+- [payment-cashfree-create.test.ts](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L1) (25 connections)
+- [createCashfreeOrder](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L8) (2 connections)
+- [args](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L239) (1 connections)
+- [connectDB](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L12) (1 connections)
+- [errorSpy](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L302) (1 connections)
+- [fetchCashfreeOrder](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L9) (1 connections)
+- [findOne](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L13) (1 connections)
+- [findOneAndUpdate](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L14) (1 connections)
+- [gatewayError](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L305) (1 connections)
+- [GUEST_ORDER](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L45) (1 connections)
+- [guestProof](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L108) (1 connections)
+- [i](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L187) (1 connections)
+- [isCashfreeConfigured](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L10) (1 connections)
+- [json](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L81) (1 connections)
+- [last](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L186) (1 connections)
+- [makeRequest()](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L24) (1 connections)
+- [{ POST }](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L79) (1 connections)
+- [REGISTERED_ORDER](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L32) (1 connections)
+- [requireAuthHybrid](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L11) (1 connections)
+- [res](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L80) (1 connections)
+- [resMismatch](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L128) (1 connections)
+- [resMissing](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L123) (1 connections)
+- [resTampered](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L137) (1 connections)
+- [resWrongOrder](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L133) (1 connections)
+- [wrongOrderProof](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts#L132) (1 connections)
+- *... and 1 more nodes in this community*
 
 ## Relationships
 
@@ -46,14 +37,12 @@ classDiagram
 
 ## Source Files
 
-- [C:\Nikunj\src\backend\lib\cashfree.ts](file:///C:/Nikunj/src/backend/lib/cashfree.ts)
-- [C:\Nikunj\src\backend\lib\cashfreeConfig.ts](file:///C:/Nikunj/src/backend/lib/cashfreeConfig.ts)
-- [C:\Nikunj\tests\cashfree-signature.test.ts](file:///C:/Nikunj/tests/cashfree-signature.test.ts)
+- [C:\Nikunj\tests\payment-cashfree-create.test.ts](file:///C:/Nikunj/tests/payment-cashfree-create.test.ts)
 
 ## Audit Trail
 
-- EXTRACTED: 67 (85%)
-- INFERRED: 12 (15%)
+- EXTRACTED: 50 (98%)
+- INFERRED: 1 (2%)
 - AMBIGUOUS: 0 (0%)
 
 ---

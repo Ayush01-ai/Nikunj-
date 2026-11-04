@@ -1,13 +1,14 @@
 # Community 65
 
-> 4 nodes · cohesion 0.50
+> 5 nodes · cohesion 0.40
 
 ## Key Concepts
 
-- [AnnouncementBar.tsx](file:///C:/Nikunj/src/frontend/components/home/AnnouncementBar.tsx#L1) (3 connections)
-- [cleanWhatsapp](file:///C:/Nikunj/src/frontend/components/home/AnnouncementBar.tsx#L15) (1 connections)
-- [hasCouponMention](file:///C:/Nikunj/src/frontend/components/home/AnnouncementBar.tsx#L22) (1 connections)
-- [waUrl](file:///C:/Nikunj/src/frontend/components/home/AnnouncementBar.tsx#L16) (1 connections)
+- [otpHash.test.ts](file:///C:/Nikunj/tests/otpHash.test.ts#L1) (4 connections)
+- [a](file:///C:/Nikunj/tests/otpHash.test.ts#L38) (1 connections)
+- [one](file:///C:/Nikunj/tests/otpHash.test.ts#L44) (1 connections)
+- [ORIGINAL](file:///C:/Nikunj/tests/otpHash.test.ts#L4) (1 connections)
+- [stored](file:///C:/Nikunj/tests/otpHash.test.ts#L12) (1 connections)
 
 ## Relationships
 
@@ -15,11 +16,11 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\frontend\components\home\AnnouncementBar.tsx](file:///C:/Nikunj/src/frontend/components/home/AnnouncementBar.tsx)
+- [C:\Nikunj\tests\otpHash.test.ts](file:///C:/Nikunj/tests/otpHash.test.ts)
 
 ## Audit Trail
 
-- EXTRACTED: 6 (100%)
+- EXTRACTED: 8 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

@@ -1,15 +1,15 @@
 # Community 52
 
-> 6 nodes · cohesion 0.33
+> 6 nodes · cohesion 0.53
 
 ## Key Concepts
 
-- [client.ts](file:///C:/Nikunj/src/cms/lib/client.ts#L1) (5 connections)
-- [apiVersion](file:///C:/Nikunj/src/cms/lib/client.ts#L5) (1 connections)
-- [client](file:///C:/Nikunj/src/cms/lib/client.ts#L7) (1 connections)
-- [dataset](file:///C:/Nikunj/src/cms/lib/client.ts#L4) (1 connections)
-- [projectId](file:///C:/Nikunj/src/cms/lib/client.ts#L3) (1 connections)
-- [writeClient](file:///C:/Nikunj/src/cms/lib/client.ts#L17) (1 connections)
+- [email.ts](file:///C:/Nikunj/src/backend/lib/email.ts#L1) (7 connections)
+- [orderConfirmationEmail()](file:///C:/Nikunj/src/backend/lib/email.ts#L49) (4 connections)
+- [escapeHtml()](file:///C:/Nikunj/src/backend/lib/email.ts#L32) (3 connections)
+- [orderStatusEmail()](file:///C:/Nikunj/src/backend/lib/email.ts#L88) (3 connections)
+- [inr()](file:///C:/Nikunj/src/backend/lib/email.ts#L35) (2 connections)
+- [passwordResetEmail()](file:///C:/Nikunj/src/backend/lib/email.ts#L101) (1 connections)
 
 ## Relationships
 
@@ -17,12 +17,12 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\cms\lib\client.ts](file:///C:/Nikunj/src/cms/lib/client.ts)
+- [C:\Nikunj\src\backend\lib\email.ts](file:///C:/Nikunj/src/backend/lib/email.ts)
 
 ## Audit Trail
 
-- EXTRACTED: 10 (100%)
-- INFERRED: 0 (0%)
+- EXTRACTED: 18 (90%)
+- INFERRED: 2 (10%)
 - AMBIGUOUS: 0 (0%)
 
 ---

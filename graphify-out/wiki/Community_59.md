@@ -4,11 +4,11 @@
 
 ## Key Concepts
 
-- [cashfreeConfig.test.ts](file:///C:/Nikunj/tests/cashfreeConfig.test.ts#L1) (4 connections)
-- [{ cashfreeEnvironment }](file:///C:/Nikunj/tests/cashfreeConfig.test.ts#L38) (1 connections)
-- [{ isCashfreeConfigured }](file:///C:/Nikunj/tests/cashfreeConfig.test.ts#L14) (1 connections)
-- [{ isCashfreeEnabledOnClient }](file:///C:/Nikunj/tests/cashfreeConfig.test.ts#L25) (1 connections)
-- [ORIGINAL_ENV](file:///C:/Nikunj/tests/cashfreeConfig.test.ts#L3) (1 connections)
+- [InstagramStrip.tsx](file:///C:/Nikunj/src/frontend/components/home/InstagramStrip.tsx#L1) (4 connections)
+- [Icon](file:///C:/Nikunj/src/frontend/components/home/InstagramStrip.tsx#L74) (1 connections)
+- [profileUrl](file:///C:/Nikunj/src/frontend/components/home/InstagramStrip.tsx#L27) (1 connections)
+- [{ ref, inView }](file:///C:/Nikunj/src/frontend/components/home/InstagramStrip.tsx#L23) (1 connections)
+- [TILES](file:///C:/Nikunj/src/frontend/components/home/InstagramStrip.tsx#L13) (1 connections)
 
 ## Relationships
 
@@ -16,7 +16,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\tests\cashfreeConfig.test.ts](file:///C:/Nikunj/tests/cashfreeConfig.test.ts)
+- [C:\Nikunj\src\frontend\components\home\InstagramStrip.tsx](file:///C:/Nikunj/src/frontend/components/home/InstagramStrip.tsx)
 
 ## Audit Trail
 

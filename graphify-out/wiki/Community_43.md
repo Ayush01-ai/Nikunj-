@@ -1,17 +1,16 @@
 # Community 43
 
-> 8 nodes · cohesion 0.25
+> 7 nodes · cohesion 0.29
 
 ## Key Concepts
 
-- [orders-db-unavailable.test.ts](file:///C:/Nikunj/tests/orders-db-unavailable.test.ts#L1) (7 connections)
-- [actual](file:///C:/Nikunj/tests/orders-db-unavailable.test.ts#L22) (1 connections)
-- [client](file:///C:/Nikunj/tests/orders-db-unavailable.test.ts#L33) (1 connections)
-- [dbError](file:///C:/Nikunj/tests/orders-db-unavailable.test.ts#L17) (1 connections)
-- [json](file:///C:/Nikunj/tests/orders-db-unavailable.test.ts#L84) (1 connections)
-- [makeRequest()](file:///C:/Nikunj/tests/orders-db-unavailable.test.ts#L54) (1 connections)
-- [{ POST }](file:///C:/Nikunj/tests/orders-db-unavailable.test.ts#L81) (1 connections)
-- [res](file:///C:/Nikunj/tests/orders-db-unavailable.test.ts#L83) (1 connections)
+- [orderRequests.ts](file:///C:/Nikunj/src/cms/lib/orderRequests.ts#L1) (7 connections)
+- [CANCEL_REASONS](file:///C:/Nikunj/src/cms/lib/orderRequests.ts#L4) (1 connections)
+- [CANCELLABLE_STATUSES](file:///C:/Nikunj/src/cms/lib/orderRequests.ts#L33) (1 connections)
+- [MAX_PHOTO_BYTES](file:///C:/Nikunj/src/cms/lib/orderRequests.ts#L36) (1 connections)
+- [MAX_REQUEST_PHOTOS](file:///C:/Nikunj/src/cms/lib/orderRequests.ts#L35) (1 connections)
+- [PHOTO_REQUIRED_REASONS](file:///C:/Nikunj/src/cms/lib/orderRequests.ts#L24) (1 connections)
+- [RETURN_REASONS](file:///C:/Nikunj/src/cms/lib/orderRequests.ts#L13) (1 connections)
 
 ## Relationships
 
@@ -19,11 +18,11 @@
 
 ## Source Files
 
-- [C:\Nikunj\tests\orders-db-unavailable.test.ts](file:///C:/Nikunj/tests/orders-db-unavailable.test.ts)
+- [C:\Nikunj\src\cms\lib\orderRequests.ts](file:///C:/Nikunj/src/cms/lib/orderRequests.ts)
 
 ## Audit Trail
 
-- EXTRACTED: 14 (100%)
+- EXTRACTED: 13 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

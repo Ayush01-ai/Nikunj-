@@ -1,17 +1,16 @@
 # Community 44
 
-> 8 nodes · cohesion 0.25
+> 7 nodes · cohesion 0.29
 
 ## Key Concepts
 
-- [stockHold.test.ts](file:///C:/Nikunj/tests/stockHold.test.ts#L1) (8 connections)
-- [aggregate](file:///C:/Nikunj/tests/stockHold.test.ts#L3) (1 connections)
-- [held](file:///C:/Nikunj/tests/stockHold.test.ts#L20) (1 connections)
-- [{ heldQuantities }](file:///C:/Nikunj/tests/stockHold.test.ts#L33) (1 connections)
-- [{ heldQuantities, holdKey }](file:///C:/Nikunj/tests/stockHold.test.ts#L19) (1 connections)
-- [pipeline](file:///C:/Nikunj/tests/stockHold.test.ts#L26) (1 connections)
-- [{ releaseStockHold }](file:///C:/Nikunj/tests/stockHold.test.ts#L44) (1 connections)
-- [{ withStockLock }](file:///C:/Nikunj/tests/stockHold.test.ts#L38) (1 connections)
+- [clerk-google-button.test.ts](file:///C:/Nikunj/tests/clerk-google-button.test.ts#L1) (4 connections)
+- [clickGoogle()](file:///C:/Nikunj/tests/clerk-google-button.test.ts#L9) (2 connections)
+- [ClerkGoogleButton()](file:///C:/Nikunj/src/frontend/components/auth/ClerkGoogleButton.tsx#L13) (2 connections)
+- [ClerkGoogleButton.tsx](file:///C:/Nikunj/src/frontend/components/auth/ClerkGoogleButton.tsx#L1) (1 connections)
+- [authenticateWithRedirect](file:///C:/Nikunj/tests/clerk-google-button.test.ts#L4) (1 connections)
+- [client](file:///C:/Nikunj/tests/clerk-google-button.test.ts#L5) (1 connections)
+- [onError](file:///C:/Nikunj/tests/clerk-google-button.test.ts#L28) (1 connections)
 
 ## Relationships
 
@@ -19,12 +18,13 @@
 
 ## Source Files
 
-- [C:\Nikunj\tests\stockHold.test.ts](file:///C:/Nikunj/tests/stockHold.test.ts)
+- [C:\Nikunj\src\frontend\components\auth\ClerkGoogleButton.tsx](file:///C:/Nikunj/src/frontend/components/auth/ClerkGoogleButton.tsx)
+- [C:\Nikunj\tests\clerk-google-button.test.ts](file:///C:/Nikunj/tests/clerk-google-button.test.ts)
 
 ## Audit Trail
 
-- EXTRACTED: 15 (100%)
-- INFERRED: 0 (0%)
+- EXTRACTED: 10 (83%)
+- INFERRED: 2 (17%)
 - AMBIGUOUS: 0 (0%)
 
 ---

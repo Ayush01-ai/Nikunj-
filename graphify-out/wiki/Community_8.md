@@ -1,53 +1,54 @@
 # Community 8
 
-> 59 nodes · cohesion 0.04
+> 72 nodes · cohesion 0.04
 
 ## Key Concepts
 
-- [BulkProductImport.tsx](file:///C:/Nikunj/src/cms/tools/BulkProductImport.tsx#L1) (34 connections)
-- [from](file:///C:/Nikunj/src/frontend/components/products/CollectionGrid.tsx#L155) (18 connections)
-- [CollectionGrid.tsx](file:///C:/Nikunj/src/frontend/components/products/CollectionGrid.tsx#L1) (12 connections)
-- [readProductRows()](file:///C:/Nikunj/src/cms/tools/spreadsheet.ts#L67) (8 connections)
-- [spreadsheet.ts](file:///C:/Nikunj/src/cms/tools/spreadsheet.ts#L1) (7 connections)
-- [downloadTemplate()](file:///C:/Nikunj/src/cms/tools/BulkProductImport.tsx#L310) (5 connections)
-- [onFile()](file:///C:/Nikunj/src/cms/tools/BulkProductImport.tsx#L288) (4 connections)
-- [otpEquals()](file:///C:/Nikunj/src/backend/lib/delivery.ts#L33) (4 connections)
-- [loadSheets()](file:///C:/Nikunj/src/cms/tools/BulkProductImport.tsx#L7) (3 connections)
-- [onImages()](file:///C:/Nikunj/src/cms/tools/BulkProductImport.tsx#L304) (3 connections)
-- [next.config.mjs](file:///C:/Nikunj/next.config.mjs#L1) (3 connections)
-- [filterAndSort()](file:///C:/Nikunj/src/frontend/components/products/CollectionGrid.tsx#L27) (3 connections)
-- [tokens()](file:///C:/Nikunj/src/frontend/components/products/CollectionGrid.tsx#L14) (3 connections)
-- [clerkFrontendHost()](file:///C:/Nikunj/next.config.mjs#L2) (3 connections)
-- [parseCsv()](file:///C:/Nikunj/src/cms/tools/spreadsheet.ts#L13) (3 connections)
-- [parseRows](file:///C:/Nikunj/src/cms/tools/BulkProductImport.tsx#L122) (2 connections)
-- [haystack()](file:///C:/Nikunj/src/frontend/components/products/CollectionGrid.tsx#L18) (2 connections)
-- [pageHref()](file:///C:/Nikunj/src/frontend/components/products/CollectionGrid.tsx#L156) (2 connections)
-- [contentSecurityPolicy()](file:///C:/Nikunj/next.config.mjs#L17) (2 connections)
-- [addFiles()](file:///C:/Nikunj/src/frontend/components/orders/OrderRequestPanel.tsx#L72) (2 connections)
-- [buildWorkbook()](file:///C:/Nikunj/src/cms/tools/spreadsheet.ts#L101) (2 connections)
-- [isOle()](file:///C:/Nikunj/src/cms/tools/spreadsheet.ts#L10) (2 connections)
-- [isZip()](file:///C:/Nikunj/src/cms/tools/spreadsheet.ts#L9) (2 connections)
-- [toObjects()](file:///C:/Nikunj/src/cms/tools/spreadsheet.ts#L48) (2 connections)
-- [[busy, setBusy]](file:///C:/Nikunj/src/cms/tools/BulkProductImport.tsx#L94) (1 connections)
-- *... and 34 more nodes in this community*
+- [RefundPanel.tsx](file:///C:/Nikunj/src/frontend/components/orders/RefundPanel.tsx#L1) (20 connections)
+- [refunds.ts](file:///C:/Nikunj/src/cms/lib/refunds.ts#L1) (18 connections)
+- [max](file:///C:/Nikunj/src/cms/tools/AnalyticsDashboard.tsx#L80) (17 connections)
+- [ProductOptions.tsx](file:///C:/Nikunj/src/frontend/components/products/ProductOptions.tsx#L1) (13 connections)
+- [pricing.ts](file:///C:/Nikunj/src/cms/lib/pricing.ts#L1) (12 connections)
+- [getVariantPricing()](file:///C:/Nikunj/src/cms/lib/pricing.ts#L46) (7 connections)
+- [refundExpected()](file:///C:/Nikunj/src/cms/lib/refunds.ts#L77) (7 connections)
+- [refundActions()](file:///C:/Nikunj/src/cms/tools/OrdersDashboard.tsx#L459) (6 connections)
+- [post()](file:///C:/Nikunj/src/frontend/components/orders/RefundPanel.tsx#L64) (6 connections)
+- [canSubmitPayoutDetails()](file:///C:/Nikunj/src/cms/lib/refunds.ts#L89) (6 connections)
+- [refundSource()](file:///C:/Nikunj/src/cms/lib/refunds.ts#L68) (6 connections)
+- [refundView()](file:///C:/Nikunj/src/backend/lib/refundView.ts#L5) (6 connections)
+- [describePayout()](file:///C:/Nikunj/src/cms/lib/refunds.ts#L140) (5 connections)
+- [deliveryPolicy()](file:///C:/Nikunj/src/cms/lib/pricing.ts#L110) (4 connections)
+- [orderTotals()](file:///C:/Nikunj/src/cms/lib/pricing.ts#L122) (4 connections)
+- [variantStock()](file:///C:/Nikunj/src/cms/lib/pricing.ts#L40) (4 connections)
+- [refundLocked()](file:///C:/Nikunj/src/cms/lib/refunds.ts#L86) (4 connections)
+- [validatePayoutDetails()](file:///C:/Nikunj/src/cms/lib/refunds.ts#L102) (4 connections)
+- [refundNeedsAction()](file:///C:/Nikunj/src/cms/tools/OrdersDashboard.tsx#L104) (3 connections)
+- [clamp()](file:///C:/Nikunj/src/frontend/components/products/ProductOptions.tsx#L169) (3 connections)
+- [submit()](file:///C:/Nikunj/src/frontend/components/orders/RefundPanel.tsx#L101) (3 connections)
+- [maskAccount()](file:///C:/Nikunj/src/cms/lib/refunds.ts#L131) (3 connections)
+- [maskUpi()](file:///C:/Nikunj/src/cms/lib/refunds.ts#L133) (3 connections)
+- [keptCharges()](file:///C:/Nikunj/src/cms/tools/OrdersDashboard.tsx#L99) (2 connections)
+- [refundOpen()](file:///C:/Nikunj/src/cms/tools/OrdersDashboard.tsx#L106) (2 connections)
+- *... and 47 more nodes in this community*
 
 ## Relationships
 
-- [[Community 999]] (1 shared connections)
+- No strong cross-community connections detected
 
 ## Source Files
 
-- [C:\Nikunj\next.config.mjs](file:///C:/Nikunj/next.config.mjs)
-- [C:\Nikunj\src\backend\lib\delivery.ts](file:///C:/Nikunj/src/backend/lib/delivery.ts)
-- [C:\Nikunj\src\cms\tools\BulkProductImport.tsx](file:///C:/Nikunj/src/cms/tools/BulkProductImport.tsx)
-- [C:\Nikunj\src\cms\tools\spreadsheet.ts](file:///C:/Nikunj/src/cms/tools/spreadsheet.ts)
-- [C:\Nikunj\src\frontend\components\orders\OrderRequestPanel.tsx](file:///C:/Nikunj/src/frontend/components/orders/OrderRequestPanel.tsx)
-- [C:\Nikunj\src\frontend\components\products\CollectionGrid.tsx](file:///C:/Nikunj/src/frontend/components/products/CollectionGrid.tsx)
+- [C:\Nikunj\src\backend\lib\refundView.ts](file:///C:/Nikunj/src/backend/lib/refundView.ts)
+- [C:\Nikunj\src\cms\lib\pricing.ts](file:///C:/Nikunj/src/cms/lib/pricing.ts)
+- [C:\Nikunj\src\cms\lib\refunds.ts](file:///C:/Nikunj/src/cms/lib/refunds.ts)
+- [C:\Nikunj\src\cms\tools\AnalyticsDashboard.tsx](file:///C:/Nikunj/src/cms/tools/AnalyticsDashboard.tsx)
+- [C:\Nikunj\src\cms\tools\OrdersDashboard.tsx](file:///C:/Nikunj/src/cms/tools/OrdersDashboard.tsx)
+- [C:\Nikunj\src\frontend\components\orders\RefundPanel.tsx](file:///C:/Nikunj/src/frontend/components/orders/RefundPanel.tsx)
+- [C:\Nikunj\src\frontend\components\products\ProductOptions.tsx](file:///C:/Nikunj/src/frontend/components/products/ProductOptions.tsx)
 
 ## Audit Trail
 
-- EXTRACTED: 133 (80%)
-- INFERRED: 33 (20%)
+- EXTRACTED: 161 (71%)
+- INFERRED: 65 (29%)
 - AMBIGUOUS: 0 (0%)
 
 ---

@@ -1,6 +1,6 @@
 # error
 
-> God node · 44 connections · [C:\Nikunj\src\app\login\page.tsx](file:///C:/Nikunj/src/app/login/page.tsx#L94)
+> God node · 45 connections · [C:\Nikunj\src\app\login\page.tsx](file:///C:/Nikunj/src/app/login/page.tsx#L94)
 
 ## Call Trace Diagram
 
@@ -164,8 +164,9 @@ sequenceDiagram
     participant P155 as saveProfile()
     participant P156 as deleteAddress()
     participant P157 as setDefaultAddress()
-    participant P158 as handleSubmit()
-    participant P159 as onRequestError()
+    participant P158 as startPayment()
+    participant P159 as handleSubmit()
+    participant P160 as onRequestError()
     P0->>+ P1: calls
     P1-->>- P0: return
     P1->>+ P2: calls
@@ -562,6 +563,8 @@ sequenceDiagram
     P158-->>- P0: return
     P0->>+ P159: calls
     P159-->>- P0: return
+    P0->>+ P160: calls
+    P160-->>- P0: return
 ```
 
 ## Connections by Relation

@@ -4,11 +4,11 @@
 
 ## Key Concepts
 
-- [orderAccess.test.ts](file:///C:/Nikunj/tests/orderAccess.test.ts#L1) (4 connections)
-- [{ authorizeOrderForPayment }](file:///C:/Nikunj/tests/orderAccess.test.ts#L8) (1 connections)
-- [{ createGuestPaymentProof }](file:///C:/Nikunj/tests/orderAccess.test.ts#L9) (1 connections)
-- [order](file:///C:/Nikunj/tests/orderAccess.test.ts#L14) (1 connections)
-- [proof](file:///C:/Nikunj/tests/orderAccess.test.ts#L39) (1 connections)
+- [fetch-retry.test.ts](file:///C:/Nikunj/tests/fetch-retry.test.ts#L1) (4 connections)
+- [failing](file:///C:/Nikunj/tests/fetch-retry.test.ts#L36) (1 connections)
+- [fetchMock](file:///C:/Nikunj/tests/fetch-retry.test.ts#L10) (1 connections)
+- [out](file:///C:/Nikunj/tests/fetch-retry.test.ts#L12) (1 connections)
+- [res()](file:///C:/Nikunj/tests/fetch-retry.test.ts#L4) (1 connections)
 
 ## Relationships
 
@@ -16,7 +16,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\tests\orderAccess.test.ts](file:///C:/Nikunj/tests/orderAccess.test.ts)
+- [C:\Nikunj\tests\fetch-retry.test.ts](file:///C:/Nikunj/tests/fetch-retry.test.ts)
 
 ## Audit Trail
 

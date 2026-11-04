@@ -4,13 +4,13 @@
 
 ## Key Concepts
 
-- [orders-pricing.test.ts](file:///C:/Nikunj/tests/orders-pricing.test.ts#L1) (6 connections)
-- [ipSeq](file:///C:/Nikunj/tests/orders-pricing.test.ts#L49) (1 connections)
-- [json](file:///C:/Nikunj/tests/orders-pricing.test.ts#L118) (1 connections)
-- [mocks](file:///C:/Nikunj/tests/orders-pricing.test.ts#L7) (1 connections)
-- [placeOrder()](file:///C:/Nikunj/tests/orders-pricing.test.ts#L50) (1 connections)
-- [{ POST }](file:///C:/Nikunj/tests/orders-pricing.test.ts#L92) (1 connections)
-- [res](file:///C:/Nikunj/tests/orders-pricing.test.ts#L93) (1 connections)
+- [orders-ratelimit.test.ts](file:///C:/Nikunj/tests/orders-ratelimit.test.ts#L1) (6 connections)
+- [i](file:///C:/Nikunj/tests/orders-ratelimit.test.ts#L39) (1 connections)
+- [json](file:///C:/Nikunj/tests/orders-ratelimit.test.ts#L45) (1 connections)
+- [last](file:///C:/Nikunj/tests/orders-ratelimit.test.ts#L38) (1 connections)
+- [makeRequest()](file:///C:/Nikunj/tests/orders-ratelimit.test.ts#L19) (1 connections)
+- [{ POST }](file:///C:/Nikunj/tests/orders-ratelimit.test.ts#L35) (1 connections)
+- [res](file:///C:/Nikunj/tests/orders-ratelimit.test.ts#L56) (1 connections)
 
 ## Relationships
 
@@ -18,7 +18,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\tests\orders-pricing.test.ts](file:///C:/Nikunj/tests/orders-pricing.test.ts)
+- [C:\Nikunj\tests\orders-ratelimit.test.ts](file:///C:/Nikunj/tests/orders-ratelimit.test.ts)
 
 ## Audit Trail
 

@@ -1,13 +1,14 @@
 # Community 64
 
-> 4 nodes · cohesion 0.50
+> 5 nodes · cohesion 0.40
 
 ## Key Concepts
 
-- [sanity.config.ts](file:///C:/Nikunj/sanity.config.ts#L1) (3 connections)
-- [dataset](file:///C:/Nikunj/sanity.config.ts#L19) (1 connections)
-- [projectId](file:///C:/Nikunj/sanity.config.ts#L18) (1 connections)
-- [SINGLETON_TYPES](file:///C:/Nikunj/sanity.config.ts#L16) (1 connections)
+- [orderAccess.test.ts](file:///C:/Nikunj/tests/orderAccess.test.ts#L1) (4 connections)
+- [{ authorizeOrderForPayment }](file:///C:/Nikunj/tests/orderAccess.test.ts#L8) (1 connections)
+- [{ createGuestPaymentProof }](file:///C:/Nikunj/tests/orderAccess.test.ts#L9) (1 connections)
+- [order](file:///C:/Nikunj/tests/orderAccess.test.ts#L14) (1 connections)
+- [proof](file:///C:/Nikunj/tests/orderAccess.test.ts#L39) (1 connections)
 
 ## Relationships
 
@@ -15,11 +16,11 @@
 
 ## Source Files
 
-- [C:\Nikunj\sanity.config.ts](file:///C:/Nikunj/sanity.config.ts)
+- [C:\Nikunj\tests\orderAccess.test.ts](file:///C:/Nikunj/tests/orderAccess.test.ts)
 
 ## Audit Trail
 
-- EXTRACTED: 6 (100%)
+- EXTRACTED: 8 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

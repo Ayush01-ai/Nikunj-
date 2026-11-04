@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- [clerkAppearance.ts](file:///C:/Nikunj/src/frontend/components/auth/clerkAppearance.ts#L1) (1 connections)
-- [clerkAppearance](file:///C:/Nikunj/src/frontend/components/auth/clerkAppearance.ts#L6) (1 connections)
+- [testimonial.ts](file:///C:/Nikunj/src/cms/schemas/testimonial.ts#L1) (1 connections)
+- [testimonial](file:///C:/Nikunj/src/cms/schemas/testimonial.ts#L3) (1 connections)
 
 ## Relationships
 
@@ -13,7 +13,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\frontend\components\auth\clerkAppearance.ts](file:///C:/Nikunj/src/frontend/components/auth/clerkAppearance.ts)
+- [C:\Nikunj\src\cms\schemas\testimonial.ts](file:///C:/Nikunj/src/cms/schemas/testimonial.ts)
 
 ## Audit Trail
 

@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- [mongodb-connection-error.test.ts](file:///C:/Nikunj/tests/mongodb-connection-error.test.ts#L1) (1 connections)
-- [err](file:///C:/Nikunj/tests/mongodb-connection-error.test.ts#L9) (1 connections)
+- [cartStore.ts](file:///C:/Nikunj/src/frontend/store/cartStore.ts#L1) (1 connections)
+- [useCartStore](file:///C:/Nikunj/src/frontend/store/cartStore.ts#L36) (1 connections)
 
 ## Relationships
 
@@ -13,7 +13,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\tests\mongodb-connection-error.test.ts](file:///C:/Nikunj/tests/mongodb-connection-error.test.ts)
+- [C:\Nikunj\src\frontend\store\cartStore.ts](file:///C:/Nikunj/src/frontend/store/cartStore.ts)
 
 ## Audit Trail
 

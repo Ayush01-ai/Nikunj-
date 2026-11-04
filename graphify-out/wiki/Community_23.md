@@ -1,30 +1,27 @@
 # Community 23
 
-> 21 nodes · cohesion 0.10
+> 18 nodes · cohesion 0.11
 
 ## Key Concepts
 
-- [ProductFilters.tsx](file:///C:/Nikunj/src/frontend/components/products/ProductFilters.tsx#L1) (21 connections)
-- [activeDeity](file:///C:/Nikunj/src/frontend/components/products/ProductFilters.tsx#L345) (1 connections)
-- [activeFragrance](file:///C:/Nikunj/src/frontend/components/products/ProductFilters.tsx#L346) (1 connections)
-- [bestsellerOnly](file:///C:/Nikunj/src/frontend/components/products/ProductFilters.tsx#L348) (1 connections)
-- [categorySlug](file:///C:/Nikunj/src/frontend/components/products/ProductFilters.tsx#L131) (1 connections)
-- [countLabel()](file:///C:/Nikunj/src/frontend/components/products/ProductFilters.tsx#L22) (1 connections)
-- [currentMax](file:///C:/Nikunj/src/frontend/components/products/ProductFilters.tsx#L344) (1 connections)
-- [currentMin](file:///C:/Nikunj/src/frontend/components/products/ProductFilters.tsx#L343) (1 connections)
-- [currentSort](file:///C:/Nikunj/src/frontend/components/products/ProductFilters.tsx#L342) (1 connections)
-- [featuredOnly](file:///C:/Nikunj/src/frontend/components/products/ProductFilters.tsx#L347) (1 connections)
-- [isActive](file:///C:/Nikunj/src/frontend/components/products/ProductFilters.tsx#L254) (1 connections)
-- [[mobileOpen, setMobileOpen]](file:///C:/Nikunj/src/frontend/components/products/ProductFilters.tsx#L320) (1 connections)
-- [navigate](file:///C:/Nikunj/src/frontend/components/products/ProductFilters.tsx#L334) (1 connections)
-- [newArrivalOnly](file:///C:/Nikunj/src/frontend/components/products/ProductFilters.tsx#L349) (1 connections)
-- [pathname](file:///C:/Nikunj/src/frontend/components/products/ProductFilters.tsx#L318) (1 connections)
-- [PRICE_RANGES](file:///C:/Nikunj/src/frontend/components/products/ProductFilters.tsx#L24) (1 connections)
-- [router](file:///C:/Nikunj/src/frontend/components/products/ProductFilters.tsx#L317) (1 connections)
-- [searchParams](file:///C:/Nikunj/src/frontend/components/products/ProductFilters.tsx#L319) (1 connections)
-- [SORT_OPTIONS](file:///C:/Nikunj/src/frontend/components/products/ProductFilters.tsx#L32) (1 connections)
-- [visibleTypes](file:///C:/Nikunj/src/frontend/components/products/ProductFilters.tsx#L81) (1 connections)
-- [withProducts()](file:///C:/Nikunj/src/frontend/components/products/ProductFilters.tsx#L19) (1 connections)
+- [guestVerifySendOtp.test.ts](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L1) (18 connections)
+- [sendWhatsAppOtp](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L13) (3 connections)
+- [allLoggedText](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L110) (1 connections)
+- [connectDB](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L7) (1 connections)
+- [createdOtp](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L109) (1 connections)
+- [errorSpy](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L95) (1 connections)
+- [GUEST_ORDER](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L30) (1 connections)
+- [i](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L134) (1 connections)
+- [json](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L81) (1 connections)
+- [last](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L133) (1 connections)
+- [logSpy](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L94) (1 connections)
+- [makeRequest()](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L22) (1 connections)
+- [orderFindOne](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L8) (1 connections)
+- [otpCreate](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L11) (1 connections)
+- [otpDeleteMany](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L10) (1 connections)
+- [otpFindOne](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L9) (1 connections)
+- [{ POST }](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L65) (1 connections)
+- [res](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts#L66) (1 connections)
 
 ## Relationships
 
@@ -32,12 +29,12 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\frontend\components\products\ProductFilters.tsx](file:///C:/Nikunj/src/frontend/components/products/ProductFilters.tsx)
+- [C:\Nikunj\tests\guestVerifySendOtp.test.ts](file:///C:/Nikunj/tests/guestVerifySendOtp.test.ts)
 
 ## Audit Trail
 
-- EXTRACTED: 41 (100%)
-- INFERRED: 0 (0%)
+- EXTRACTED: 35 (95%)
+- INFERRED: 2 (5%)
 - AMBIGUOUS: 0 (0%)
 
 ---

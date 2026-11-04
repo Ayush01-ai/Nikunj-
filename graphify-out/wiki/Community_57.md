@@ -1,14 +1,15 @@
 # Community 57
 
-> 5 nodes · cohesion 0.40
+> 6 nodes · cohesion 0.33
 
 ## Key Concepts
 
-- [InstagramStrip.tsx](file:///C:/Nikunj/src/frontend/components/home/InstagramStrip.tsx#L1) (4 connections)
-- [Icon](file:///C:/Nikunj/src/frontend/components/home/InstagramStrip.tsx#L74) (1 connections)
-- [profileUrl](file:///C:/Nikunj/src/frontend/components/home/InstagramStrip.tsx#L27) (1 connections)
-- [{ ref, inView }](file:///C:/Nikunj/src/frontend/components/home/InstagramStrip.tsx#L23) (1 connections)
-- [TILES](file:///C:/Nikunj/src/frontend/components/home/InstagramStrip.tsx#L13) (1 connections)
+- [CookieConsent.tsx](file:///C:/Nikunj/src/frontend/components/ui/CookieConsent.tsx#L1) (5 connections)
+- [choose()](file:///C:/Nikunj/src/frontend/components/ui/CookieConsent.tsx#L23) (1 connections)
+- [[consent, setConsent]](file:///C:/Nikunj/src/frontend/components/ui/CookieConsent.tsx#L15) (1 connections)
+- [STORAGE_KEY](file:///C:/Nikunj/src/frontend/components/ui/CookieConsent.tsx#L7) (1 connections)
+- [stored](file:///C:/Nikunj/src/frontend/components/ui/CookieConsent.tsx#L19) (1 connections)
+- [validGaId](file:///C:/Nikunj/src/frontend/components/ui/CookieConsent.tsx#L29) (1 connections)
 
 ## Relationships
 
@@ -16,11 +17,11 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\frontend\components\home\InstagramStrip.tsx](file:///C:/Nikunj/src/frontend/components/home/InstagramStrip.tsx)
+- [C:\Nikunj\src\frontend\components\ui\CookieConsent.tsx](file:///C:/Nikunj/src/frontend/components/ui/CookieConsent.tsx)
 
 ## Audit Trail
 
-- EXTRACTED: 8 (100%)
+- EXTRACTED: 10 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

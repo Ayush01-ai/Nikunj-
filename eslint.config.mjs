@@ -1,11 +1,15 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTypescript from "eslint-config-next/typescript";
+import reactHooksPlugin from "eslint-plugin-react-hooks";
 
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTypescript,
   {
+    plugins: {
+      "react-hooks": reactHooksPlugin,
+    },
     rules: {
       // This rule flags the standard "sync local state to an external store /
       // reset on dependency change" effect pattern (used throughout this app for

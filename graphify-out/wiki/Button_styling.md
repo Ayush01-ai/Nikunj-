@@ -4,9 +4,9 @@
 
 ## Key Concepts
 
-- [button.tsx](file:///C:/Nikunj/src/frontend/components/ui/button.tsx#L1) (2 connections)
-- [Button](file:///C:/Nikunj/src/frontend/components/ui/button.tsx#L48) (1 connections)
-- [buttonVariants](file:///C:/Nikunj/src/frontend/components/ui/button.tsx#L7) (1 connections)
+- [adminSettings.ts](file:///C:/Nikunj/src/cms/schemas/adminSettings.ts#L1) (2 connections)
+- [adminSettings](file:///C:/Nikunj/src/cms/schemas/adminSettings.ts#L6) (1 connections)
+- [MOBILE](file:///C:/Nikunj/src/cms/schemas/adminSettings.ts#L3) (1 connections)
 
 ## Relationships
 
@@ -14,7 +14,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\frontend\components\ui\button.tsx](file:///C:/Nikunj/src/frontend/components/ui/button.tsx)
+- [C:\Nikunj\src\cms\schemas\adminSettings.ts](file:///C:/Nikunj/src/cms/schemas/adminSettings.ts)
 
 ## Audit Trail
 

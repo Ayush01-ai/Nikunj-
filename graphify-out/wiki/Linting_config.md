@@ -1,11 +1,12 @@
 # Linting config
 
-> 2 nodes · cohesion 1.00
+> 3 nodes · cohesion 0.67
 
 ## Key Concepts
 
-- [eslint.config.mjs](file:///C:/Nikunj/eslint.config.mjs#L1) (1 connections)
-- [eslintConfig](file:///C:/Nikunj/eslint.config.mjs#L5) (1 connections)
+- [wishlistStore.ts](file:///C:/Nikunj/src/frontend/store/wishlistStore.ts#L1) (2 connections)
+- [useWishlistHydrated()](file:///C:/Nikunj/src/frontend/store/wishlistStore.ts#L39) (1 connections)
+- [useWishlistStore](file:///C:/Nikunj/src/frontend/store/wishlistStore.ts#L12) (1 connections)
 
 ## Relationships
 
@@ -13,11 +14,11 @@
 
 ## Source Files
 
-- [C:\Nikunj\eslint.config.mjs](file:///C:/Nikunj/eslint.config.mjs)
+- [C:\Nikunj\src\frontend\store\wishlistStore.ts](file:///C:/Nikunj/src/frontend/store/wishlistStore.ts)
 
 ## Audit Trail
 
-- EXTRACTED: 2 (100%)
+- EXTRACTED: 4 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

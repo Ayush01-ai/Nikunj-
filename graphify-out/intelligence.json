@@ -29,8 +29,8 @@
   "blast_radius": {
     "POST()": 145,
     "GET()": 55,
-    "error": 44,
+    "error": 45,
     "PATCH()": 33,
-    "catch()": 30
+    "json": 29
   }
 }

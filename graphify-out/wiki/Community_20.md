@@ -1,33 +1,31 @@
 # Community 20
 
-> 24 nodes · cohesion 0.09
+> 22 nodes · cohesion 0.10
 
 ## Key Concepts
 
-- [ContactContent.tsx](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L1) (18 connections)
-- [getWhatsAppHref()](file:///C:/Nikunj/src/frontend/lib/whatsapp.ts#L13) (4 connections)
-- [whatsapp.ts](file:///C:/Nikunj/src/frontend/lib/whatsapp.ts#L1) (3 connections)
-- [handleWhatsAppForward()](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L95) (2 connections)
-- [normalizeWhatsAppNumber()](file:///C:/Nikunj/src/frontend/lib/whatsapp.ts#L3) (2 connections)
-- [WhatsAppFloat()](file:///C:/Nikunj/src/frontend/components/ui/WhatsAppFloat.tsx#L12) (2 connections)
-- [WhatsAppFloat.tsx](file:///C:/Nikunj/src/frontend/components/ui/WhatsAppFloat.tsx#L1) (1 connections)
-- [defaultWaMessage](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L56) (1 connections)
-- [directWaUrl](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L57) (1 connections)
-- [[email, setEmail]](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L44) (1 connections)
-- [FAQS](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L18) (1 connections)
-- [[honeypot, setHoneypot]](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L48) (1 connections)
-- [isOpen](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L472) (1 connections)
-- [[message, setMessage]](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L47) (1 connections)
-- [[name, setName]](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L42) (1 connections)
-- [[openFaq, setOpenFaq]](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L51) (1 connections)
-- [[orderId, setOrderId]](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L45) (1 connections)
-- [[phone, setPhone]](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L43) (1 connections)
-- [rawWhatsapp](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L53) (1 connections)
-- [[subject, setSubject]](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L46) (1 connections)
-- [[submitted, setSubmitted]](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L50) (1 connections)
-- [[submitting, setSubmitting]](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L49) (1 connections)
-- [supportEmail](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L54) (1 connections)
-- [DEFAULT_WHATSAPP_NUMBER](file:///C:/Nikunj/src/frontend/lib/whatsapp.ts#L1) (1 connections)
+- [3-d-coverflow-carousel.tsx](file:///C:/Nikunj/src/frontend/components/ui/3-d-coverflow-carousel.tsx#L1) (23 connections)
+- [onKeyDown()](file:///C:/Nikunj/src/frontend/components/ui/3-d-coverflow-carousel.tsx#L47) (3 connections)
+- [nextSlide](file:///C:/Nikunj/src/frontend/components/ui/3-d-coverflow-carousel.tsx#L37) (2 connections)
+- [prevSlide](file:///C:/Nikunj/src/frontend/components/ui/3-d-coverflow-carousel.tsx#L38) (2 connections)
+- [{ addItem, openCart }](file:///C:/Nikunj/src/frontend/components/ui/3-d-coverflow-carousel.tsx#L32) (1 connections)
+- [backgroundImage](file:///C:/Nikunj/src/frontend/components/ui/3-d-coverflow-carousel.tsx#L58) (1 connections)
+- [[currentIndex, setCurrentIndex]](file:///C:/Nikunj/src/frontend/components/ui/3-d-coverflow-carousel.tsx#L27) (1 connections)
+- [currentProduct](file:///C:/Nikunj/src/frontend/components/ui/3-d-coverflow-carousel.tsx#L57) (1 connections)
+- [difference](file:///C:/Nikunj/src/frontend/components/ui/3-d-coverflow-carousel.tsx#L89) (1 connections)
+- [interval](file:///C:/Nikunj/src/frontend/components/ui/3-d-coverflow-carousel.tsx#L42) (1 connections)
+- [isCenter](file:///C:/Nikunj/src/frontend/components/ui/3-d-coverflow-carousel.tsx#L104) (1 connections)
+- [[isHovered, setIsHovered]](file:///C:/Nikunj/src/frontend/components/ui/3-d-coverflow-carousel.tsx#L28) (1 connections)
+- [offset](file:///C:/Nikunj/src/frontend/components/ui/3-d-coverflow-carousel.tsx#L103) (1 connections)
+- [[quickViewProduct, setQuickViewProduct]](file:///C:/Nikunj/src/frontend/components/ui/3-d-coverflow-carousel.tsx#L29) (1 connections)
+- [router](file:///C:/Nikunj/src/frontend/components/ui/3-d-coverflow-carousel.tsx#L31) (1 connections)
+- [side](file:///C:/Nikunj/src/frontend/components/ui/3-d-coverflow-carousel.tsx#L107) (1 connections)
+- [{ toggleWishlist, isWishlisted }](file:///C:/Nikunj/src/frontend/components/ui/3-d-coverflow-carousel.tsx#L33) (1 connections)
+- [total](file:///C:/Nikunj/src/frontend/components/ui/3-d-coverflow-carousel.tsx#L35) (1 connections)
+- [touchStartX](file:///C:/Nikunj/src/frontend/components/ui/3-d-coverflow-carousel.tsx#L30) (1 connections)
+- [visible](file:///C:/Nikunj/src/frontend/components/ui/3-d-coverflow-carousel.tsx#L110) (1 connections)
+- [wished](file:///C:/Nikunj/src/frontend/components/ui/3-d-coverflow-carousel.tsx#L109) (1 connections)
+- [wishlistReady](file:///C:/Nikunj/src/frontend/components/ui/3-d-coverflow-carousel.tsx#L34) (1 connections)
 
 ## Relationships
 
@@ -35,14 +33,12 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\app\contact\ContactContent.tsx](file:///C:/Nikunj/src/app/contact/ContactContent.tsx)
-- [C:\Nikunj\src\frontend\components\ui\WhatsAppFloat.tsx](file:///C:/Nikunj/src/frontend/components/ui/WhatsAppFloat.tsx)
-- [C:\Nikunj\src\frontend\lib\whatsapp.ts](file:///C:/Nikunj/src/frontend/lib/whatsapp.ts)
+- [C:\Nikunj\src\frontend\components\ui\3-d-coverflow-carousel.tsx](file:///C:/Nikunj/src/frontend/components/ui/3-d-coverflow-carousel.tsx)
 
 ## Audit Trail
 
-- EXTRACTED: 45 (92%)
-- INFERRED: 4 (8%)
+- EXTRACTED: 48 (100%)
+- INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 
 ---

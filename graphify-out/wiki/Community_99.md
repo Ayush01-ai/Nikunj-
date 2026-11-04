@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- [siteSettings.ts](file:///C:/Nikunj/src/cms/schemas/siteSettings.ts#L1) (1 connections)
-- [siteSettings](file:///C:/Nikunj/src/cms/schemas/siteSettings.ts#L3) (1 connections)
+- [index.ts](file:///C:/Nikunj/src/cms/schemas/index.ts#L1) (1 connections)
+- [schema](file:///C:/Nikunj/src/cms/schemas/index.ts#L15) (1 connections)
 
 ## Relationships
 
@@ -13,7 +13,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\cms\schemas\siteSettings.ts](file:///C:/Nikunj/src/cms/schemas/siteSettings.ts)
+- [C:\Nikunj\src\cms\schemas\index.ts](file:///C:/Nikunj/src/cms/schemas/index.ts)
 
 ## Audit Trail
 

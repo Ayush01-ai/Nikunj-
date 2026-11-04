@@ -1,30 +1,28 @@
 # Community 22
 
-> 21 nodes · cohesion 0.10
+> 19 nodes · cohesion 0.12
 
 ## Key Concepts
 
-- [OrderRequestPanel.tsx](file:///C:/Nikunj/src/frontend/components/orders/OrderRequestPanel.tsx#L1) (21 connections)
-- [submit()](file:///C:/Nikunj/src/frontend/components/orders/OrderRequestPanel.tsx#L84) (4 connections)
-- [[busy, setBusy]](file:///C:/Nikunj/src/frontend/components/orders/OrderRequestPanel.tsx#L52) (1 connections)
-- [chargeNotice](file:///C:/Nikunj/src/frontend/components/orders/OrderRequestPanel.tsx#L61) (1 connections)
-- [cr](file:///C:/Nikunj/src/frontend/components/orders/OrderRequestPanel.tsx#L118) (1 connections)
-- [[details, setDetails]](file:///C:/Nikunj/src/frontend/components/orders/OrderRequestPanel.tsx#L49) (1 connections)
-- [[done, setDone]](file:///C:/Nikunj/src/frontend/components/orders/OrderRequestPanel.tsx#L54) (1 connections)
-- [[error, setError]](file:///C:/Nikunj/src/frontend/components/orders/OrderRequestPanel.tsx#L53) (1 connections)
-- [[files, setFiles]](file:///C:/Nikunj/src/frontend/components/orders/OrderRequestPanel.tsx#L50) (1 connections)
-- [formatDate()](file:///C:/Nikunj/src/frontend/components/orders/OrderRequestPanel.tsx#L32) (1 connections)
-- [[guestProof, setGuestProof]](file:///C:/Nikunj/src/frontend/components/orders/OrderRequestPanel.tsx#L47) (1 connections)
-- [[open, setOpen]](file:///C:/Nikunj/src/frontend/components/orders/OrderRequestPanel.tsx#L46) (1 connections)
-- [photoRequired](file:///C:/Nikunj/src/frontend/components/orders/OrderRequestPanel.tsx#L58) (1 connections)
-- [policy](file:///C:/Nikunj/src/frontend/components/orders/OrderRequestPanel.tsx#L60) (1 connections)
-- [[previews, setPreviews]](file:///C:/Nikunj/src/frontend/components/orders/OrderRequestPanel.tsx#L51) (1 connections)
-- [[reason, setReason]](file:///C:/Nikunj/src/frontend/components/orders/OrderRequestPanel.tsx#L48) (1 connections)
-- [reasons](file:///C:/Nikunj/src/frontend/components/orders/OrderRequestPanel.tsx#L57) (1 connections)
-- [rr](file:///C:/Nikunj/src/frontend/components/orders/OrderRequestPanel.tsx#L119) (1 connections)
-- [statusNote](file:///C:/Nikunj/src/frontend/components/orders/OrderRequestPanel.tsx#L120) (1 connections)
-- [type](file:///C:/Nikunj/src/frontend/components/orders/OrderRequestPanel.tsx#L56) (1 connections)
-- [urls](file:///C:/Nikunj/src/frontend/components/orders/OrderRequestPanel.tsx#L67) (1 connections)
+- [check-mongodb.mjs](file:///C:/Nikunj/scripts/check-mongodb.mjs#L1) (12 connections)
+- [mongodb.ts](file:///C:/Nikunj/src/backend/lib/mongodb.ts#L1) (5 connections)
+- [connectDB()](file:///C:/Nikunj/src/backend/lib/mongodb.ts#L32) (4 connections)
+- [pingOk()](file:///C:/Nikunj/src/backend/lib/mongodb.ts#L18) (3 connections)
+- [admin](file:///C:/Nikunj/scripts/check-mongodb.mjs#L44) (2 connections)
+- [isDbConnectionError()](file:///C:/Nikunj/src/backend/lib/mongodb.ts#L74) (2 connections)
+- [isWorkersRuntime()](file:///C:/Nikunj/src/backend/lib/mongodb.ts#L15) (2 connections)
+- [classification](file:///C:/Nikunj/scripts/check-mongodb.mjs#L61) (1 connections)
+- [elapsedMs](file:///C:/Nikunj/scripts/check-mongodb.mjs#L43) (1 connections)
+- [loadEnvLocal()](file:///C:/Nikunj/scripts/check-mongodb.mjs#L14) (1 connections)
+- [message](file:///C:/Nikunj/scripts/check-mongodb.mjs#L58) (1 connections)
+- [name](file:///C:/Nikunj/scripts/check-mongodb.mjs#L57) (1 connections)
+- [pingResult](file:///C:/Nikunj/scripts/check-mongodb.mjs#L45) (1 connections)
+- [redact()](file:///C:/Nikunj/scripts/check-mongodb.mjs#L68) (1 connections)
+- [serverErrors](file:///C:/Nikunj/scripts/check-mongodb.mjs#L69) (1 connections)
+- [servers](file:///C:/Nikunj/scripts/check-mongodb.mjs#L71) (1 connections)
+- [start](file:///C:/Nikunj/scripts/check-mongodb.mjs#L37) (1 connections)
+- [uri](file:///C:/Nikunj/scripts/check-mongodb.mjs#L31) (1 connections)
+- [cached](file:///C:/Nikunj/src/backend/lib/mongodb.ts#L12) (1 connections)
 
 ## Relationships
 
@@ -32,12 +30,13 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\frontend\components\orders\OrderRequestPanel.tsx](file:///C:/Nikunj/src/frontend/components/orders/OrderRequestPanel.tsx)
+- [C:\Nikunj\scripts\check-mongodb.mjs](file:///C:/Nikunj/scripts/check-mongodb.mjs)
+- [C:\Nikunj\src\backend\lib\mongodb.ts](file:///C:/Nikunj/src/backend/lib/mongodb.ts)
 
 ## Audit Trail
 
-- EXTRACTED: 41 (93%)
-- INFERRED: 3 (7%)
+- EXTRACTED: 38 (90%)
+- INFERRED: 4 (10%)
 - AMBIGUOUS: 0 (0%)
 
 ---

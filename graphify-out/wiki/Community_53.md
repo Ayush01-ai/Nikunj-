@@ -4,25 +4,25 @@
 
 ## Key Concepts
 
-- [HeroSection.tsx](file:///C:/Nikunj/src/frontend/components/home/HeroSection.tsx#L1) (5 connections)
-- [hasSlides](file:///C:/Nikunj/src/frontend/components/home/HeroSection.tsx#L32) (1 connections)
-- [heroRef](file:///C:/Nikunj/src/frontend/components/home/HeroSection.tsx#L28) (1 connections)
-- [opacity](file:///C:/Nikunj/src/frontend/components/home/HeroSection.tsx#L30) (1 connections)
-- [Scene3D](file:///C:/Nikunj/src/frontend/components/home/HeroSection.tsx#L20) (1 connections)
-- [{ scrollYProgress }](file:///C:/Nikunj/src/frontend/components/home/HeroSection.tsx#L29) (1 connections)
+- [User.ts](file:///C:/Nikunj/src/backend/models/User.ts#L1) (5 connections)
+- [ensureUserIndexes()](file:///C:/Nikunj/src/backend/models/User.ts#L91) (4 connections)
+- [indexesReady](file:///C:/Nikunj/src/backend/models/User.ts#L85) (2 connections)
+- [AddressSchema](file:///C:/Nikunj/src/backend/models/User.ts#L41) (1 connections)
+- [User](file:///C:/Nikunj/src/backend/models/User.ts#L82) (1 connections)
+- [UserSchema](file:///C:/Nikunj/src/backend/models/User.ts#L53) (1 connections)
 
 ## Relationships
 
-- No strong cross-community connections detected
+- [[Community 999]] (2 shared connections)
 
 ## Source Files
 
-- [C:\Nikunj\src\frontend\components\home\HeroSection.tsx](file:///C:/Nikunj/src/frontend/components/home/HeroSection.tsx)
+- [C:\Nikunj\src\backend\models\User.ts](file:///C:/Nikunj/src/backend/models/User.ts)
 
 ## Audit Trail
 
-- EXTRACTED: 10 (100%)
-- INFERRED: 0 (0%)
+- EXTRACTED: 12 (86%)
+- INFERRED: 2 (14%)
 - AMBIGUOUS: 0 (0%)
 
 ---

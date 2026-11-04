@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- [smsLoginRetired.test.ts](file:///C:/Nikunj/tests/smsLoginRetired.test.ts#L1) (1 connections)
-- [res](file:///C:/Nikunj/tests/smsLoginRetired.test.ts#L12) (1 connections)
+- [mongodb-connection-error.test.ts](file:///C:/Nikunj/tests/mongodb-connection-error.test.ts#L1) (1 connections)
+- [err](file:///C:/Nikunj/tests/mongodb-connection-error.test.ts#L9) (1 connections)
 
 ## Relationships
 
@@ -13,7 +13,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\tests\smsLoginRetired.test.ts](file:///C:/Nikunj/tests/smsLoginRetired.test.ts)
+- [C:\Nikunj\tests\mongodb-connection-error.test.ts](file:///C:/Nikunj/tests/mongodb-connection-error.test.ts)
 
 ## Audit Trail
 

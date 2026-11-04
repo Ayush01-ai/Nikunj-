@@ -48,124 +48,125 @@ sequenceDiagram
     participant P39 as saveProfile()
     participant P40 as deleteAddress()
     participant P41 as setDefaultAddress()
-    participant P42 as handleSubmit()
-    participant P43 as onRequestError()
-    participant P44 as json
-    participant P45 as set()
-    participant P46 as push
-    participant P47 as from
-    participant P48 as connectDB
-    participant P49 as notifyOrder()
-    participant P50 as now
-    participant P51 as assignDelivery()
-    participant P52 as digest()
-    participant P53 as findOne
-    participant P54 as ensureDeliveryCode()
-    participant P55 as isRateLimited
-    participant P56 as isIpLimited
-    participant P57 as sanitizePhone()
-    participant P58 as findOneAndUpdate
-    participant P59 as sanityOrderId()
-    participant P60 as parseAddress()
-    participant P61 as text
-    participant P62 as dayUpdateFor()
-    participant P63 as isClerkConfigured()
-    participant P64 as getClerkServerClient()
-    participant P65 as getVariantPricing()
-    participant P66 as syncMongo()
-    participant P67 as requireAuthHybrid
-    participant P68 as publicUser()
-    participant P69 as lean()
-    participant P70 as log()
-    participant P71 as setSessionCookie()
-    participant P72 as canSubmitPayoutDetails()
-    participant P73 as requestEligibility()
-    participant P74 as historyEntry()
-    participant P75 as updateOne
-    participant P76 as processRefund()
-    participant P77 as refundView()
-    participant P78 as fail()
-    participant P79 as isOrderLimited
-    participant P80 as validSignature()
-    participant P81 as recordDayUpdate()
-    participant P82 as syncAdminRole()
-    participant P83 as sessionResponse()
-    participant P84 as otpMatches()
-    participant P85 as isStudioOrSiteAdmin()
-    participant P86 as resendDeliveryCode()
-    participant P87 as describePayout()
-    participant P88 as getAdminSettings()
-    participant P89 as daysSinceDelivered()
-    participant P90 as verifyPaymentSignature()
-    participant P91 as deliveryView()
-    participant P92 as buildPaymentResponse()
-    participant P93 as analyticsEnabled()
-    participant P94 as parseTrackPayload()
-    participant P95 as istDay()
-    participant P96 as recordLead()
-    participant P97 as ensureUserIndexes()
-    participant P98 as isValidPhone()
-    participant P99 as isWhatsAppConfigured
-    participant P100 as studioCorsHeaders()
-    participant P101 as orderTotals()
-    participant P102 as deliveryPolicy()
-    participant P103 as snapshotForOrder()
-    participant P104 as validatePayoutDetails()
-    participant P105 as isCashfreeConfigured
-    participant P106 as createGuestPaymentProof()
-    participant P107 as refundBreakdown()
-    participant P108 as isLimited
-    participant P109 as clean()
-    participant P110 as imageExt()
-    participant P111 as key()
-    participant P112 as recoverExistingCashfreeOrder()
-    participant P113 as providedSecret()
-    participant P114 as safeEqual()
-    participant P115 as validSecret()
-    participant P116 as clientIp()
-    participant P117 as normalizeEmail()
-    participant P118 as isValidEmail()
-    participant P119 as sendWhatsAppOtp
-    participant P120 as holdKey()
-    participant P121 as pushConfirmedOrderToSanity
-    participant P122 as pushAwaitingPaymentOrderToSanity()
-    participant P123 as done()
-    participant P124 as isLeadRateLimited
-    participant P125 as isTokenLimited
-    participant P126 as plain()
-    participant P127 as initialsOf()
-    participant P128 as isOrderCreateLimited
-    participant P129 as trustedBaseUrl()
-    participant P130 as cashfreeCustomerId()
-    participant P131 as isBot()
-    participant P132 as comparePassword()
-    participant P133 as passwordProblem()
-    participant P134 as hashPassword()
-    participant P135 as generateOTP()
-    participant P136 as isDbConnectionError()
-    participant P137 as authorizeOrderForPayment()
-    participant P138 as createCashfreeOrder
-    participant P139 as verifyCashfreeWebhookSignature
-    participant P140 as revalidatePath
-    participant P141 as Boolean()
-    participant P142 as max
-    participant P143 as verifySanityStudioToken()
-    participant P144 as pickDiverse()
-    participant P145 as track()
-    participant P146 as safeEq()
-    participant P147 as isEmailConfigured()
-    participant P148 as uploadImageFromUrl()
-    participant P149 as isGoogleConfigured()
-    participant P150 as safeEqual()
-    participant P151 as getSanityOrderStatuses()
-    participant P152 as LegacyProductsPage()
-    participant P153 as extractToken()
-    participant P154 as summariseDays()
-    participant P155 as summariseProducts()
-    participant P156 as filterAndSort()
-    participant P157 as safeNext()
-    participant P158 as siteUrl()
-    participant P159 as limit
+    participant P42 as startPayment()
+    participant P43 as handleSubmit()
+    participant P44 as onRequestError()
+    participant P45 as json
+    participant P46 as set()
+    participant P47 as push
+    participant P48 as from
+    participant P49 as connectDB
+    participant P50 as notifyOrder()
+    participant P51 as now
+    participant P52 as assignDelivery()
+    participant P53 as digest()
+    participant P54 as findOne
+    participant P55 as ensureDeliveryCode()
+    participant P56 as isRateLimited
+    participant P57 as isIpLimited
+    participant P58 as sanitizePhone()
+    participant P59 as findOneAndUpdate
+    participant P60 as sanityOrderId()
+    participant P61 as parseAddress()
+    participant P62 as text
+    participant P63 as dayUpdateFor()
+    participant P64 as isClerkConfigured()
+    participant P65 as getClerkServerClient()
+    participant P66 as getVariantPricing()
+    participant P67 as syncMongo()
+    participant P68 as requireAuthHybrid
+    participant P69 as publicUser()
+    participant P70 as lean()
+    participant P71 as log()
+    participant P72 as setSessionCookie()
+    participant P73 as canSubmitPayoutDetails()
+    participant P74 as requestEligibility()
+    participant P75 as historyEntry()
+    participant P76 as updateOne
+    participant P77 as processRefund()
+    participant P78 as refundView()
+    participant P79 as fail()
+    participant P80 as isOrderLimited
+    participant P81 as validSignature()
+    participant P82 as recordDayUpdate()
+    participant P83 as syncAdminRole()
+    participant P84 as sessionResponse()
+    participant P85 as otpMatches()
+    participant P86 as isStudioOrSiteAdmin()
+    participant P87 as resendDeliveryCode()
+    participant P88 as describePayout()
+    participant P89 as getAdminSettings()
+    participant P90 as daysSinceDelivered()
+    participant P91 as verifyPaymentSignature()
+    participant P92 as deliveryView()
+    participant P93 as buildPaymentResponse()
+    participant P94 as analyticsEnabled()
+    participant P95 as parseTrackPayload()
+    participant P96 as istDay()
+    participant P97 as recordLead()
+    participant P98 as ensureUserIndexes()
+    participant P99 as isValidPhone()
+    participant P100 as isWhatsAppConfigured
+    participant P101 as studioCorsHeaders()
+    participant P102 as orderTotals()
+    participant P103 as deliveryPolicy()
+    participant P104 as snapshotForOrder()
+    participant P105 as validatePayoutDetails()
+    participant P106 as isCashfreeConfigured
+    participant P107 as createGuestPaymentProof()
+    participant P108 as refundBreakdown()
+    participant P109 as isLimited
+    participant P110 as clean()
+    participant P111 as imageExt()
+    participant P112 as key()
+    participant P113 as recoverExistingCashfreeOrder()
+    participant P114 as providedSecret()
+    participant P115 as safeEqual()
+    participant P116 as validSecret()
+    participant P117 as clientIp()
+    participant P118 as normalizeEmail()
+    participant P119 as isValidEmail()
+    participant P120 as sendWhatsAppOtp
+    participant P121 as holdKey()
+    participant P122 as pushConfirmedOrderToSanity
+    participant P123 as pushAwaitingPaymentOrderToSanity()
+    participant P124 as done()
+    participant P125 as isLeadRateLimited
+    participant P126 as isTokenLimited
+    participant P127 as plain()
+    participant P128 as initialsOf()
+    participant P129 as isOrderCreateLimited
+    participant P130 as trustedBaseUrl()
+    participant P131 as cashfreeCustomerId()
+    participant P132 as isBot()
+    participant P133 as comparePassword()
+    participant P134 as passwordProblem()
+    participant P135 as hashPassword()
+    participant P136 as generateOTP()
+    participant P137 as isDbConnectionError()
+    participant P138 as authorizeOrderForPayment()
+    participant P139 as createCashfreeOrder
+    participant P140 as verifyCashfreeWebhookSignature
+    participant P141 as revalidatePath
+    participant P142 as Boolean()
+    participant P143 as max
+    participant P144 as verifySanityStudioToken()
+    participant P145 as pickDiverse()
+    participant P146 as track()
+    participant P147 as safeEq()
+    participant P148 as isEmailConfigured()
+    participant P149 as uploadImageFromUrl()
+    participant P150 as isGoogleConfigured()
+    participant P151 as safeEqual()
+    participant P152 as getSanityOrderStatuses()
+    participant P153 as LegacyProductsPage()
+    participant P154 as extractToken()
+    participant P155 as summariseDays()
+    participant P156 as summariseProducts()
+    participant P157 as filterAndSort()
+    participant P158 as safeNext()
+    participant P159 as siteUrl()
+    participant P160 as limit
     P0->>+ P1: calls
     P1-->>- P0: return
     P1->>+ P0: calls
@@ -258,12 +259,12 @@ sequenceDiagram
     P42-->>- P2: return
     P2->>+ P43: calls
     P43-->>- P2: return
+    P2->>+ P44: calls
+    P44-->>- P2: return
     P1->>+ P3: calls
     P3-->>- P1: return
     P1->>+ P4: calls
     P4-->>- P1: return
-    P1->>+ P44: calls
-    P44-->>- P1: return
     P1->>+ P45: calls
     P45-->>- P1: return
     P1->>+ P46: calls
@@ -278,36 +279,36 @@ sequenceDiagram
     P50-->>- P1: return
     P1->>+ P51: calls
     P51-->>- P1: return
-    P1->>+ P6: calls
-    P6-->>- P1: return
     P1->>+ P52: calls
     P52-->>- P1: return
+    P1->>+ P6: calls
+    P6-->>- P1: return
     P1->>+ P53: calls
     P53-->>- P1: return
     P1->>+ P54: calls
     P54-->>- P1: return
-    P1->>+ P13: calls
-    P13-->>- P1: return
     P1->>+ P55: calls
     P55-->>- P1: return
+    P1->>+ P13: calls
+    P13-->>- P1: return
     P1->>+ P56: calls
     P56-->>- P1: return
     P1->>+ P57: calls
     P57-->>- P1: return
     P1->>+ P58: calls
     P58-->>- P1: return
-    P1->>+ P15: calls
-    P15-->>- P1: return
     P1->>+ P59: calls
     P59-->>- P1: return
+    P1->>+ P15: calls
+    P15-->>- P1: return
+    P1->>+ P60: calls
+    P60-->>- P1: return
     P1->>+ P20: calls
     P20-->>- P1: return
     P1->>+ P18: calls
     P18-->>- P1: return
     P1->>+ P19: calls
     P19-->>- P1: return
-    P1->>+ P60: calls
-    P60-->>- P1: return
     P1->>+ P61: calls
     P61-->>- P1: return
     P1->>+ P62: calls
@@ -318,10 +319,10 @@ sequenceDiagram
     P64-->>- P1: return
     P1->>+ P65: calls
     P65-->>- P1: return
-    P1->>+ P24: calls
-    P24-->>- P1: return
     P1->>+ P66: calls
     P66-->>- P1: return
+    P1->>+ P24: calls
+    P24-->>- P1: return
     P1->>+ P67: calls
     P67-->>- P1: return
     P1->>+ P68: calls
@@ -372,14 +373,14 @@ sequenceDiagram
     P90-->>- P1: return
     P1->>+ P91: calls
     P91-->>- P1: return
-    P1->>+ P32: calls
-    P32-->>- P1: return
     P1->>+ P92: calls
     P92-->>- P1: return
-    P1->>+ P34: calls
-    P34-->>- P1: return
+    P1->>+ P32: calls
+    P32-->>- P1: return
     P1->>+ P93: calls
     P93-->>- P1: return
+    P1->>+ P34: calls
+    P34-->>- P1: return
     P1->>+ P94: calls
     P94-->>- P1: return
     P1->>+ P95: calls
@@ -474,84 +475,84 @@ sequenceDiagram
     P139-->>- P1: return
     P1->>+ P140: calls
     P140-->>- P1: return
+    P1->>+ P141: calls
+    P141-->>- P1: return
     P0->>+ P2: calls
     P2-->>- P0: return
-    P0->>+ P44: calls
-    P44-->>- P0: return
     P0->>+ P45: calls
     P45-->>- P0: return
-    P0->>+ P141: calls
-    P141-->>- P0: return
-    P0->>+ P47: calls
-    P47-->>- P0: return
+    P0->>+ P46: calls
+    P46-->>- P0: return
     P0->>+ P142: calls
     P142-->>- P0: return
     P0->>+ P48: calls
     P48-->>- P0: return
-    P0->>+ P5: calls
-    P5-->>- P0: return
-    P0->>+ P53: calls
-    P53-->>- P0: return
-    P0->>+ P12: calls
-    P12-->>- P0: return
     P0->>+ P143: calls
     P143-->>- P0: return
-    P0->>+ P61: calls
-    P61-->>- P0: return
-    P0->>+ P63: calls
-    P63-->>- P0: return
-    P0->>+ P71: calls
-    P71-->>- P0: return
-    P0->>+ P67: calls
-    P67-->>- P0: return
+    P0->>+ P49: calls
+    P49-->>- P0: return
+    P0->>+ P5: calls
+    P5-->>- P0: return
+    P0->>+ P54: calls
+    P54-->>- P0: return
+    P0->>+ P12: calls
+    P12-->>- P0: return
+    P0->>+ P144: calls
+    P144-->>- P0: return
+    P0->>+ P62: calls
+    P62-->>- P0: return
+    P0->>+ P64: calls
+    P64-->>- P0: return
+    P0->>+ P72: calls
+    P72-->>- P0: return
     P0->>+ P68: calls
     P68-->>- P0: return
     P0->>+ P69: calls
     P69-->>- P0: return
+    P0->>+ P70: calls
+    P70-->>- P0: return
     P0->>+ P27: calls
     P27-->>- P0: return
-    P0->>+ P144: calls
-    P144-->>- P0: return
     P0->>+ P145: calls
     P145-->>- P0: return
     P0->>+ P146: calls
     P146-->>- P0: return
-    P0->>+ P78: calls
-    P78-->>- P0: return
-    P0->>+ P82: calls
-    P82-->>- P0: return
     P0->>+ P147: calls
     P147-->>- P0: return
-    P0->>+ P88: calls
-    P88-->>- P0: return
-    P0->>+ P85: calls
-    P85-->>- P0: return
+    P0->>+ P79: calls
+    P79-->>- P0: return
+    P0->>+ P83: calls
+    P83-->>- P0: return
     P0->>+ P148: calls
     P148-->>- P0: return
-    P0->>+ P97: calls
-    P97-->>- P0: return
-    P0->>+ P99: calls
-    P99-->>- P0: return
-    P0->>+ P37: calls
-    P37-->>- P0: return
-    P0->>+ P100: calls
-    P100-->>- P0: return
+    P0->>+ P89: calls
+    P89-->>- P0: return
+    P0->>+ P86: calls
+    P86-->>- P0: return
     P0->>+ P149: calls
     P149-->>- P0: return
-    P0->>+ P113: calls
-    P113-->>- P0: return
+    P0->>+ P98: calls
+    P98-->>- P0: return
+    P0->>+ P100: calls
+    P100-->>- P0: return
+    P0->>+ P37: calls
+    P37-->>- P0: return
+    P0->>+ P101: calls
+    P101-->>- P0: return
     P0->>+ P150: calls
     P150-->>- P0: return
+    P0->>+ P114: calls
+    P114-->>- P0: return
     P0->>+ P151: calls
     P151-->>- P0: return
     P0->>+ P152: calls
     P152-->>- P0: return
     P0->>+ P153: calls
     P153-->>- P0: return
-    P0->>+ P116: calls
-    P116-->>- P0: return
     P0->>+ P154: calls
     P154-->>- P0: return
+    P0->>+ P117: calls
+    P117-->>- P0: return
     P0->>+ P155: calls
     P155-->>- P0: return
     P0->>+ P156: calls
@@ -562,6 +563,8 @@ sequenceDiagram
     P158-->>- P0: return
     P0->>+ P159: calls
     P159-->>- P0: return
+    P0->>+ P160: calls
+    P160-->>- P0: return
 ```
 
 ## Connections by Relation

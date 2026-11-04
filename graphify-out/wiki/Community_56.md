@@ -4,12 +4,12 @@
 
 ## Key Concepts
 
-- [sanity-order-resync.test.ts](file:///C:/Nikunj/tests/sanity-order-resync.test.ts#L1) (5 connections)
-- [doc](file:///C:/Nikunj/tests/sanity-order-resync.test.ts#L58) (1 connections)
-- [mocks](file:///C:/Nikunj/tests/sanity-order-resync.test.ts#L3) (1 connections)
-- [order()](file:///C:/Nikunj/tests/sanity-order-resync.test.ts#L23) (1 connections)
-- [spy](file:///C:/Nikunj/tests/sanity-order-resync.test.ts#L92) (1 connections)
-- [tx](file:///C:/Nikunj/tests/sanity-order-resync.test.ts#L13) (1 connections)
+- [ShopSuggestions.tsx](file:///C:/Nikunj/src/frontend/components/layout/ShopSuggestions.tsx#L1) (5 connections)
+- [alive](file:///C:/Nikunj/src/frontend/components/layout/ShopSuggestions.tsx#L24) (1 connections)
+- [[day]](file:///C:/Nikunj/src/frontend/components/layout/ShopSuggestions.tsx#L21) (1 connections)
+- [[index, setIndex]](file:///C:/Nikunj/src/frontend/components/layout/ShopSuggestions.tsx#L19) (1 connections)
+- [pathname](file:///C:/Nikunj/src/frontend/components/layout/ShopSuggestions.tsx#L18) (1 connections)
+- [picks](file:///C:/Nikunj/src/frontend/components/layout/ShopSuggestions.tsx#L33) (1 connections)
 
 ## Relationships
 
@@ -17,7 +17,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\tests\sanity-order-resync.test.ts](file:///C:/Nikunj/tests/sanity-order-resync.test.ts)
+- [C:\Nikunj\src\frontend\components\layout\ShopSuggestions.tsx](file:///C:/Nikunj/src/frontend/components/layout/ShopSuggestions.tsx)
 
 ## Audit Trail
 

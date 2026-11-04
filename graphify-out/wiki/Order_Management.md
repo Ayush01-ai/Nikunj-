@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- [Order](file:///C:/Nikunj/src/backend/models/Order.ts) (19 connections)
+- [Order](file:///C:/Nikunj/src/backend/models/Order.ts) (20 connections)
 
 ## Relationships
 
@@ -16,7 +16,7 @@
 
 ## Audit Trail
 
-- EXTRACTED: 19 (100%)
+- EXTRACTED: 20 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

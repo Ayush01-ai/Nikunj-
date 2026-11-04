@@ -4,10 +4,10 @@
 
 ## Key Concepts
 
-- [AuthBootstrap()](file:///C:/Nikunj/src/frontend/providers/AuthBootstrap.tsx#L22) (2 connections)
-- [useAuthStore](file:///C:/Nikunj/src/frontend/store/authStore.ts#L25) (2 connections)
-- [AuthBootstrap.tsx](file:///C:/Nikunj/src/frontend/providers/AuthBootstrap.tsx#L1) (1 connections)
-- [authStore.ts](file:///C:/Nikunj/src/frontend/store/authStore.ts#L1) (1 connections)
+- [WhyUs.tsx](file:///C:/Nikunj/src/frontend/components/home/WhyUs.tsx#L1) (3 connections)
+- [Icon](file:///C:/Nikunj/src/frontend/components/home/WhyUs.tsx#L80) (1 connections)
+- [{ ref, inView }](file:///C:/Nikunj/src/frontend/components/home/WhyUs.tsx#L14) (1 connections)
+- [whyItems](file:///C:/Nikunj/src/frontend/components/home/WhyUs.tsx#L16) (1 connections)
 
 ## Relationships
 
@@ -15,13 +15,12 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\frontend\providers\AuthBootstrap.tsx](file:///C:/Nikunj/src/frontend/providers/AuthBootstrap.tsx)
-- [C:\Nikunj\src\frontend\store\authStore.ts](file:///C:/Nikunj/src/frontend/store/authStore.ts)
+- [C:\Nikunj\src\frontend\components\home\WhyUs.tsx](file:///C:/Nikunj/src/frontend/components/home/WhyUs.tsx)
 
 ## Audit Trail
 
-- EXTRACTED: 4 (67%)
-- INFERRED: 2 (33%)
+- EXTRACTED: 6 (100%)
+- INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 
 ---

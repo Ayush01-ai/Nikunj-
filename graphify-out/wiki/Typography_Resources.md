@@ -4,14 +4,14 @@
 
 ## Key Concepts
 
-- [fonts.ts](file:///C:/Nikunj/src/app/fonts.ts#L1) (7 connections)
-- [cinzel](file:///C:/Nikunj/src/app/fonts.ts#L6) (1 connections)
-- [cinzelDecorative](file:///C:/Nikunj/src/app/fonts.ts#L18) (1 connections)
-- [crimsonText](file:///C:/Nikunj/src/app/fonts.ts#L28) (1 connections)
-- [greatVibes](file:///C:/Nikunj/src/app/fonts.ts#L64) (1 connections)
-- [lato](file:///C:/Nikunj/src/app/fonts.ts#L41) (1 connections)
-- [montserrat](file:///C:/Nikunj/src/app/fonts.ts#L52) (1 connections)
-- [yatraOne](file:///C:/Nikunj/src/app/fonts.ts#L71) (1 connections)
+- [FeaturedProducts.tsx](file:///C:/Nikunj/src/frontend/components/home/FeaturedProducts.tsx#L1) (7 connections)
+- [[activeTab, setActiveTab]](file:///C:/Nikunj/src/frontend/components/home/FeaturedProducts.tsx#L26) (1 connections)
+- [currentProducts](file:///C:/Nikunj/src/frontend/components/home/FeaturedProducts.tsx#L35) (1 connections)
+- [Icon](file:///C:/Nikunj/src/frontend/components/home/FeaturedProducts.tsx#L71) (1 connections)
+- [isActive](file:///C:/Nikunj/src/frontend/components/home/FeaturedProducts.tsx#L72) (1 connections)
+- [productMap](file:///C:/Nikunj/src/frontend/components/home/FeaturedProducts.tsx#L29) (1 connections)
+- [{ ref, inView }](file:///C:/Nikunj/src/frontend/components/home/FeaturedProducts.tsx#L27) (1 connections)
+- [tabs](file:///C:/Nikunj/src/frontend/components/home/FeaturedProducts.tsx#L19) (1 connections)
 
 ## Relationships
 
@@ -19,7 +19,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\app\fonts.ts](file:///C:/Nikunj/src/app/fonts.ts)
+- [C:\Nikunj\src\frontend\components\home\FeaturedProducts.tsx](file:///C:/Nikunj/src/frontend/components/home/FeaturedProducts.tsx)
 
 ## Audit Trail
 

@@ -1,35 +1,44 @@
 # Community 11
 
-> 52 nodes · cohesion 0.06
+> 40 nodes · cohesion 0.07
 
 ## Key Concepts
 
-- [push](file:///C:/Nikunj/src/frontend/components/products/ProductFilters.tsx#L322) (22 connections)
-- [run()](file:///C:/Nikunj/scripts/import-products.mjs#L174) (15 connections)
-- [import-products.mjs](file:///C:/Nikunj/scripts/import-products.mjs#L1) (12 connections)
-- [seed.mjs](file:///C:/Nikunj/scripts/seed.mjs#L1) (12 connections)
-- [static-html-assets.test.ts](file:///C:/Nikunj/tests/static-html-assets.test.ts#L1) (11 connections)
-- [static-html-assets.mjs](file:///C:/Nikunj/scripts/static-html-assets.mjs#L1) (8 connections)
-- [run()](file:///C:/Nikunj/scripts/static-html-assets.mjs#L69) (6 connections)
-- [log()](file:///C:/Nikunj/tests/static-html-assets.test.ts#L55) (6 connections)
-- [pickDiverse()](file:///C:/Nikunj/src/cms/lib/suggestions.ts#L25) (6 connections)
-- [parseCsv()](file:///C:/Nikunj/scripts/import-products.mjs#L67) (4 connections)
-- [uploadImageFromUrl()](file:///C:/Nikunj/scripts/import-products.mjs#L123) (4 connections)
-- [suggestions.ts](file:///C:/Nikunj/src/cms/lib/suggestions.ts#L1) (3 connections)
-- [getSlugMap()](file:///C:/Nikunj/scripts/import-products.mjs#L159) (3 connections)
-- [parseCsvLine()](file:///C:/Nikunj/scripts/import-products.mjs#L35) (3 connections)
-- [usage()](file:///C:/Nikunj/scripts/import-products.mjs#L170) (3 connections)
-- [getData()](file:///C:/Nikunj/src/app/products/%5Bslug%5D/page.tsx#L59) (3 connections)
-- [handleLogout()](file:///C:/Nikunj/src/app/account/page.tsx#L208) (3 connections)
-- [buildHeadersFile()](file:///C:/Nikunj/scripts/static-html-assets.mjs#L55) (3 connections)
-- [headersForRoute()](file:///C:/Nikunj/scripts/static-html-assets.mjs#L45) (3 connections)
-- [loadEnvLocal()](file:///C:/Nikunj/scripts/import-products.mjs#L6) (2 connections)
-- [parseArgs()](file:///C:/Nikunj/scripts/import-products.mjs#L21) (2 connections)
-- [portableTextFromPlainText()](file:///C:/Nikunj/scripts/import-products.mjs#L106) (2 connections)
-- [slugObject()](file:///C:/Nikunj/scripts/import-products.mjs#L102) (2 connections)
-- [toBool()](file:///C:/Nikunj/scripts/import-products.mjs#L90) (2 connections)
-- [toNumber()](file:///C:/Nikunj/scripts/import-products.mjs#L96) (2 connections)
-- *... and 27 more nodes in this community*
+- [digest()](file:///C:/Nikunj/src/backend/lib/otpHash.ts#L20) (15 connections)
+- [cashfree-signature.test.ts](file:///C:/Nikunj/tests/cashfree-signature.test.ts#L1) (14 connections)
+- [cashfree.ts](file:///C:/Nikunj/src/backend/lib/cashfree.ts#L1) (11 connections)
+- [getClient()](file:///C:/Nikunj/src/backend/lib/cashfree.ts#L22) (9 connections)
+- [otpHash.ts](file:///C:/Nikunj/src/backend/lib/otpHash.ts#L1) (7 connections)
+- [deliveryOtp()](file:///C:/Nikunj/src/backend/lib/otpHash.ts#L39) (7 connections)
+- [otpMatches()](file:///C:/Nikunj/src/backend/lib/otpHash.ts#L28) (5 connections)
+- [verifyCashfreeWebhookSignature()](file:///C:/Nikunj/src/backend/lib/cashfree.ts#L131) (4 connections)
+- [cashfreeEnvironment()](file:///C:/Nikunj/src/backend/lib/cashfreeConfig.ts#L28) (4 connections)
+- [isCashfreeConfigured](file:///C:/Nikunj/tests/payment-cashfree-verify.test.ts#L10) (4 connections)
+- [cashfreeConfig.ts](file:///C:/Nikunj/src/backend/lib/cashfreeConfig.ts#L1) (3 connections)
+- [createCashfreeOrder()](file:///C:/Nikunj/src/backend/lib/cashfree.ts#L58) (3 connections)
+- [createCashfreeRefund()](file:///C:/Nikunj/src/backend/lib/cashfree.ts#L101) (3 connections)
+- [fetchCashfreeRefund()](file:///C:/Nikunj/src/backend/lib/cashfree.ts#L116) (3 connections)
+- [hashOtp()](file:///C:/Nikunj/src/backend/lib/otpHash.ts#L23) (3 connections)
+- [isHashedOtp()](file:///C:/Nikunj/src/backend/lib/otpHash.ts#L18) (3 connections)
+- [otpKey()](file:///C:/Nikunj/src/backend/lib/otpHash.ts#L10) (3 connections)
+- [cashfreeApiVersion()](file:///C:/Nikunj/src/backend/lib/cashfree.ts#L10) (2 connections)
+- [fetchCashfreeOrder()](file:///C:/Nikunj/src/backend/lib/cashfree.ts#L83) (2 connections)
+- [fetchCashfreeOrderPayments()](file:///C:/Nikunj/src/backend/lib/cashfree.ts#L90) (2 connections)
+- [constructor()](file:///C:/Nikunj/tests/cashfree-signature.test.ts#L14) (2 connections)
+- [PGCreateOrder](file:///C:/Nikunj/tests/cashfree-signature.test.ts#L6) (2 connections)
+- [sign()](file:///C:/Nikunj/tests/cashfree-signature.test.ts#L21) (2 connections)
+- [isCashfreeConfigured()](file:///C:/Nikunj/src/backend/lib/cashfreeConfig.ts#L10) (2 connections)
+- [CashfreeSignatureError](file:///C:/Nikunj/src/backend/lib/cashfree.ts#L122) (1 connections)
+- *... and 15 more nodes in this community*
+
+## Class Diagram
+
+```mermaid
+classDiagram
+    class CashfreeSignatureError {
+        +cashfree.ts()
+    }
+```
 
 ## Relationships
 
@@ -37,19 +46,16 @@
 
 ## Source Files
 
-- [C:\Nikunj\scripts\import-products.mjs](file:///C:/Nikunj/scripts/import-products.mjs)
-- [C:\Nikunj\scripts\seed.mjs](file:///C:/Nikunj/scripts/seed.mjs)
-- [C:\Nikunj\scripts\static-html-assets.mjs](file:///C:/Nikunj/scripts/static-html-assets.mjs)
-- [C:\Nikunj\src\app\account\page.tsx](file:///C:/Nikunj/src/app/account/page.tsx)
-- [C:\Nikunj\src\app\products\[slug]\page.tsx](file:///C:/Nikunj/src/app/products/%5Bslug%5D/page.tsx)
-- [C:\Nikunj\src\cms\lib\suggestions.ts](file:///C:/Nikunj/src/cms/lib/suggestions.ts)
-- [C:\Nikunj\src\frontend\components\products\ProductFilters.tsx](file:///C:/Nikunj/src/frontend/components/products/ProductFilters.tsx)
-- [C:\Nikunj\tests\static-html-assets.test.ts](file:///C:/Nikunj/tests/static-html-assets.test.ts)
+- [C:\Nikunj\src\backend\lib\cashfree.ts](file:///C:/Nikunj/src/backend/lib/cashfree.ts)
+- [C:\Nikunj\src\backend\lib\cashfreeConfig.ts](file:///C:/Nikunj/src/backend/lib/cashfreeConfig.ts)
+- [C:\Nikunj\src\backend\lib\otpHash.ts](file:///C:/Nikunj/src/backend/lib/otpHash.ts)
+- [C:\Nikunj\tests\cashfree-signature.test.ts](file:///C:/Nikunj/tests/cashfree-signature.test.ts)
+- [C:\Nikunj\tests\payment-cashfree-verify.test.ts](file:///C:/Nikunj/tests/payment-cashfree-verify.test.ts)
 
 ## Audit Trail
 
-- EXTRACTED: 125 (72%)
-- INFERRED: 49 (28%)
+- EXTRACTED: 97 (74%)
+- INFERRED: 34 (26%)
 - AMBIGUOUS: 0 (0%)
 
 ---

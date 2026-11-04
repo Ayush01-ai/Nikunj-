@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- [NikunjSakhiLogo.tsx](file:///C:/Nikunj/src/frontend/components/ui/NikunjSakhiLogo.tsx#L1) (1 connections)
-- [sizing](file:///C:/Nikunj/src/frontend/components/ui/NikunjSakhiLogo.tsx#L11) (1 connections)
+- [FooterShopLinks.tsx](file:///C:/Nikunj/src/frontend/components/layout/FooterShopLinks.tsx#L1) (1 connections)
+- [{ menu }](file:///C:/Nikunj/src/frontend/components/layout/FooterShopLinks.tsx#L7) (1 connections)
 
 ## Relationships
 
@@ -13,7 +13,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\frontend\components\ui\NikunjSakhiLogo.tsx](file:///C:/Nikunj/src/frontend/components/ui/NikunjSakhiLogo.tsx)
+- [C:\Nikunj\src\frontend\components\layout\FooterShopLinks.tsx](file:///C:/Nikunj/src/frontend/components/layout/FooterShopLinks.tsx)
 
 ## Audit Trail
 

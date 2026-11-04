@@ -1,28 +1,26 @@
 # Community 25
 
-> 19 nodes · cohesion 0.11
+> 17 nodes · cohesion 0.12
 
 ## Key Concepts
 
-- [SearchModal.tsx](file:///C:/Nikunj/src/frontend/components/ui/SearchModal.tsx#L1) (12 connections)
-- [product.ts](file:///C:/Nikunj/src/cms/schemas/product.ts#L1) (4 connections)
-- [normalize()](file:///C:/Nikunj/src/frontend/components/ui/SearchModal.tsx#L49) (4 connections)
-- [slugify()](file:///C:/Nikunj/src/cms/tools/BulkProductImport.tsx#L59) (2 connections)
-- [slugify()](file:///C:/Nikunj/src/cms/schemas/product.ts#L6) (2 connections)
-- [loadSearchIndex()](file:///C:/Nikunj/src/frontend/components/ui/SearchModal.tsx#L39) (2 connections)
-- [score()](file:///C:/Nikunj/src/frontend/components/ui/SearchModal.tsx#L52) (2 connections)
-- [isEmpty()](file:///C:/Nikunj/src/cms/schemas/product.ts#L16) (1 connections)
-- [product](file:///C:/Nikunj/src/cms/schemas/product.ts#L18) (1 connections)
-- [SLUG_PATTERN](file:///C:/Nikunj/src/cms/schemas/product.ts#L4) (1 connections)
-- [cancelled](file:///C:/Nikunj/src/frontend/components/ui/SearchModal.tsx#L98) (1 connections)
-- [handleEsc()](file:///C:/Nikunj/src/frontend/components/ui/SearchModal.tsx#L112) (1 connections)
-- [indexPromise](file:///C:/Nikunj/src/frontend/components/ui/SearchModal.tsx#L38) (1 connections)
-- [MAX_SUGGESTIONS](file:///C:/Nikunj/src/frontend/components/ui/SearchModal.tsx#L34) (1 connections)
-- [names](file:///C:/Nikunj/src/frontend/components/ui/SearchModal.tsx#L131) (1 connections)
-- [off](file:///C:/Nikunj/src/frontend/components/ui/SearchModal.tsx#L244) (1 connections)
-- [POPULAR](file:///C:/Nikunj/src/frontend/components/ui/SearchModal.tsx#L35) (1 connections)
-- [re](file:///C:/Nikunj/src/frontend/components/ui/SearchModal.tsx#L74) (1 connections)
-- [scored](file:///C:/Nikunj/src/frontend/components/ui/SearchModal.tsx#L121) (1 connections)
+- [guestVerifyConfirmOtp.test.ts](file:///C:/Nikunj/tests/guestVerifyConfirmOtp.test.ts#L1) (16 connections)
+- [makeOtpRecord()](file:///C:/Nikunj/tests/guestVerifyConfirmOtp.test.ts#L33) (2 connections)
+- [connectDB](file:///C:/Nikunj/tests/guestVerifyConfirmOtp.test.ts#L8) (1 connections)
+- [decoded](file:///C:/Nikunj/tests/guestVerifyConfirmOtp.test.ts#L146) (1 connections)
+- [expired](file:///C:/Nikunj/tests/guestVerifyConfirmOtp.test.ts#L97) (1 connections)
+- [GUEST_ORDER](file:///C:/Nikunj/tests/guestVerifyConfirmOtp.test.ts#L26) (1 connections)
+- [i](file:///C:/Nikunj/tests/guestVerifyConfirmOtp.test.ts#L157) (1 connections)
+- [json](file:///C:/Nikunj/tests/guestVerifyConfirmOtp.test.ts#L139) (1 connections)
+- [last](file:///C:/Nikunj/tests/guestVerifyConfirmOtp.test.ts#L156) (1 connections)
+- [makeRequest()](file:///C:/Nikunj/tests/guestVerifyConfirmOtp.test.ts#L18) (1 connections)
+- [orderFindOne](file:///C:/Nikunj/tests/guestVerifyConfirmOtp.test.ts#L9) (1 connections)
+- [otpDeleteMany](file:///C:/Nikunj/tests/guestVerifyConfirmOtp.test.ts#L12) (1 connections)
+- [otpFindOne](file:///C:/Nikunj/tests/guestVerifyConfirmOtp.test.ts#L10) (1 connections)
+- [otpFindOneAndUpdate](file:///C:/Nikunj/tests/guestVerifyConfirmOtp.test.ts#L11) (1 connections)
+- [{ POST }](file:///C:/Nikunj/tests/guestVerifyConfirmOtp.test.ts#L62) (1 connections)
+- [record](file:///C:/Nikunj/tests/guestVerifyConfirmOtp.test.ts#L108) (1 connections)
+- [res](file:///C:/Nikunj/tests/guestVerifyConfirmOtp.test.ts#L63) (1 connections)
 
 ## Relationships
 
@@ -30,14 +28,12 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\cms\schemas\product.ts](file:///C:/Nikunj/src/cms/schemas/product.ts)
-- [C:\Nikunj\src\cms\tools\BulkProductImport.tsx](file:///C:/Nikunj/src/cms/tools/BulkProductImport.tsx)
-- [C:\Nikunj\src\frontend\components\ui\SearchModal.tsx](file:///C:/Nikunj/src/frontend/components/ui/SearchModal.tsx)
+- [C:\Nikunj\tests\guestVerifyConfirmOtp.test.ts](file:///C:/Nikunj/tests/guestVerifyConfirmOtp.test.ts)
 
 ## Audit Trail
 
-- EXTRACTED: 35 (88%)
-- INFERRED: 5 (12%)
+- EXTRACTED: 32 (97%)
+- INFERRED: 1 (3%)
 - AMBIGUOUS: 0 (0%)
 
 ---

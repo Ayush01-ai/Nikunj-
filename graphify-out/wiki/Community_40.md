@@ -4,14 +4,14 @@
 
 ## Key Concepts
 
-- [FeaturedProducts.tsx](file:///C:/Nikunj/src/frontend/components/home/FeaturedProducts.tsx#L1) (7 connections)
-- [[activeTab, setActiveTab]](file:///C:/Nikunj/src/frontend/components/home/FeaturedProducts.tsx#L26) (1 connections)
-- [currentProducts](file:///C:/Nikunj/src/frontend/components/home/FeaturedProducts.tsx#L35) (1 connections)
-- [Icon](file:///C:/Nikunj/src/frontend/components/home/FeaturedProducts.tsx#L71) (1 connections)
-- [isActive](file:///C:/Nikunj/src/frontend/components/home/FeaturedProducts.tsx#L72) (1 connections)
-- [productMap](file:///C:/Nikunj/src/frontend/components/home/FeaturedProducts.tsx#L29) (1 connections)
-- [{ ref, inView }](file:///C:/Nikunj/src/frontend/components/home/FeaturedProducts.tsx#L27) (1 connections)
-- [tabs](file:///C:/Nikunj/src/frontend/components/home/FeaturedProducts.tsx#L19) (1 connections)
+- [orderNotify.test.ts](file:///C:/Nikunj/tests/orderNotify.test.ts#L1) (7 connections)
+- [both](file:///C:/Nikunj/tests/orderNotify.test.ts#L51) (1 connections)
+- [mocks](file:///C:/Nikunj/tests/orderNotify.test.ts#L3) (1 connections)
+- [order()](file:///C:/Nikunj/tests/orderNotify.test.ts#L98) (1 connections)
+- [res](file:///C:/Nikunj/tests/orderNotify.test.ts#L103) (1 connections)
+- [snap](file:///C:/Nikunj/tests/orderNotify.test.ts#L70) (1 connections)
+- [verifiedEmail](file:///C:/Nikunj/tests/orderNotify.test.ts#L32) (1 connections)
+- [verifiedPhone](file:///C:/Nikunj/tests/orderNotify.test.ts#L33) (1 connections)
 
 ## Relationships
 
@@ -19,7 +19,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\frontend\components\home\FeaturedProducts.tsx](file:///C:/Nikunj/src/frontend/components/home/FeaturedProducts.tsx)
+- [C:\Nikunj\tests\orderNotify.test.ts](file:///C:/Nikunj/tests/orderNotify.test.ts)
 
 ## Audit Trail
 

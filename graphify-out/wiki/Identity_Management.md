@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- [User](file:///C:/Nikunj/src/backend/models/User.ts) (9 connections)
+- [auth.test.ts](file:///C:/Nikunj/tests/auth.test.ts#L1) (0 connections)
 
 ## Relationships
 
@@ -12,11 +12,11 @@
 
 ## Source Files
 
-- [src\backend\models\User.ts](file:///C:/Nikunj/src/backend/models/User.ts)
+- [C:\Nikunj\tests\auth.test.ts](file:///C:/Nikunj/tests/auth.test.ts)
 
 ## Audit Trail
 
-- EXTRACTED: 9 (100%)
+- EXTRACTED: 0 (0%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

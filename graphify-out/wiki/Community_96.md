@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- [heroSlide.ts](file:///C:/Nikunj/src/cms/schemas/heroSlide.ts#L1) (1 connections)
-- [heroSlide](file:///C:/Nikunj/src/cms/schemas/heroSlide.ts#L3) (1 connections)
+- [deity.ts](file:///C:/Nikunj/src/cms/schemas/deity.ts#L1) (1 connections)
+- [deity](file:///C:/Nikunj/src/cms/schemas/deity.ts#L3) (1 connections)
 
 ## Relationships
 
@@ -13,7 +13,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\cms\schemas\heroSlide.ts](file:///C:/Nikunj/src/cms/schemas/heroSlide.ts)
+- [C:\Nikunj\src\cms\schemas\deity.ts](file:///C:/Nikunj/src/cms/schemas/deity.ts)
 
 ## Audit Trail
 

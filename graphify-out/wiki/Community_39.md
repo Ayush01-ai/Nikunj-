@@ -4,14 +4,14 @@
 
 ## Key Concepts
 
-- [Order.ts](file:///C:/Nikunj/src/backend/models/Order.ts#L1) (4 connections)
-- [order.ts](file:///C:/Nikunj/src/cms/schemas/order.ts#L1) (3 connections)
-- [order](file:///C:/Nikunj/src/cms/schemas/order.ts#L20) (2 connections)
-- [ORDER_STATUS_LIST](file:///C:/Nikunj/src/cms/schemas/order.ts#L3) (1 connections)
-- [OrderItemSchema](file:///C:/Nikunj/src/backend/models/Order.ts#L77) (1 connections)
-- [OrderSchema](file:///C:/Nikunj/src/backend/models/Order.ts#L98) (1 connections)
-- [ShippingAddressSchema](file:///C:/Nikunj/src/backend/models/Order.ts#L87) (1 connections)
-- [statusTitle()](file:///C:/Nikunj/src/cms/schemas/order.ts#L16) (1 connections)
+- [analytics-suggestions.test.ts](file:///C:/Nikunj/tests/analytics-suggestions.test.ts#L1) (7 connections)
+- [first](file:///C:/Nikunj/tests/analytics-suggestions.test.ts#L64) (1 connections)
+- [p](file:///C:/Nikunj/tests/analytics-suggestions.test.ts#L56) (1 connections)
+- [PHONE_UA](file:///C:/Nikunj/tests/analytics-suggestions.test.ts#L15) (1 connections)
+- [picked](file:///C:/Nikunj/tests/analytics-suggestions.test.ts#L99) (1 connections)
+- [pool](file:///C:/Nikunj/tests/analytics-suggestions.test.ts#L96) (1 connections)
+- [s](file:///C:/Nikunj/tests/analytics-suggestions.test.ts#L80) (1 connections)
+- [seed](file:///C:/Nikunj/tests/analytics-suggestions.test.ts#L105) (1 connections)
 
 ## Relationships
 
@@ -19,8 +19,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\backend\models\Order.ts](file:///C:/Nikunj/src/backend/models/Order.ts)
-- [C:\Nikunj\src\cms\schemas\order.ts](file:///C:/Nikunj/src/cms/schemas/order.ts)
+- [C:\Nikunj\tests\analytics-suggestions.test.ts](file:///C:/Nikunj/tests/analytics-suggestions.test.ts)
 
 ## Audit Trail
 

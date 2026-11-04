@@ -62,15 +62,11 @@ export function findInsufficientStockLines(products: StockProduct[], lines: Stoc
   for (const product of products) {
     const publishedId = product._id.replace(/^drafts\./, '');
     const productStock = product.hasQty ? product.stockQuantity : product.hasLegacy ? product.stock : undefined;
-    const trackedVariants = (product.variants ?? []).filter((variant) => typeof variant.stock === 'number');
-    const variantsTracked = trackedVariants.length > 0 && !(
-      trackedVariants.every((variant) => variant.stock === 0) && typeof productStock === 'number' && productStock > 0
-    );
 
     for (const line of groupedLines.values()) {
       if (line.productId.replace(/^drafts\./, '') !== publishedId) continue;
       const variant = line.option ? product.variants?.find((item) => item.label === line.option) : undefined;
-      const stock = variant && variantsTracked && variant.hasStock ? variant.stock : productStock;
+      const stock = variant?.hasStock && typeof variant.stock === 'number' ? variant.stock : productStock;
       if (typeof stock !== 'number' || !Number.isFinite(stock) || stock >= line.quantity) continue;
       const key = `${publishedId}|${line.option ?? ''}`;
       insufficient.set(key, line);

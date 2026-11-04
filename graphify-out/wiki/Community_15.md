@@ -1,35 +1,45 @@
 # Community 15
 
-> 38 nodes · cohesion 0.05
+> 32 nodes · cohesion 0.13
 
 ## Key Concepts
 
-- [migrate-taxonomy.mjs](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L1) (37 connections)
-- [ACCESSORY_FACETS](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L43) (1 connections)
-- [activeCategorySlugs](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L150) (1 connections)
-- [APPLY](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L24) (1 connections)
-- [categoryId](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L127) (1 connections)
-- [categoryIdBySlug](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L101) (1 connections)
-- [clean](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L199) (1 connections)
-- [client](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L36) (1 connections)
-- [current](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L175) (1 connections)
-- [data](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L92) (1 connections)
-- [dataset](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L28) (1 connections)
-- [existing](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L107) (1 connections)
-- [FRAGRANCE_FACETS](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L42) (1 connections)
-- [id](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L108) (1 connections)
-- [keywordIndex](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L103) (1 connections)
-- [loadEnvLocal()](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L8) (1 connections)
-- [log](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L100) (1 connections)
-- [movedFrom](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L149) (1 connections)
-- [name](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L155) (1 connections)
-- [oldImage](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L176) (1 connections)
-- [patch](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L177) (1 connections)
-- [projectId](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L27) (1 connections)
-- [publishedId()](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L89) (1 connections)
-- [ref()](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L90) (1 connections)
-- [res](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs#L214) (1 connections)
-- *... and 13 more nodes in this community*
+- [sendApproved()](file:///C:/Nikunj/src/backend/lib/refunds.ts#L255) (14 connections)
+- [refunds.ts](file:///C:/Nikunj/src/backend/lib/refunds.ts#L1) (12 connections)
+- [cashfreePayouts.ts](file:///C:/Nikunj/src/backend/lib/cashfreePayouts.ts#L1) (9 connections)
+- [razorpay.ts](file:///C:/Nikunj/src/backend/lib/razorpay.ts#L1) (9 connections)
+- [createPayoutTransfer()](file:///C:/Nikunj/src/backend/lib/cashfreePayouts.ts#L98) (8 connections)
+- [getPayoutTransfer()](file:///C:/Nikunj/src/backend/lib/cashfreePayouts.ts#L131) (8 connections)
+- [lookupAtGateway()](file:///C:/Nikunj/src/backend/lib/refunds.ts#L131) (8 connections)
+- [getClient()](file:///C:/Nikunj/src/backend/lib/razorpay.ts#L26) (7 connections)
+- [sendToGateway()](file:///C:/Nikunj/src/backend/lib/refunds.ts#L109) (7 connections)
+- [syncProcessing()](file:///C:/Nikunj/src/backend/lib/refunds.ts#L208) (7 connections)
+- [processRefund()](file:///C:/Nikunj/src/backend/lib/refunds.ts#L238) (6 connections)
+- [verifyPaymentSignature()](file:///C:/Nikunj/src/backend/lib/razorpay.ts#L77) (5 connections)
+- [baseUrl()](file:///C:/Nikunj/src/backend/lib/cashfreePayouts.ts#L13) (4 connections)
+- [headers()](file:///C:/Nikunj/src/backend/lib/cashfreePayouts.ts#L24) (4 connections)
+- [isPayoutsConfigured()](file:///C:/Nikunj/src/backend/lib/cashfreePayouts.ts#L9) (4 connections)
+- [signature()](file:///C:/Nikunj/src/backend/lib/cashfreePayouts.ts#L16) (4 connections)
+- [toResult()](file:///C:/Nikunj/src/backend/lib/cashfreePayouts.ts#L75) (4 connections)
+- [gatewayErrorMessage()](file:///C:/Nikunj/src/backend/lib/refunds.ts#L69) (4 connections)
+- [createRazorpayRefund()](file:///C:/Nikunj/src/backend/lib/razorpay.ts#L57) (3 connections)
+- [fetchRazorpayOrder()](file:///C:/Nikunj/src/backend/lib/razorpay.ts#L52) (3 connections)
+- [fetchRazorpayRefund()](file:///C:/Nikunj/src/backend/lib/razorpay.ts#L66) (3 connections)
+- [findRazorpayRefundByReceipt()](file:///C:/Nikunj/src/backend/lib/razorpay.ts#L71) (3 connections)
+- [getCredentials()](file:///C:/Nikunj/src/backend/lib/razorpay.ts#L16) (3 connections)
+- [mapCashfreeRefund()](file:///C:/Nikunj/src/backend/lib/refunds.ts#L93) (3 connections)
+- [mapRazorpayRefund()](file:///C:/Nikunj/src/backend/lib/refunds.ts#L103) (3 connections)
+- *... and 7 more nodes in this community*
+
+## Class Diagram
+
+```mermaid
+classDiagram
+    class PayoutRequestError {
+        +cashfreePayouts.ts()
+        +.constructor()
+    }
+```
 
 ## Relationships
 
@@ -37,12 +47,14 @@
 
 ## Source Files
 
-- [C:\Nikunj\scripts\migrate-taxonomy.mjs](file:///C:/Nikunj/scripts/migrate-taxonomy.mjs)
+- [C:\Nikunj\src\backend\lib\cashfreePayouts.ts](file:///C:/Nikunj/src/backend/lib/cashfreePayouts.ts)
+- [C:\Nikunj\src\backend\lib\razorpay.ts](file:///C:/Nikunj/src/backend/lib/razorpay.ts)
+- [C:\Nikunj\src\backend\lib\refunds.ts](file:///C:/Nikunj/src/backend/lib/refunds.ts)
 
 ## Audit Trail
 
-- EXTRACTED: 74 (100%)
-- INFERRED: 0 (0%)
+- EXTRACTED: 118 (76%)
+- INFERRED: 38 (24%)
 - AMBIGUOUS: 0 (0%)
 
 ---

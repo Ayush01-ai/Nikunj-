@@ -1,35 +1,34 @@
 # Community 18
 
-> 28 nodes · cohesion 0.09
+> 25 nodes · cohesion 0.08
 
 ## Key Concepts
 
-- [ClerkEmailAuth.tsx](file:///C:/Nikunj/src/frontend/components/auth/ClerkEmailAuth.tsx#L1) (27 connections)
-- [run()](file:///C:/Nikunj/src/frontend/components/auth/ClerkEmailAuth.tsx#L60) (8 connections)
-- [check()](file:///C:/Nikunj/src/frontend/components/auth/ClerkEmailAuth.tsx#L75) (3 connections)
-- [clerkMessage()](file:///C:/Nikunj/src/frontend/components/auth/ClerkEmailAuth.tsx#L20) (3 connections)
-- [finish()](file:///C:/Nikunj/src/frontend/components/auth/ClerkEmailAuth.tsx#L79) (2 connections)
-- [submitCode()](file:///C:/Nikunj/src/frontend/components/auth/ClerkEmailAuth.tsx#L132) (2 connections)
-- [submitForgot()](file:///C:/Nikunj/src/frontend/components/auth/ClerkEmailAuth.tsx#L119) (2 connections)
-- [submitNewPassword()](file:///C:/Nikunj/src/frontend/components/auth/ClerkEmailAuth.tsx#L154) (2 connections)
-- [submitSignIn()](file:///C:/Nikunj/src/frontend/components/auth/ClerkEmailAuth.tsx#L85) (2 connections)
-- [submitSignUp()](file:///C:/Nikunj/src/frontend/components/auth/ClerkEmailAuth.tsx#L103) (2 connections)
-- [[busy, setBusy]](file:///C:/Nikunj/src/frontend/components/auth/ClerkEmailAuth.tsx#L43) (1 connections)
-- [[code, setCode]](file:///C:/Nikunj/src/frontend/components/auth/ClerkEmailAuth.tsx#L48) (1 connections)
-- [[codeKind, setCodeKind]](file:///C:/Nikunj/src/frontend/components/auth/ClerkEmailAuth.tsx#L49) (1 connections)
-- [[email, setEmail]](file:///C:/Nikunj/src/frontend/components/auth/ClerkEmailAuth.tsx#L46) (1 connections)
-- [[fieldError, setFieldError]](file:///C:/Nikunj/src/frontend/components/auth/ClerkEmailAuth.tsx#L50) (1 connections)
-- [iconCls](file:///C:/Nikunj/src/frontend/components/auth/ClerkEmailAuth.tsx#L15) (1 connections)
-- [inputCls](file:///C:/Nikunj/src/frontend/components/auth/ClerkEmailAuth.tsx#L16) (1 connections)
-- [inputWrapCls](file:///C:/Nikunj/src/frontend/components/auth/ClerkEmailAuth.tsx#L14) (1 connections)
-- [labelCls](file:///C:/Nikunj/src/frontend/components/auth/ClerkEmailAuth.tsx#L13) (1 connections)
-- [linkBtnCls](file:///C:/Nikunj/src/frontend/components/auth/ClerkEmailAuth.tsx#L17) (1 connections)
-- [[name, setName]](file:///C:/Nikunj/src/frontend/components/auth/ClerkEmailAuth.tsx#L45) (1 connections)
-- [[password, setPassword]](file:///C:/Nikunj/src/frontend/components/auth/ClerkEmailAuth.tsx#L47) (1 connections)
-- [reset()](file:///C:/Nikunj/src/frontend/components/auth/ClerkEmailAuth.tsx#L52) (1 connections)
-- [[showPassword, setShowPassword]](file:///C:/Nikunj/src/frontend/components/auth/ClerkEmailAuth.tsx#L44) (1 connections)
-- [{ signIn }](file:///C:/Nikunj/src/frontend/components/auth/ClerkEmailAuth.tsx#L39) (1 connections)
-- *... and 3 more nodes in this community*
+- [ContactContent.tsx](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L1) (18 connections)
+- [getWhatsAppHref()](file:///C:/Nikunj/src/frontend/lib/whatsapp.ts#L13) (4 connections)
+- [whatsapp.ts](file:///C:/Nikunj/src/frontend/lib/whatsapp.ts#L1) (3 connections)
+- [handleSubmit()](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L59) (3 connections)
+- [handleWhatsAppForward()](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L95) (2 connections)
+- [normalizeWhatsAppNumber()](file:///C:/Nikunj/src/frontend/lib/whatsapp.ts#L3) (2 connections)
+- [WhatsAppFloat()](file:///C:/Nikunj/src/frontend/components/ui/WhatsAppFloat.tsx#L12) (2 connections)
+- [WhatsAppFloat.tsx](file:///C:/Nikunj/src/frontend/components/ui/WhatsAppFloat.tsx#L1) (1 connections)
+- [defaultWaMessage](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L56) (1 connections)
+- [directWaUrl](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L57) (1 connections)
+- [[email, setEmail]](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L44) (1 connections)
+- [FAQS](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L18) (1 connections)
+- [[honeypot, setHoneypot]](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L48) (1 connections)
+- [isOpen](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L472) (1 connections)
+- [[message, setMessage]](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L47) (1 connections)
+- [[name, setName]](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L42) (1 connections)
+- [[openFaq, setOpenFaq]](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L51) (1 connections)
+- [[orderId, setOrderId]](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L45) (1 connections)
+- [[phone, setPhone]](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L43) (1 connections)
+- [rawWhatsapp](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L53) (1 connections)
+- [[subject, setSubject]](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L46) (1 connections)
+- [[submitted, setSubmitted]](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L50) (1 connections)
+- [[submitting, setSubmitting]](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L49) (1 connections)
+- [supportEmail](file:///C:/Nikunj/src/app/contact/ContactContent.tsx#L54) (1 connections)
+- [DEFAULT_WHATSAPP_NUMBER](file:///C:/Nikunj/src/frontend/lib/whatsapp.ts#L1) (1 connections)
 
 ## Relationships
 
@@ -37,12 +36,14 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\frontend\components\auth\ClerkEmailAuth.tsx](file:///C:/Nikunj/src/frontend/components/auth/ClerkEmailAuth.tsx)
+- [C:\Nikunj\src\app\contact\ContactContent.tsx](file:///C:/Nikunj/src/app/contact/ContactContent.tsx)
+- [C:\Nikunj\src\frontend\components\ui\WhatsAppFloat.tsx](file:///C:/Nikunj/src/frontend/components/ui/WhatsAppFloat.tsx)
+- [C:\Nikunj\src\frontend\lib\whatsapp.ts](file:///C:/Nikunj/src/frontend/lib/whatsapp.ts)
 
 ## Audit Trail
 
-- EXTRACTED: 70 (99%)
-- INFERRED: 1 (1%)
+- EXTRACTED: 46 (88%)
+- INFERRED: 6 (12%)
 - AMBIGUOUS: 0 (0%)
 
 ---

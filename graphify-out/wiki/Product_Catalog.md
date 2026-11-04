@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- [category.ts](file:///C:/Nikunj/src/cms/schemas/category.ts#L1) (1 connections)
-- [category](file:///C:/Nikunj/src/cms/schemas/category.ts#L3) (1 connections)
+- [ClerkTicketRedeemer.tsx](file:///C:/Nikunj/src/app/login/whatsapp/ClerkTicketRedeemer.tsx#L1) (1 connections)
+- [ClerkTicketRedeemer()](file:///C:/Nikunj/src/app/login/whatsapp/ClerkTicketRedeemer.tsx#L22) (1 connections)
 
 ## Relationships
 
@@ -13,7 +13,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\cms\schemas\category.ts](file:///C:/Nikunj/src/cms/schemas/category.ts)
+- [C:\Nikunj\src\app\login\whatsapp\ClerkTicketRedeemer.tsx](file:///C:/Nikunj/src/app/login/whatsapp/ClerkTicketRedeemer.tsx)
 
 ## Audit Trail
 

@@ -4,13 +4,13 @@
 
 ## Key Concepts
 
-- [clerk-google-button.test.ts](file:///C:/Nikunj/tests/clerk-google-button.test.ts#L1) (4 connections)
-- [clickGoogle()](file:///C:/Nikunj/tests/clerk-google-button.test.ts#L9) (2 connections)
-- [ClerkGoogleButton()](file:///C:/Nikunj/src/frontend/components/auth/ClerkGoogleButton.tsx#L13) (2 connections)
-- [ClerkGoogleButton.tsx](file:///C:/Nikunj/src/frontend/components/auth/ClerkGoogleButton.tsx#L1) (1 connections)
-- [authenticateWithRedirect](file:///C:/Nikunj/tests/clerk-google-button.test.ts#L4) (1 connections)
-- [client](file:///C:/Nikunj/tests/clerk-google-button.test.ts#L5) (1 connections)
-- [onError](file:///C:/Nikunj/tests/clerk-google-button.test.ts#L28) (1 connections)
+- [orders-pricing.test.ts](file:///C:/Nikunj/tests/orders-pricing.test.ts#L1) (6 connections)
+- [ipSeq](file:///C:/Nikunj/tests/orders-pricing.test.ts#L49) (1 connections)
+- [json](file:///C:/Nikunj/tests/orders-pricing.test.ts#L133) (1 connections)
+- [mocks](file:///C:/Nikunj/tests/orders-pricing.test.ts#L7) (1 connections)
+- [placeOrder()](file:///C:/Nikunj/tests/orders-pricing.test.ts#L50) (1 connections)
+- [{ POST }](file:///C:/Nikunj/tests/orders-pricing.test.ts#L92) (1 connections)
+- [res](file:///C:/Nikunj/tests/orders-pricing.test.ts#L93) (1 connections)
 
 ## Relationships
 
@@ -18,13 +18,12 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\frontend\components\auth\ClerkGoogleButton.tsx](file:///C:/Nikunj/src/frontend/components/auth/ClerkGoogleButton.tsx)
-- [C:\Nikunj\tests\clerk-google-button.test.ts](file:///C:/Nikunj/tests/clerk-google-button.test.ts)
+- [C:\Nikunj\tests\orders-pricing.test.ts](file:///C:/Nikunj/tests/orders-pricing.test.ts)
 
 ## Audit Trail
 
-- EXTRACTED: 10 (83%)
-- INFERRED: 2 (17%)
+- EXTRACTED: 12 (100%)
+- INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 
 ---

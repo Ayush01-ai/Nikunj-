@@ -1,12 +1,13 @@
 # API Configuration
 
-> 3 nodes · cohesion 0.67
+> 4 nodes · cohesion 0.50
 
 ## Key Concepts
 
-- [sitemap.ts](file:///C:/Nikunj/src/app/sitemap.ts#L1) (2 connections)
-- [BASE_URL](file:///C:/Nikunj/src/app/sitemap.ts#L5) (1 connections)
-- [sitemap()](file:///C:/Nikunj/src/app/sitemap.ts#L7) (1 connections)
+- [AuthBootstrap()](file:///C:/Nikunj/src/frontend/providers/AuthBootstrap.tsx#L22) (2 connections)
+- [useAuthStore](file:///C:/Nikunj/src/frontend/store/authStore.ts#L25) (2 connections)
+- [AuthBootstrap.tsx](file:///C:/Nikunj/src/frontend/providers/AuthBootstrap.tsx#L1) (1 connections)
+- [authStore.ts](file:///C:/Nikunj/src/frontend/store/authStore.ts#L1) (1 connections)
 
 ## Relationships
 
@@ -14,12 +15,13 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\app\sitemap.ts](file:///C:/Nikunj/src/app/sitemap.ts)
+- [C:\Nikunj\src\frontend\providers\AuthBootstrap.tsx](file:///C:/Nikunj/src/frontend/providers/AuthBootstrap.tsx)
+- [C:\Nikunj\src\frontend\store\authStore.ts](file:///C:/Nikunj/src/frontend/store/authStore.ts)
 
 ## Audit Trail
 
-- EXTRACTED: 4 (100%)
-- INFERRED: 0 (0%)
+- EXTRACTED: 4 (67%)
+- INFERRED: 2 (33%)
 - AMBIGUOUS: 0 (0%)
 
 ---

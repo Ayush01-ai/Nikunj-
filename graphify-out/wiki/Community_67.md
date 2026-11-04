@@ -4,10 +4,10 @@
 
 ## Key Concepts
 
-- [Providers.tsx](file:///C:/Nikunj/src/frontend/providers/Providers.tsx#L1) (3 connections)
-- [Providers()](file:///C:/Nikunj/src/frontend/providers/Providers.tsx#L24) (1 connections)
-- [SiteSettingsContext](file:///C:/Nikunj/src/frontend/providers/Providers.tsx#L17) (1 connections)
-- [useSiteSettings()](file:///C:/Nikunj/src/frontend/providers/Providers.tsx#L19) (1 connections)
+- [AnnouncementBar.tsx](file:///C:/Nikunj/src/frontend/components/home/AnnouncementBar.tsx#L1) (3 connections)
+- [cleanWhatsapp](file:///C:/Nikunj/src/frontend/components/home/AnnouncementBar.tsx#L15) (1 connections)
+- [hasCouponMention](file:///C:/Nikunj/src/frontend/components/home/AnnouncementBar.tsx#L22) (1 connections)
+- [waUrl](file:///C:/Nikunj/src/frontend/components/home/AnnouncementBar.tsx#L16) (1 connections)
 
 ## Relationships
 
@@ -15,7 +15,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\frontend\providers\Providers.tsx](file:///C:/Nikunj/src/frontend/providers/Providers.tsx)
+- [C:\Nikunj\src\frontend\components\home\AnnouncementBar.tsx](file:///C:/Nikunj/src/frontend/components/home/AnnouncementBar.tsx)
 
 ## Audit Trail
 

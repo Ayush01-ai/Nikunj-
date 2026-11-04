@@ -1,25 +1,21 @@
 # Community 30
 
-> 13 nodes · cohesion 0.15
+> 12 nodes · cohesion 0.17
 
 ## Key Concepts
 
-- [CartSidebar.tsx](file:///C:/Nikunj/src/frontend/components/cart/CartSidebar.tsx#L1) (12 connections)
-- [allSelected](file:///C:/Nikunj/src/frontend/components/cart/CartSidebar.tsx#L47) (1 connections)
-- [{ freeDeliveryThreshold: FREE_THRESHOLD, deliveryCharge }](file:///C:/Nikunj/src/frontend/components/cart/CartSidebar.tsx#L50) (1 connections)
-- [handleKey()](file:///C:/Nikunj/src/frontend/components/cart/CartSidebar.tsx#L28) (1 connections)
-- [{
-    items, isOpen, closeCart, removeItem, updateQuantity, deselectedIds,
-    toggleSelected, selectAll, deselectAll, selectedItems, selectedSubtotal,
-  }](file:///C:/Nikunj/src/frontend/components/cart/CartSidebar.tsx#L15) (1 connections)
-- [[mounted, setMounted]](file:///C:/Nikunj/src/frontend/components/cart/CartSidebar.tsx#L19) (1 connections)
-- [remaining](file:///C:/Nikunj/src/frontend/components/cart/CartSidebar.tsx#L51) (1 connections)
-- [safeIsOpen](file:///C:/Nikunj/src/frontend/components/cart/CartSidebar.tsx#L44) (1 connections)
-- [safeItems](file:///C:/Nikunj/src/frontend/components/cart/CartSidebar.tsx#L43) (1 connections)
-- [safeSelectedItems](file:///C:/Nikunj/src/frontend/components/cart/CartSidebar.tsx#L45) (1 connections)
-- [selectedCount](file:///C:/Nikunj/src/frontend/components/cart/CartSidebar.tsx#L46) (1 connections)
-- [{ settings }](file:///C:/Nikunj/src/frontend/components/cart/CartSidebar.tsx#L49) (1 connections)
-- [total](file:///C:/Nikunj/src/frontend/components/cart/CartSidebar.tsx#L48) (1 connections)
+- [bulk-import-spreadsheet.test.ts](file:///C:/Nikunj/tests/bulk-import-spreadsheet.test.ts#L1) (11 connections)
+- [bytes](file:///C:/Nikunj/tests/bulk-import-spreadsheet.test.ts#L19) (1 connections)
+- [csv](file:///C:/Nikunj/tests/bulk-import-spreadsheet.test.ts#L91) (1 connections)
+- [good](file:///C:/Nikunj/tests/bulk-import-spreadsheet.test.ts#L115) (1 connections)
+- [header](file:///C:/Nikunj/tests/bulk-import-spreadsheet.test.ts#L11) (1 connections)
+- [ole](file:///C:/Nikunj/tests/bulk-import-spreadsheet.test.ts#L119) (1 connections)
+- [out](file:///C:/Nikunj/tests/bulk-import-spreadsheet.test.ts#L32) (1 connections)
+- [[row]](file:///C:/Nikunj/tests/bulk-import-spreadsheet.test.ts#L77) (1 connections)
+- [rows](file:///C:/Nikunj/tests/bulk-import-spreadsheet.test.ts#L12) (1 connections)
+- [toAB()](file:///C:/Nikunj/tests/bulk-import-spreadsheet.test.ts#L5) (1 connections)
+- [wb](file:///C:/Nikunj/tests/bulk-import-spreadsheet.test.ts#L24) (1 connections)
+- [ws](file:///C:/Nikunj/tests/bulk-import-spreadsheet.test.ts#L68) (1 connections)
 
 ## Relationships
 
@@ -27,11 +23,11 @@
 
 ## Source Files
 
-- [C:\Nikunj\src\frontend\components\cart\CartSidebar.tsx](file:///C:/Nikunj/src/frontend/components/cart/CartSidebar.tsx)
+- [C:\Nikunj\tests\bulk-import-spreadsheet.test.ts](file:///C:/Nikunj/tests/bulk-import-spreadsheet.test.ts)
 
 ## Audit Trail
 
-- EXTRACTED: 24 (100%)
+- EXTRACTED: 22 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

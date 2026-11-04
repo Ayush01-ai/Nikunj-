@@ -4,11 +4,11 @@
 
 ## Key Concepts
 
-- [fetch-retry.test.ts](file:///C:/Nikunj/tests/fetch-retry.test.ts#L1) (4 connections)
-- [failing](file:///C:/Nikunj/tests/fetch-retry.test.ts#L36) (1 connections)
-- [fetchMock](file:///C:/Nikunj/tests/fetch-retry.test.ts#L10) (1 connections)
-- [out](file:///C:/Nikunj/tests/fetch-retry.test.ts#L12) (1 connections)
-- [res()](file:///C:/Nikunj/tests/fetch-retry.test.ts#L4) (1 connections)
+- [DeliveryCode.tsx](file:///C:/Nikunj/src/frontend/components/orders/DeliveryCode.tsx#L1) (4 connections)
+- [CopyCodeButton()](file:///C:/Nikunj/src/frontend/components/orders/DeliveryCode.tsx#L29) (1 connections)
+- [DeliveryCode()](file:///C:/Nikunj/src/frontend/components/orders/DeliveryCode.tsx#L60) (1 connections)
+- [deliveryStatusText()](file:///C:/Nikunj/src/frontend/components/orders/DeliveryCode.tsx#L21) (1 connections)
+- [OUT_FOR_DELIVERY_STATUSES](file:///C:/Nikunj/src/frontend/components/orders/DeliveryCode.tsx#L18) (1 connections)
 
 ## Relationships
 
@@ -16,7 +16,7 @@
 
 ## Source Files
 
-- [C:\Nikunj\tests\fetch-retry.test.ts](file:///C:/Nikunj/tests/fetch-retry.test.ts)
+- [C:\Nikunj\src\frontend\components\orders\DeliveryCode.tsx](file:///C:/Nikunj/src/frontend/components/orders/DeliveryCode.tsx)
 
 ## Audit Trail
 

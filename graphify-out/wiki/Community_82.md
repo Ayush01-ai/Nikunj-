@@ -1,11 +1,12 @@
 # Community 82
 
-> 2 nodes · cohesion 1.00
+> 3 nodes · cohesion 0.67
 
 ## Key Concepts
 
-- [open-next.config.ts](file:///C:/Nikunj/open-next.config.ts#L1) (1 connections)
-- [silentStaticAssetsIncrementalCache](file:///C:/Nikunj/open-next.config.ts#L6) (1 connections)
+- [collections-filter.spec.ts](file:///C:/Nikunj/tests/collections-filter.spec.ts#L1) (2 connections)
+- [found](file:///C:/Nikunj/tests/collections-filter.spec.ts#L5) (1 connections)
+- [total](file:///C:/Nikunj/tests/collections-filter.spec.ts#L7) (1 connections)
 
 ## Relationships
 
@@ -13,11 +14,11 @@
 
 ## Source Files
 
-- [C:\Nikunj\open-next.config.ts](file:///C:/Nikunj/open-next.config.ts)
+- [C:\Nikunj\tests\collections-filter.spec.ts](file:///C:/Nikunj/tests/collections-filter.spec.ts)
 
 ## Audit Trail
 
-- EXTRACTED: 2 (100%)
+- EXTRACTED: 4 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 
