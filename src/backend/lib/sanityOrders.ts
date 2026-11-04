@@ -6,6 +6,7 @@ import type { CancelRequestInfo } from '@/cms/lib/orderRequests';
 import type { RefundInfo } from '@/cms/lib/refunds';
 import { recordOrderPlaced } from '@/backend/lib/analytics';
 import { releaseStockHold } from '@/backend/lib/stockHold';
+import { ensureShiprocketOrder } from '@/backend/lib/shiprocketFulfilment';
 
 /** Private ID path: documents with a dot in the ID are not readable through the public dataset API. */
 export const sanityOrderId = (orderId: string) => `orders.${orderId}`;
@@ -441,6 +442,9 @@ export async function notifyCustomerOrderConfirmed(order: IOrder): Promise<void>
   } catch (error) {
     console.error('[order-notify]', order.orderId, error instanceof Error ? error.message : error);
   }
+
+  // Confirmed orders are booked on Shiprocket automatically (idempotent; failures only flag the order).
+  await ensureShiprocketOrder(order.orderId).catch(() => undefined);
 }
 
 export interface AdminSettings {

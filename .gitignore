@@ -80,3 +80,9 @@ audit/
 
 /test-results/
 /playwright-report/
+
+# Internal agent / knowledge-graph tooling (kept on disk, not published)
+/graphify-out/
+/.agent/
+/.agents/
+/.gsd/

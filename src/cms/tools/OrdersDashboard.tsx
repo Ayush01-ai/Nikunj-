@@ -606,7 +606,10 @@ export function OrdersDashboard() {
             ...(values.url ? { 'tracking.trackingUrl': values.url } : {}),
           },
         });
-        whatsappCustomer({ ...o, tracking: { courier: values.courier, trackingNumber: values.awb, trackingUrl: values.url || undefined } }, 'shipped');
+        // The Sanity "status changed" webhook already messages the customer; only open WhatsApp manually if it is switched off.
+        if (process.env.NEXT_PUBLIC_AUTO_STATUS_NOTIFY === 'false') {
+          whatsappCustomer({ ...o, tracking: { courier: values.courier, trackingNumber: values.awb, trackingUrl: values.url || undefined } }, 'shipped');
+        }
       });
     } else if (kind === 'return') {
       const days = daysSinceDelivered(o.statusHistory);
@@ -1189,7 +1192,7 @@ function OrderDialog(props: {
                 <TextInput value={url} onChange={(e) => setUrl(e.currentTarget.value)} customValidity={urlValid ? undefined : 'Must start with https://'} />
               </Stack>
               <Text size={1} muted>
-                Saving marks the order Shipped and opens WhatsApp with the tracking details for the customer.
+                Saving marks the order Shipped. The customer is messaged automatically with the tracking details.
               </Text>
             </>
           )}
