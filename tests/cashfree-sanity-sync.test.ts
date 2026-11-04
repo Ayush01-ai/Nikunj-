@@ -159,6 +159,7 @@ describe('Cashfree Sanity synchronization', () => {
       attentionNote: expect.stringContaining('Test Product'),
     });
     expect(state.stock).toBe(-1);
+    expect(mocks.recordOrderPlaced).toHaveBeenCalledTimes(1);
     expect(sentNotifications.size).toBe(1);
   });
 
@@ -172,6 +173,7 @@ describe('Cashfree Sanity synchronization', () => {
 
     expect(state.order).toMatchObject({ status: 'confirmed', paymentStatus: 'paid', stockAdjusted: true });
     expect(state.stock).toBe(2);
+    expect(mocks.recordOrderPlaced).toHaveBeenCalledTimes(1);
     expect(sentNotifications.size).toBe(1);
   });
 
@@ -185,6 +187,7 @@ describe('Cashfree Sanity synchronization', () => {
 
     expect(state.order).toMatchObject({ status: 'confirmed', paymentStatus: 'paid', stockAdjusted: true });
     expect(state.stock).toBe(2);
+    expect(mocks.recordOrderPlaced).toHaveBeenCalledTimes(1);
     expect(mocks.notify).toHaveBeenCalledTimes(2);
     expect(sentNotifications.size).toBe(1);
   });

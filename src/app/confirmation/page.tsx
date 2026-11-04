@@ -14,7 +14,7 @@ import { settleCashfreeOrder } from '@/backend/lib/cashfreeSettlement';
 import { createRateLimiter } from '@/backend/lib/rateLimit';
 import { getWhatsAppHref } from '@/frontend/lib/whatsapp';
 import type { SiteSettings } from '@/types';
-import { CashfreeCheckout } from '@/app/checkout/CashfreeCheckout';
+import { ConfirmationPayment } from '@/app/confirmation/ConfirmationPayment';
 
 export const metadata: Metadata = {
   title: 'Order Confirmation',
@@ -141,11 +141,7 @@ async function ConfirmationContent({ orderId }: { orderId: string }) {
 
         {order && awaitingCashfreePayment && (
           <div className="bg-white border border-[var(--border)] p-6 mb-5 text-left">
-            <CashfreeCheckout
-              orderId={orderId}
-              isGuest={order.isGuest}
-              onComplete={() => window.location.reload()}
-            />
+            <ConfirmationPayment orderId={orderId} isGuest={order.isGuest} />
           </div>
         )}
 

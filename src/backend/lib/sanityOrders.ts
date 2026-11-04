@@ -219,7 +219,9 @@ async function pushOrderToSanity(order: IOrder, note: string, status: 'confirmed
     for (const patch of stockPatches) tx.patch(patch.id, (p) => p.inc(patch.inc));
     await tx.commit({ autoGenerateArrayKeys: true });
     await releaseStockHold(order.orderId);
-    await recordOrderPlaced({ orderId: order.orderId, total: order.total, phone: addr.phone, name: addr.fullName, placedAt: order.createdAt });
+    if (confirmed) {
+      await recordOrderPlaced({ orderId: order.orderId, total: order.total, phone: addr.phone, name: addr.fullName, placedAt: order.createdAt });
+    }
     // Fresh order only (a duplicate create returns 409 below), so the customer is messaged once.
     if (confirmed) await notifyCustomerOrderConfirmed(order);
     return true;
@@ -381,13 +383,15 @@ async function syncCashfreeOrderToSanity(
         await tx.commit({ autoGenerateArrayKeys: true });
         if (paymentStatus === 'paid') {
           await releaseStockHold(order.orderId);
-          await recordOrderPlaced({
-            orderId: order.orderId,
-            total: order.total,
-            phone: address.phone,
-            name: address.fullName,
-            placedAt: order.createdAt,
-          });
+          if (changed) {
+            await recordOrderPlaced({
+              orderId: order.orderId,
+              total: order.total,
+              phone: address.phone,
+              name: address.fullName,
+              placedAt: order.createdAt,
+            });
+          }
           await notifyCustomerOrderConfirmed(order);
         }
         return true;
