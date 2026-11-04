@@ -358,6 +358,14 @@ describe('buildMongoStatusUpdate (Sanity -> Mongo)', () => {
     expect(set).toMatchObject({ status: 'delivered', paymentStatus: 'paid', 'tracking.courier': 'DTDC', 'tracking.trackingNumber': 'A1', awbCode: 'A1' });
   });
 
+  it('copies refund_due to Mongo paymentStatus but never payment_failed', () => {
+    expect(buildMongoStatusUpdate({ status: 'cancelled', paymentStatus: 'refund_due' }, { paymentMethod: 'online' })).toEqual({
+      status: 'cancelled',
+      paymentStatus: 'refund_due',
+    });
+    expect(buildMongoStatusUpdate({ paymentStatus: 'payment_failed' }, { paymentMethod: 'online' })).not.toHaveProperty('paymentStatus');
+  });
+
   it('does not copy Sanity-only states and stores out_for_delivery as shipped', () => {
     expect(buildMongoStatusUpdate({ status: 'payment_failed' }, { paymentMethod: 'online' })).not.toHaveProperty('status');
     expect(buildMongoStatusUpdate({ status: 'out_for_delivery' }, { paymentMethod: 'online' }).status).toBe('shipped');

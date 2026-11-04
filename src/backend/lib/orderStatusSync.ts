@@ -4,7 +4,7 @@ export const MONGO_ORDER_STATUSES = new Set([
   'pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled',
   'return_requested', 'return_approved', 'returned', 'refunded',
 ]);
-export const MONGO_PAYMENT_STATUSES = new Set(['pending', 'paid', 'failed', 'refunded']);
+export const MONGO_PAYMENT_STATUSES = new Set(['pending', 'paid', 'failed', 'refund_due', 'refunded']);
 
 export interface SanityStatusInput {
   status?: unknown;
@@ -17,7 +17,7 @@ const nonEmpty = (v: unknown): v is string => typeof v === 'string' && v.trim().
 /**
  * Translates an owner decision made in Sanity Studio into a MongoDB `$set`.
  * - `out_for_delivery` is stored as `shipped` (Mongo has no separate state for it).
- * - Sanity-only values (`payment_failed`, `refund_due`) are not copied; Mongo has no equivalent.
+ * - `refund_due` is copied as-is; the Sanity-only `payment_failed` is not copied (Mongo has no equivalent).
  * - A delivered COD order means the cash was collected, so it becomes `paid`.
  */
 export function buildMongoStatusUpdate(input: SanityStatusInput, current: { paymentMethod?: string }): Record<string, string> {
