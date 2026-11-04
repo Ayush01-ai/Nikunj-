@@ -70,6 +70,21 @@ export interface IOrder extends Document {
     attempts?: number;
     verifiedAt?: Date;
   };
+  /** Courier details mirrored from Sanity (Studio) or Shiprocket. */
+  tracking?: { courier?: string; trackingNumber?: string; trackingUrl?: string };
+  /** SHIPROCKET = parcel booked through Shiprocket; SELF_DELIVERY = owner's own rider / manual courier. */
+  fulfilmentMode?: 'SHIPROCKET' | 'SELF_DELIVERY';
+  shiprocketOrderId?: string;
+  shiprocketShipmentId?: string;
+  awbCode?: string;
+  courierName?: string;
+  trackingUrl?: string;
+  labelUrl?: string;
+  shiprocketError?: string;
+  /** Short-lived lock so two concurrent confirmations cannot both create the Shiprocket order. */
+  shiprocketClaimAt?: Date;
+  needsAttention?: boolean;
+  attentionNote?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -151,6 +166,22 @@ const OrderSchema = new Schema<IOrder>(
       attempts:    { type: Number, default: 0 },
       verifiedAt:  { type: Date },
     },
+    tracking: {
+      courier:        { type: String },
+      trackingNumber: { type: String },
+      trackingUrl:    { type: String },
+    },
+    fulfilmentMode: { type: String, enum: ['SHIPROCKET', 'SELF_DELIVERY'], default: 'SHIPROCKET' },
+    shiprocketOrderId:    { type: String },
+    shiprocketShipmentId: { type: String },
+    awbCode:        { type: String },
+    courierName:    { type: String },
+    trackingUrl:    { type: String },
+    labelUrl:       { type: String },
+    shiprocketError: { type: String },
+    shiprocketClaimAt: { type: Date },
+    needsAttention: { type: Boolean },
+    attentionNote:  { type: String },
   },
   { timestamps: true },
 );
@@ -160,6 +191,7 @@ OrderSchema.index({ status: 1, createdAt: -1 });
 OrderSchema.index({ guestPhone: 1 });
 // Webhook lookups are by Cashfree order id; sparse so legacy/COD orders without one aren't indexed.
 OrderSchema.index({ cashfreeOrderId: 1 }, { sparse: true });
+OrderSchema.index({ shiprocketOrderId: 1 }, { sparse: true });
 OrderSchema.index({ 'delivery.token': 1 }, { sparse: true });
 OrderSchema.index({ 'delivery.otpMessageId': 1 }, { sparse: true });
 OrderSchema.index({ stockHeld: 1, createdAt: -1 });

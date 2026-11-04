@@ -13,7 +13,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/backend/lib/mongodb', () => ({ connectDB: mocks.connectDB }));
 vi.mock('@/backend/models/Order', () => ({
   Order: {
-    findOne: mocks.findOne,
+    findOne: (...args: unknown[]) => ({ lean: () => mocks.findOne(...args) }),
     findOneAndUpdate: (...args: unknown[]) => ({ lean: () => mocks.findOneAndUpdate(...args) }),
   },
 }));
@@ -31,6 +31,7 @@ describe('POST /api/webhooks/order-status', () => {
     for (const mock of Object.values(mocks)) mock.mockReset();
     mocks.connectDB.mockResolvedValue(undefined);
     mocks.findOneAndUpdate.mockResolvedValue(null);
+    mocks.findOne.mockResolvedValue({ orderId: 'NS-AB12CD34', paymentMethod: 'cashfree', status: 'pending', paymentStatus: 'pending' });
   });
 
   afterEach(() => {
