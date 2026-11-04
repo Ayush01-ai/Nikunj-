@@ -65,7 +65,6 @@ for (const mongoOrder of mongoOrders) {
       return current !== value;
     }),
   );
-  if (sanity.paymentStatus === 'refund_due') notes.push(`${mongoOrder.orderId}: Sanity paymentStatus=refund_due (Mongo has no such state; stays "${mongoOrder.paymentStatus}" until refunded)`);
   if (Object.keys(diff).length) changes.push({ orderId: mongoOrder.orderId, from: `${mongoOrder.status}/${mongoOrder.paymentStatus}`, sanity: `${sanity.status}/${sanity.paymentStatus}`, to: `${diff.status ?? mongoOrder.status}/${diff.paymentStatus ?? mongoOrder.paymentStatus}`, diff });
 }
 

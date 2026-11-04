@@ -79,9 +79,9 @@ describe('Sanity order-status webhook', () => {
     expect(mocks.notifyOrder).not.toHaveBeenCalled();
   });
 
-  it('mirrors a cancellation but never writes Sanity-only payment states to the website order', async () => {
+  it('mirrors a cancellation and refund_due payment status to the website order', async () => {
     await call({ orderNumber: 'NS-AB12CD34', status: 'cancelled', paymentStatus: 'refund_due' });
-    expect(mocks.findOneAndUpdate).toHaveBeenCalledWith({ orderId: 'NS-AB12CD34' }, { $set: { status: 'cancelled' } }, { new: true });
+    expect(mocks.findOneAndUpdate).toHaveBeenCalledWith({ orderId: 'NS-AB12CD34' }, { $set: { status: 'cancelled', paymentStatus: 'refund_due' } }, { new: true });
     expect(mocks.notifyOrder).toHaveBeenCalled();
   });
 

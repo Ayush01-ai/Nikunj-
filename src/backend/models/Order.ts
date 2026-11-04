@@ -29,7 +29,7 @@ export interface IOrder extends Document {
   total: number;
   couponCode?: string;
   paymentMethod: 'upi' | 'card' | 'netbanking' | 'online' | 'cod' | 'whatsapp';
-  paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
+  paymentStatus: 'pending' | 'paid' | 'failed' | 'refund_due' | 'refunded';
   /** Gateway-agnostic field — which online gateway (if any) is handling this order's payment. Unset for COD. */
   paymentGateway?: 'razorpay' | 'cashfree';
   razorpayOrderId?: string;
@@ -129,7 +129,7 @@ const OrderSchema = new Schema<IOrder>(
     },
     paymentStatus: {
       type: String,
-      enum: ['pending', 'paid', 'failed', 'refunded'],
+      enum: ['pending', 'paid', 'failed', 'refund_due', 'refunded'],
       default: 'pending',
     },
     razorpayOrderId:  { type: String },
