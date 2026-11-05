@@ -10,6 +10,7 @@ import {
   generatePickup,
   generateShiprocketLabel,
   isShiprocketEnabled,
+  isShiprocketOrderCancelled,
   LOGIN_FAILED_NOTE,
   ShiprocketError,
   mapShiprocketStatus,
@@ -159,7 +160,13 @@ export async function cancelShiprocketForOrder(orderId: string): Promise<{ cance
     await connectDB();
     const order = await Order.findOne({ orderId }).select('shiprocketOrderId').lean<Pick<IOrder, 'shiprocketOrderId'>>();
     if (!order?.shiprocketOrderId) return { cancelled: false, reason: 'no_shiprocket_order' };
-    await cancelShiprocketOrder(order.shiprocketOrderId);
+    try {
+      await cancelShiprocketOrder(order.shiprocketOrderId);
+    } catch (e) {
+      // A cancel that fails because Shiprocket already cancelled it is a success. Skip the check after a login failure so we never retry login.
+      if (e instanceof ShiprocketError && e.loginFailure) throw e;
+      if (!(await isShiprocketOrderCancelled(order.shiprocketOrderId).catch(() => false))) throw e;
+    }
     await Order.updateOne({ orderId }, { $unset: { shiprocketOrderId: '', shiprocketShipmentId: '', awbCode: '' } });
     await patchSanity(orderId, (p) => p.append('statusHistory', [historyEntry('cancelled', 'Shiprocket order cancelled')]));
     return { cancelled: true };
