@@ -1,6 +1,7 @@
 import { Order, type IOrder } from '@/backend/models/Order';
 import { connectDB } from '@/backend/lib/mongodb';
 import { notifyOrder } from '@/backend/lib/orderNotify';
+import { alertOwnerOrderIssue } from '@/backend/lib/ownerAlert';
 import { writeClient } from '@/cms/lib/client';
 import { historyEntry } from '@/cms/lib/orderOps';
 import {
@@ -60,6 +61,19 @@ async function sanityFulfilmentMode(orderId: string): Promise<string | undefined
 async function flagAttention(orderId: string, note: string) {
   await Order.updateOne({ orderId }, { $set: { shiprocketError: note, needsAttention: true, attentionNote: note }, $unset: { shiprocketClaimAt: '' } }).catch(() => undefined);
   await patchSanity(orderId, (p) => p.set({ needsAttention: true, attentionNote: note, 'shiprocket.error': note }));
+  try {
+    const o = await Order.findOne({ orderId }).select('shippingAddress total').lean<Pick<IOrder, 'shippingAddress' | 'total'>>();
+    await alertOwnerOrderIssue({
+      orderNumber: orderId,
+      stage: 'shiprocket',
+      reason: note,
+      customerName: o?.shippingAddress?.fullName,
+      phone: o?.shippingAddress?.phone,
+      total: o?.total,
+    });
+  } catch {
+    // alerting must never break fulfilment
+  }
 }
 
 /**

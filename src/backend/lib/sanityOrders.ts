@@ -7,6 +7,7 @@ import type { RefundInfo } from '@/cms/lib/refunds';
 import { recordOrderPlaced } from '@/backend/lib/analytics';
 import { releaseStockHold } from '@/backend/lib/stockHold';
 import { ensureShiprocketOrder } from '@/backend/lib/shiprocketFulfilment';
+import { alertOwnerOrderIssue } from '@/backend/lib/ownerAlert';
 
 /** Private ID path: documents with a dot in the ID are not readable through the public dataset API. */
 export const sanityOrderId = (orderId: string) => `orders.${orderId}`;
@@ -382,6 +383,16 @@ async function syncCashfreeOrderToSanity(
 
       try {
         await tx.commit({ autoGenerateArrayKeys: true });
+        if (attentionItems.length) {
+          await alertOwnerOrderIssue({
+            orderNumber: order.orderId,
+            stage: 'over_stock',
+            reason: `Paid order exceeded tracked stock for ${attentionItems.join(', ')}`,
+            customerName: address.fullName,
+            phone: address.phone,
+            total: order.total,
+          });
+        }
         if (paymentStatus === 'paid') {
           await releaseStockHold(order.orderId);
           if (changed) {
@@ -403,9 +414,58 @@ async function syncCashfreeOrderToSanity(
     return false;
   } catch (error) {
     console.error('[sanity-orders] Cashfree sync failed', order.orderId, error instanceof Error ? error.message : error);
-    if (paymentStatus === 'paid') await notifyCustomerOrderConfirmed(order);
+    if (paymentStatus === 'paid') {
+      await alertOwnerOrderIssue({
+        orderNumber: order.orderId,
+        stage: 'sanity_push_failed',
+        reason: 'Paid order could not be pushed to Sanity. Check the order manually.',
+        customerName: address.fullName,
+        phone: address.phone,
+        total: order.total,
+      });
+      await notifyCustomerOrderConfirmed(order);
+    }
     return false;
   }
+}
+
+/**
+ * A successful payment arriving for an order that was already cancelled (in Mongo or Sanity) must not
+ * confirm it: mark it refund_due + needsAttention on both stores and alert the owner. Returns true if handled.
+ */
+export async function handleLatePaymentOnCancelledOrder(order: IOrder, cashfreePaymentId: string): Promise<boolean> {
+  const id = sanityOrderId(order.orderId);
+  let sanityCancelled = false;
+  if (hasToken()) {
+    try {
+      sanityCancelled = (await writeClient.fetch<string | null>(`*[_id == $id][0].status`, { id })) === 'cancelled';
+    } catch {
+      sanityCancelled = false;
+    }
+  }
+  if (order.status !== 'cancelled' && !sanityCancelled) return false;
+
+  const note = `Payment received after the order was cancelled (Cashfree payment ${cashfreePaymentId}). Refund the customer.`;
+  await Order.updateOne(
+    { orderId: order.orderId },
+    { $set: { paymentStatus: 'refund_due', needsAttention: true, attentionNote: note, cashfreePaymentId } },
+  ).catch(() => undefined);
+  if (hasToken()) {
+    await writeClient
+      .patch(id)
+      .set({ paymentStatus: 'refund_due', needsAttention: true, attentionNote: note, cashfreePaymentId })
+      .commit()
+      .catch((e: unknown) => console.error('[sanity-orders] late payment patch', order.orderId, e instanceof Error ? e.message : e));
+  }
+  await alertOwnerOrderIssue({
+    orderNumber: order.orderId,
+    stage: 'late_payment_on_cancelled',
+    reason: note,
+    customerName: order.shippingAddress?.fullName,
+    phone: order.shippingAddress?.phone,
+    total: order.total,
+  });
+  return true;
 }
 
 /** Order confirmation to the customer on the channel snapshotted at order time (see orderNotify.ts). Idempotent. */
