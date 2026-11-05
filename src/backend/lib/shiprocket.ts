@@ -27,7 +27,9 @@ export function getShiprocketPassword(): string | undefined {
   return process.env.SHIPROCKET_PASSWORD || undefined;
 }
 
-export const isShiprocketConfigured = () => Boolean(process.env.SHIPROCKET_EMAIL && getShiprocketPassword());
+export const getShiprocketEmail = (): string | undefined => process.env.SHIPROCKET_EMAIL?.trim() || undefined;
+
+export const isShiprocketConfigured = () => Boolean(getShiprocketEmail() && getShiprocketPassword());
 
 /** Opt-in: Shiprocket is only used when SHIPROCKET_ENABLED=true AND credentials exist. Unset/false = fully inert. */
 export const isShiprocketEnabled = () => process.env.SHIPROCKET_ENABLED === 'true' && isShiprocketConfigured();
@@ -52,11 +54,12 @@ async function login(): Promise<string> {
     throw new ShiprocketError(`${LOGIN_FAILED_NOTE} (login paused for ${Math.ceil((loginBlockedUntil - Date.now()) / 60000)} min to avoid an account lock)`, 403, true);
   }
   const password = getShiprocketPassword();
-  if (!process.env.SHIPROCKET_EMAIL || !password) throw new ShiprocketError(`${LOGIN_FAILED_NOTE} (credentials missing or invalid)`, undefined, true);
+  const email = getShiprocketEmail();
+  if (!email || !password) throw new ShiprocketError(`${LOGIN_FAILED_NOTE} (credentials missing or invalid)`, undefined, true);
   const res = await fetch(`${BASE_URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: process.env.SHIPROCKET_EMAIL, password }),
+    body: JSON.stringify({ email, password }),
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
   const data = (await res.json().catch(() => null)) as { token?: string; message?: string } | null;
@@ -141,7 +144,7 @@ export function buildShiprocketPayload(order: OrderForShipping) {
     billing_pincode: a.pincode,
     billing_state: a.state,
     billing_country: 'India',
-    billing_email: order.notification?.email || process.env.SHIPROCKET_EMAIL || '',
+    billing_email: order.notification?.email || getShiprocketEmail() || '',
     billing_phone: lastTen(a.phone),
     shipping_is_billing: true,
     order_items: order.items.map((i) => ({
