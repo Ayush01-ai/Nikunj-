@@ -3,6 +3,7 @@ import { connectDB } from '@/backend/lib/mongodb';
 import { Order } from '@/backend/models/Order';
 import { AuthError } from '@/backend/lib/auth';
 import { requireAdminHybrid, requireAuthHybrid } from '@/backend/lib/clerk';
+import { redactOrderForCustomer } from '@/backend/lib/orderView';
 
 // ─── GET single order ─────────────────────────────────────────────────────
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -24,7 +25,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       return NextResponse.json({ success: false, error: 'Access denied.' }, { status: 403 });
     }
 
-    return NextResponse.json({ success: true, data: order });
+    return NextResponse.json({ success: true, data: isAdmin ? order : redactOrderForCustomer(order) });
   } catch (error) {
     if (error instanceof AuthError) {
       return NextResponse.json({ success: false, error: error.message }, { status: error.status });
@@ -53,7 +54,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
 
     if (body.paymentStatus) {
-      const validPaymentStatuses = ['pending', 'paid', 'failed', 'refunded'];
+      const validPaymentStatuses = ['pending', 'paid', 'failed', 'refund_due', 'refunded'];
       if (!validPaymentStatuses.includes(body.paymentStatus)) {
         return NextResponse.json({ success: false, error: 'Invalid payment status.' }, { status: 400 });
       }

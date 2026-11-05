@@ -6,6 +6,7 @@ import { requestEligibility } from '@/cms/lib/orderRequests';
 import { refundBreakdown } from '@/cms/lib/refunds';
 import { refundView } from '@/backend/lib/refundView';
 import { deliveryView, ensureDeliveryCode, OUT_FOR_DELIVERY } from '@/backend/lib/delivery';
+import { trackingView } from '@/backend/lib/orderView';
 
 const isRateLimited = createRateLimiter(10, 10 * 60 * 1000, 'api/track-order:isRateLimited');
 
@@ -42,7 +43,7 @@ export async function POST(req: NextRequest) {
     status,
     placedAt: managed?.placedAt ?? new Date(mongoOrder.createdAt).toISOString(),
     statusHistory,
-    tracking: managed?.tracking ?? null,
+    tracking: trackingView(managed?.tracking, mongoOrder),
     items: (managed?.items ?? mongoOrder.items.map((i) => ({
       productName: i.name,
       image: i.image,

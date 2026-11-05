@@ -7,8 +7,10 @@ import { client } from '@/cms/lib/client';
 import { SITE_SETTINGS_QUERY } from '@/cms/lib/queries';
 import { orderPlacedMessage } from '@/cms/lib/orderMessages';
 import { connectDB } from '@/backend/lib/mongodb';
-import { Order } from '@/backend/models/Order';
-import { getAdminSettings, resyncOrderToSanity } from '@/backend/lib/sanityOrders';
+import { Order, type IOrder } from '@/backend/models/Order';
+import { getAdminSettings, getSanityOrder, resyncOrderToSanity } from '@/backend/lib/sanityOrders';
+import { trackingView } from '@/backend/lib/orderView';
+import { ORDER_STATUS_LABEL } from '@/cms/lib/orderMessages';
 import { isCashfreeConfigured } from '@/backend/lib/cashfreeConfig';
 import { settleCashfreeOrder } from '@/backend/lib/cashfreeSettlement';
 import { createRateLimiter } from '@/backend/lib/rateLimit';
@@ -30,9 +32,11 @@ async function getOrderSummary(orderId: string) {
     await reconcileCashfreePayment(orderId);
     await resyncOrderToSanity(orderId);
     const order = await Order.findOne({ orderId })
-      .select('items total paymentMethod paymentStatus paymentGateway status userId shippingAddress.city')
+      .select('items total paymentMethod paymentStatus paymentGateway status userId shippingAddress.city tracking courierName awbCode trackingUrl')
       .lean();
     if (!order) return null;
+    // The owner manages status in Sanity, so it wins over the website copy once synced.
+    const managed = await getSanityOrder(orderId);
     return {
       items: order.items.map(({ productId, name, selectedSize, selectedColor, quantity, price }) => ({
         productId,
@@ -44,9 +48,10 @@ async function getOrderSummary(orderId: string) {
       })),
       total: order.total,
       paymentMethod: order.paymentMethod,
-      paymentStatus: order.paymentStatus,
+      paymentStatus: (managed?.paymentStatus ?? order.paymentStatus) as IOrder['paymentStatus'],
       paymentGateway: order.paymentGateway,
-      status: order.status,
+      status: (managed?.status ?? order.status) as IOrder['status'],
+      tracking: trackingView(managed?.tracking, order),
       shippingAddress: { city: order.shippingAddress?.city ?? '' },
       isGuest: !order.userId,
     };
@@ -93,8 +98,23 @@ async function ConfirmationContent({ orderId }: { orderId: string }) {
     { orderNumber: orderId, items, total: order?.total, paymentMethod: order?.paymentMethod, city: order?.shippingAddress?.city },
     SITE_URL,
   );
-  const awaitingPayment = order?.paymentMethod !== 'cod' && order?.paymentStatus !== 'paid';
-  const awaitingCashfreePayment = order?.paymentMethod === 'online' && order.paymentStatus !== 'paid';
+  const closedOrder = order?.status === 'cancelled' || order?.status === 'refunded';
+  const paymentSettled = order?.paymentStatus === 'paid' || order?.paymentStatus === 'refund_due' || order?.paymentStatus === 'refunded';
+  const awaitingPayment = !closedOrder && order?.paymentMethod !== 'cod' && !paymentSettled;
+  const awaitingCashfreePayment = !closedOrder && order?.paymentMethod === 'online' && !paymentSettled;
+  const paymentLine = !order
+    ? ''
+    : order.paymentStatus === 'refund_due'
+      ? 'Refund due - we will process it shortly'
+      : order.paymentStatus === 'refunded'
+        ? 'Refunded'
+        : order.paymentMethod === 'cod'
+          ? 'Cash on Delivery'
+          : order.paymentStatus === 'paid'
+            ? 'Paid online'
+            : order.paymentStatus === 'failed'
+              ? 'Payment failed'
+              : 'Awaiting payment';
 
   return (
     <div className="min-h-screen bg-cream flex items-center justify-center px-4 pt-10 pb-12">
@@ -105,7 +125,7 @@ async function ConfirmationContent({ orderId }: { orderId: string }) {
         </div>
 
         <h1 className="font-cinzel text-2xl font-semibold text-deep mb-2">
-          {awaitingPayment ? 'Order Received 🙏' : 'Order Confirmed! 🙏'}
+          {closedOrder ? `Order ${ORDER_STATUS_LABEL[order!.status] ?? order!.status}` : awaitingPayment ? 'Order Received 🙏' : 'Order Confirmed! 🙏'}
         </h1>
         <p className="font-crimson italic text-[var(--text-mid)] mb-1">Thank you for your divine purchase</p>
         <p className="font-lato text-xs text-[var(--text-mid)]">Your order ID</p>
@@ -132,10 +152,29 @@ async function ConfirmationContent({ orderId }: { orderId: string }) {
               <span>Total</span>
               <span>{inr(order.total)}</span>
             </div>
-            <p className="mt-1 font-lato text-xs text-[var(--text-mid)]">
-              {order.paymentMethod === 'cod' ? 'Cash on Delivery' : order.paymentStatus === 'paid' ? 'Paid online' : 'Awaiting payment'}
+            <p className="mt-1 font-lato text-xs text-[var(--text-mid)]" data-testid="confirmation-payment-line">
+              {paymentLine}
               {order.shippingAddress?.city && ` · Delivering to ${order.shippingAddress.city}`}
             </p>
+            {order.status !== 'pending' && (
+              <p className="mt-1 font-lato text-xs text-[var(--text-mid)]" data-testid="confirmation-status">
+                Status: <span className="font-semibold text-deep">{ORDER_STATUS_LABEL[order.status] ?? order.status}</span>
+              </p>
+            )}
+            {order.tracking && (order.tracking.courier || order.tracking.trackingNumber) && (
+              <div className="mt-3 pt-3 border-t border-[var(--border)] font-lato text-sm text-deep" data-testid="confirmation-tracking">
+                <p className="font-cinzel text-[10px] tracking-widest uppercase text-[var(--text-mid)] mb-1">Tracking</p>
+                <p>
+                  {order.tracking.courier || 'Courier'}
+                  {order.tracking.trackingNumber && <> · AWB <span className="font-semibold">{order.tracking.trackingNumber}</span></>}
+                </p>
+                {order.tracking.trackingUrl && (
+                  <a href={order.tracking.trackingUrl} target="_blank" rel="noopener noreferrer" className="inline-block mt-1 text-gold-dark underline">
+                    Track your parcel
+                  </a>
+                )}
+              </div>
+            )}
           </div>
         )}
 

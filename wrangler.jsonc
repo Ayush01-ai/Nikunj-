@@ -1,6 +1,8 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "main": ".open-next/worker.js",
+  // Wraps .open-next/worker.js and adds the scheduled() cron handler.
+  "main": "cloudflare/worker.mjs",
+  "triggers": { "crons": ["*/15 * * * *"] },
   // Must match the Worker name in the Cloudflare dashboard (Workers Builds enforces this).
   "name": "nikunj",
   "compatibility_date": "2026-10-19",
