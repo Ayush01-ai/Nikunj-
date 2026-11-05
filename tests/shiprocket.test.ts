@@ -34,7 +34,7 @@ vi.mock('@/cms/lib/orderOps', () => ({ historyEntry: (status: string, note: stri
 import {
   buildShiprocketPayload, createShiprocketOrder, getShiprocketPassword, isShiprocketEnabled, mapShiprocketStatus, resetShiprocketLoginState, shiprocketRequest,
 } from '@/backend/lib/shiprocket';
-import { applyShiprocketStatusUpdate, ensureShiprocketOrder, isShiprocketEligible } from '@/backend/lib/shiprocketFulfilment';
+import { applyShiprocketStatusUpdate, cancelShiprocketForOrder, ensureShiprocketOrder, isShiprocketEligible } from '@/backend/lib/shiprocketFulfilment';
 import { buildMongoStatusUpdate } from '@/backend/lib/orderStatusSync';
 import { GET as shiprocketGet, HEAD as shiprocketHead, POST as shiprocketWebhook } from '@/app/api/webhooks/courier-status/route';
 
@@ -262,6 +262,40 @@ describe('ensureShiprocketOrder', () => {
     expect(isShiprocketEligible({ status: 'pending', paymentMethod: 'cod', paymentStatus: 'pending' })).toBe(true);
     expect(isShiprocketEligible({ status: 'shipped', paymentMethod: 'cod', paymentStatus: 'pending' })).toBe(false);
     expect(isShiprocketEligible({ status: 'cancelled', paymentMethod: 'online', paymentStatus: 'paid' })).toBe(false);
+  });
+});
+
+describe('cancelShiprocketForOrder', () => {
+  const route = (cancel: () => Response, show: () => Response) =>
+    fetchMock.mockImplementation(async (url: string) => {
+      const u = String(url);
+      if (u.endsWith('/auth/login')) return json({ token: 't' });
+      if (u.endsWith('/orders/cancel')) return cancel();
+      if (u.includes('/orders/show/')) return show();
+      return json({});
+    });
+
+  it('cancels normally and unsets the Shiprocket ids', async () => {
+    route(() => json({ message: 'ok' }), () => json({ data: { status: 'NEW' } }));
+    mocks.findOne.mockResolvedValue(baseOrder({ shiprocketOrderId: '77' }));
+    expect(await cancelShiprocketForOrder('NS-AB12CD34')).toEqual({ cancelled: true });
+    expect(mocks.updateOne).toHaveBeenCalledWith({ orderId: 'NS-AB12CD34' }, { $unset: { shiprocketOrderId: '', shiprocketShipmentId: '', awbCode: '' } });
+  });
+
+  it('treats an already CANCELED Shiprocket order as success without flagging needsAttention', async () => {
+    route(() => json({ message: 'Order already cancelled' }, 422), () => json({ data: { status: 'CANCELED' } }));
+    mocks.findOne.mockResolvedValue(baseOrder({ shiprocketOrderId: '77' }));
+    expect(await cancelShiprocketForOrder('NS-AB12CD34')).toEqual({ cancelled: true });
+    expect(mocks.updateOne).toHaveBeenCalledWith({ orderId: 'NS-AB12CD34' }, { $unset: { shiprocketOrderId: '', shiprocketShipmentId: '', awbCode: '' } });
+    expect(mocks.updateOne).not.toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ $set: expect.objectContaining({ needsAttention: true }) }));
+  });
+
+  it('still flags needsAttention when the cancel fails and the order is not cancelled', async () => {
+    route(() => json({ message: 'boom' }, 500), () => json({ data: { status: 'NEW' } }));
+    mocks.findOne.mockResolvedValue(baseOrder({ shiprocketOrderId: '77' }));
+    const res = await cancelShiprocketForOrder('NS-AB12CD34');
+    expect(res.cancelled).toBe(false);
+    expect(mocks.updateOne).toHaveBeenCalledWith({ orderId: 'NS-AB12CD34' }, expect.objectContaining({ $set: expect.objectContaining({ needsAttention: true }) }));
   });
 });
 

@@ -201,6 +201,13 @@ export async function cancelShiprocketOrder(shiprocketOrderId: string) {
   return shiprocketRequest('/orders/cancel', { method: 'POST', body: { ids: [Number(shiprocketOrderId) || shiprocketOrderId] } });
 }
 
+/** True when Shiprocket already reports the order as CANCELED (e.g. cancelled by hand in their panel). */
+export async function isShiprocketOrderCancelled(shiprocketOrderId: string): Promise<boolean> {
+  const res = await shiprocketRequest<{ data?: { status?: string }; status?: string }>(`/orders/show/${encodeURIComponent(shiprocketOrderId)}`);
+  const status = res.data?.status ?? res.status;
+  return typeof status === 'string' && /^cancell?ed$/i.test(status.trim());
+}
+
 export async function getShiprocketTracking(awbOrShipmentId: string, by: 'awb' | 'shipment' = 'awb') {
   return shiprocketRequest(`/courier/track/${by === 'awb' ? 'awb' : 'shipment'}/${encodeURIComponent(awbOrShipmentId)}`);
 }
