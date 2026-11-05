@@ -3,7 +3,7 @@ import { verifyCashfreeWebhookSignature } from '@/backend/lib/cashfree';
 import { isCashfreeConfigured } from '@/backend/lib/cashfreeConfig';
 import { connectDB } from '@/backend/lib/mongodb';
 import { Order } from '@/backend/models/Order';
-import { pushCashfreePaymentFailureToSanity, pushConfirmedOrderToSanity } from '@/backend/lib/sanityOrders';
+import { pushCashfreePaymentFailureToSanity, pushConfirmedOrderToSanity, handleLatePaymentOnCancelledOrder } from '@/backend/lib/sanityOrders';
 
 interface CashfreeWebhookPayload {
   type?: string;
@@ -130,6 +130,11 @@ export async function POST(req: NextRequest) {
         receivedCurrency: payment.payment_currency,
       });
       return NextResponse.json({ success: true, ignored: 'amount_mismatch' });
+    }
+
+    // A payment for an already-cancelled order is never confirmed: it is flagged for refund instead.
+    if (await handleLatePaymentOnCancelledOrder(candidate, cashfreePaymentId)) {
+      return NextResponse.json({ success: true, handled: 'late_payment_on_cancelled' });
     }
 
     // Idempotent: the paymentStatus guard ensures repeated webhook deliveries (or a race

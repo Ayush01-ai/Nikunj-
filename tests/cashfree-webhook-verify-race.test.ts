@@ -25,6 +25,7 @@ vi.mock('@/backend/lib/clerk', () => ({ requireAuthHybrid: mocks.requireAuth }))
 vi.mock('@/backend/lib/sanityOrders', () => ({
   pushConfirmedOrderToSanity: mocks.syncPaid,
   pushCashfreePaymentFailureToSanity: mocks.syncFailed,
+  handleLatePaymentOnCancelledOrder: vi.fn(async () => false),
 }));
 vi.mock('@/backend/models/Order', () => ({
   Order: { findOne: mocks.findOne, findOneAndUpdate: mocks.findOneAndUpdate },

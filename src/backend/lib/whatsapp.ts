@@ -98,6 +98,46 @@ export async function sendOrderWhatsApp(order: OrderMessageInput & { phone?: str
 }
 
 /**
+ * Internal alert to the owner. With OWNER_ALERT_TEMPLATE set it sends that approved template (one body
+ * variable: the alert text); otherwise free-form text, which Meta only delivers inside the 24h window.
+ */
+export async function sendOwnerWhatsApp(toPhone: string, text: string): Promise<boolean> {
+  if (!isWhatsAppConfigured()) return false;
+  const to = toE164India(toPhone);
+  if (!to) return false;
+  const template = process.env.OWNER_ALERT_TEMPLATE?.trim();
+  const flat = text.replace(/\s*\n\s*/g, ' | ');
+  const body = template
+    ? {
+        messaging_product: 'whatsapp',
+        to,
+        type: 'template',
+        template: {
+          name: template,
+          language: { code: process.env.WHATSAPP_TEMPLATE_LANG || 'en' },
+          components: [{ type: 'body', parameters: [{ type: 'text', text: flat.slice(0, 900) }] }],
+        },
+      }
+    : { messaging_product: 'whatsapp', to, type: 'text', text: { preview_url: false, body: text } };
+  try {
+    const res = await fetch(`${GRAPH_URL}/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) {
+      console.error('[whatsapp] owner alert failed', res.status, (await res.text()).slice(0, 300));
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error('[whatsapp] owner alert error', error instanceof Error ? error.message : error);
+    return false;
+  }
+}
+
+/**
  * Sends a one-time login code via an approved Meta "authentication" category template,
  * using the exact request shape documented by Meta for authentication templates with a
  * copy-code button:

@@ -11,7 +11,7 @@ const findOne = vi.fn();
 const findOneAndUpdate = vi.fn();
 const pushConfirmedOrderToSanity = vi.fn(async () => {});
 const pushCashfreePaymentFailureToSanity = vi.fn(async () => {});
-
+const handleLatePaymentOnCancelledOrder = vi.fn(async (..._args: unknown[]) => false);
 vi.mock('@/backend/lib/cashfree', () => ({ verifyCashfreeWebhookSignature }));
 vi.mock('@/backend/lib/cashfreeConfig', () => ({ isCashfreeConfigured }));
 vi.mock('@/backend/lib/mongodb', () => ({ connectDB }));
@@ -21,7 +21,7 @@ vi.mock('@/backend/models/Order', () => ({
     findOneAndUpdate: (...args: unknown[]) => findOneAndUpdate(...args),
   },
 }));
-vi.mock('@/backend/lib/sanityOrders', () => ({ pushConfirmedOrderToSanity, pushCashfreePaymentFailureToSanity }));
+vi.mock('@/backend/lib/sanityOrders', () => ({ pushConfirmedOrderToSanity, pushCashfreePaymentFailureToSanity, handleLatePaymentOnCancelledOrder }));
 
 function makeRequest(body: string, headers: Record<string, string>) {
   return new NextRequest('https://example.test/api/payment/cashfree/webhook', {
@@ -43,9 +43,31 @@ describe('POST /api/payment/cashfree/webhook', () => {
     findOneAndUpdate.mockReset();
     pushConfirmedOrderToSanity.mockClear();
     pushCashfreePaymentFailureToSanity.mockClear();
+    handleLatePaymentOnCancelledOrder.mockReset().mockResolvedValue(false);
   });
 
   afterEach(() => vi.restoreAllMocks());
+
+  it('flags a payment for an already-cancelled order as refund_due instead of confirming it', async () => {
+    const payload = {
+      type: 'PAYMENT_SUCCESS_WEBHOOK',
+      data: {
+        order: { order_id: 'order-1' },
+        payment: { cf_payment_id: 'cf-pay-1', payment_status: 'SUCCESS', payment_amount: 499, payment_currency: 'INR' },
+      },
+    };
+    verifyCashfreeWebhookSignature.mockReturnValue({ object: payload });
+    findOne.mockResolvedValue({ _id: 'mongo-id', orderId: 'order-1', total: 499, status: 'cancelled', paymentStatus: 'pending' });
+    handleLatePaymentOnCancelledOrder.mockResolvedValue(true);
+
+    const { POST } = await import('@/app/api/payment/cashfree/webhook/route');
+    const res = await POST(makeRequest(JSON.stringify(payload), VALID_HEADERS));
+
+    expect(res.status).toBe(200);
+    expect(handleLatePaymentOnCancelledOrder).toHaveBeenCalledWith(expect.objectContaining({ orderId: 'order-1' }), 'cf-pay-1');
+    expect(findOneAndUpdate).not.toHaveBeenCalled();
+    expect(pushConfirmedOrderToSanity).not.toHaveBeenCalled();
+  });
 
   it('rejects when the signature/timestamp headers are missing', async () => {
     const { POST } = await import('@/app/api/payment/cashfree/webhook/route');

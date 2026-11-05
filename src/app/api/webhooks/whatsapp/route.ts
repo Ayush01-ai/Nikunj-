@@ -26,7 +26,7 @@ function validSignature(rawBody: string, header: string | null, secret: string) 
 }
 
 export async function GET(req: NextRequest) {
-  const verifyToken = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN;
+  const verifyToken = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN || process.env.WHATSAPP_VERIFY_TOKEN;
   const p = req.nextUrl.searchParams;
   if (verifyToken && p.get('hub.mode') === 'subscribe' && safeEq(p.get('hub.verify_token') ?? '', verifyToken)) {
     return new NextResponse(p.get('hub.challenge') ?? '', { status: 200 });

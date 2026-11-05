@@ -1,6 +1,7 @@
 import { timingSafeEqual } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { notifyOrder } from '@/backend/lib/orderNotify';
+import { alertOwnerOrderIssue } from '@/backend/lib/ownerAlert';
 import { ORDER_ID_PATTERN } from '@/backend/lib/orderAccess';
 import { ensureDeliveryCode, OUT_FOR_DELIVERY } from '@/backend/lib/delivery';
 import { notifyCustomerOrderConfirmed } from '@/backend/lib/sanityOrders';
@@ -46,10 +47,28 @@ export async function POST(req: NextRequest) {
   if (!order?.orderNumber || !ORDER_ID_PATTERN.test(String(order.orderNumber))) {
     return NextResponse.json({ success: true, skipped: true });
   }
-  const mongoOrder = await syncMongo({ ...order, orderNumber: String(order.orderNumber) }).catch((err: unknown) => {
+  const mongoOrder = await syncMongo({ ...order, orderNumber: String(order.orderNumber) }).catch(async (err: unknown) => {
     console.error('[order-status] mongo sync', order.orderNumber, err instanceof Error ? err.message : err);
+    await alertOwnerOrderIssue({
+      orderNumber: String(order.orderNumber),
+      stage: 'mongo_sync_failed',
+      reason: `Sanity to Mongo status sync failed (status ${String(order.status)}). Run the sync script or re-save the order.`,
+      customerName: order.customerName,
+      phone: order.phone,
+      total: order.total,
+    });
     return null;
   });
+  if (order.paymentStatus === 'refund_due') {
+    await alertOwnerOrderIssue({
+      orderNumber: String(order.orderNumber),
+      stage: 'refund_due',
+      reason: `Refund due: order is ${String(order.status)} and was paid. Refund the customer.`,
+      customerName: order.customerName,
+      phone: order.phone,
+      total: order.total,
+    });
+  }
   if (order.status === 'cancelled') await cancelShiprocketForOrder(String(order.orderNumber)).catch(() => undefined);
   if (!NOTIFY_STATUSES.has(order.status)) return NextResponse.json({ success: true, skipped: true });
   if (order.status === 'confirmed') {
