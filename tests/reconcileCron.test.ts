@@ -122,6 +122,21 @@ describe('reconcile-orders buckets', () => {
     expect(body.failed).toBe(1);
   });
 
+  it('queries gateway orders of any method with no lookback floor', async () => {
+    await POST(req(auth));
+    const filter = mocks.find.mock.calls[0][0] as Record<string, unknown>;
+    expect(filter.$or).toEqual([{ paymentMethod: { $in: ['online', 'card', 'netbanking'] } }, { paymentGateway: 'cashfree' }]);
+    expect(filter.createdAt).toEqual({ $lt: expect.any(Date) });
+  });
+
+  it('fails and releases a legacy card order that has no Cashfree order', async () => {
+    queueFinds([order({ paymentMethod: 'card', stockHeld: true, createdAt: old(60 * 24 * 20) })], [], []);
+    mocks.updateOne.mockResolvedValue({ modifiedCount: 1 });
+    const body = await (await POST(req(auth))).json();
+    expect(body.failed).toBe(1);
+    expect(mocks.release).toHaveBeenCalledWith('NS-AAAA1111');
+  });
+
   it('alerts the owner when a Cashfree payment mismatches', async () => {
     queueFinds([order({ paymentMethod: 'online', paymentGateway: 'cashfree', cashfreeOrderId: 'cf1' })], [], []);
     mocks.settle.mockResolvedValue({ state: 'mismatch' });

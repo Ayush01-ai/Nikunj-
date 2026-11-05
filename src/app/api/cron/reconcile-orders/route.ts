@@ -48,11 +48,13 @@ async function reconcile() {
   };
 
   // 1. Online orders whose payment window has passed: confirm if paid, otherwise fail them and free the stock hold.
+  // No lookback floor here: an abandoned gateway order must never stay pending (holding stock) forever.
+  // Covers legacy card/netbanking methods and any order tied to Cashfree; manual UPI is left to the owner.
   const abandoned = await Order.find({
-    paymentMethod: 'online',
+    $or: [{ paymentMethod: { $in: ['online', 'card', 'netbanking'] } }, { paymentGateway: 'cashfree' }],
     paymentStatus: 'pending',
     status: 'pending',
-    createdAt: { $lt: new Date(now - HOLD_MINUTES * MIN), $gt: since },
+    createdAt: { $lt: new Date(now - HOLD_MINUTES * MIN) },
   }).sort({ createdAt: 1 }).limit(BATCH);
   for (const order of abandoned) {
     try {
