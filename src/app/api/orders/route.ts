@@ -10,6 +10,7 @@ import { client } from '@/cms/lib/client';
 import { COUPON_BY_CODE_QUERY, SITE_SETTINGS_QUERY } from '@/cms/lib/queries';
 import { getAdminSettings, getSanityOrderStatuses, getSanityOrders, pushAwaitingPaymentOrderToSanity, pushConfirmedOrderToSanity } from '@/backend/lib/sanityOrders';
 import { refundView } from '@/backend/lib/refundView';
+import { redactOrderForCustomer, trackingView } from '@/backend/lib/orderView';
 import { deliveryView, ensureDeliveryCode, OUT_FOR_DELIVERY } from '@/backend/lib/delivery';
 import { refundBreakdown } from '@/cms/lib/refunds';
 import { heldQuantities, holdKey, StockLockUnavailableError, withStockLock } from '@/backend/lib/stockHold';
@@ -380,10 +381,11 @@ export async function GET(req: NextRequest) {
       data = orders.map((o) => {
         const m = managed.get(o.orderId) ?? null;
         return {
-          ...o,
+          ...redactOrderForCustomer(o),
           delivery: deliveryView(o, m?.status ?? o.status, true),
           status: m?.status ?? o.status,
           paymentStatus: m?.paymentStatus ?? o.paymentStatus,
+          tracking: trackingView(m?.tracking, o),
           refund: refundView(m, 'account', refundBreakdown(o, admin.refundDeliveryCharge)),
         };
       });

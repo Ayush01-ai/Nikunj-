@@ -69,7 +69,8 @@ export async function POST(req: NextRequest) {
       total: order.total,
     });
   }
-  if (order.status === 'cancelled') await cancelShiprocketForOrder(String(order.orderNumber)).catch(() => undefined);
+  // paymentStatus-only changes also reach this route, so only cancel a parcel that is still booked.
+  if (order.status === 'cancelled' && mongoOrder?.shiprocketOrderId) await cancelShiprocketForOrder(String(order.orderNumber)).catch(() => undefined);
   if (!NOTIFY_STATUSES.has(order.status)) return NextResponse.json({ success: true, skipped: true });
   if (order.status === 'confirmed') {
     // Manual-UPI orders reach "confirmed" only when the owner verifies payment; send the full confirmation once

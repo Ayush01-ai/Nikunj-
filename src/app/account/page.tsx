@@ -28,7 +28,22 @@ import toast from 'react-hot-toast';
 import { RefundPanel, type RefundView } from '@/frontend/components/orders/RefundPanel';
 import { DeliveryCode, type DeliveryCodeView } from '@/frontend/components/orders/DeliveryCode';
 
-type AccountOrder = Order & { refund?: RefundView | null; delivery?: DeliveryCodeView | null };
+type AccountOrder = Omit<Order, 'paymentStatus'> & {
+  paymentStatus: Order['paymentStatus'] | 'refund_due';
+  tracking?: { courier?: string; trackingNumber?: string; trackingUrl?: string } | null;
+  refund?: RefundView | null;
+  delivery?: DeliveryCodeView | null;
+};
+
+function paymentBadge(order: Pick<AccountOrder, 'paymentMethod' | 'paymentStatus' | 'status'>): { label: string; className: string } | null {
+  if (order.paymentStatus === 'refund_due') return { label: 'Refund Due', className: 'bg-amber-100 text-amber-800' };
+  if (order.paymentStatus === 'refunded') return { label: 'Refunded', className: 'bg-blue-100 text-blue-700' };
+  if (order.paymentStatus === 'paid') return { label: 'Paid', className: 'bg-green-100 text-green-700' };
+  if (order.paymentMethod === 'cod') return { label: 'COD', className: 'bg-gold/10 text-gold-dark' };
+  if (order.paymentStatus === 'failed') return { label: 'Payment Failed', className: 'bg-red-100 text-red-700' };
+  if (order.status === 'cancelled') return null;
+  return { label: 'Payment Pending', className: 'bg-gold/10 text-gold-dark' };
+}
 
 // Same build-time pattern used elsewhere (e.g. login/whatsapp/page.tsx) — only render the
 // Clerk sign-out bridge when a <ClerkProvider> ancestor is guaranteed to exist.
@@ -441,6 +456,12 @@ export default function AccountPage() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
+                          {(() => {
+                            const badge = paymentBadge(order);
+                            return badge ? (
+                              <span data-testid="account-payment-badge" className={`font-cinzel text-[9px] uppercase tracking-wider px-2 py-1 ${badge.className}`}>{badge.label}</span>
+                            ) : null;
+                          })()}
                           <span className={`font-cinzel text-[9px] uppercase tracking-wider px-2 py-1 ${
                             order.status === 'delivered' ? 'bg-green-100 text-green-700'
                               : order.status === 'cancelled' || order.status === 'refunded' ? 'bg-red-100 text-red-700'
@@ -453,6 +474,29 @@ export default function AccountPage() {
                         </div>
                       </div>
                       <OrderProgress status={order.status} />
+                      {(order.tracking?.courier || order.tracking?.trackingNumber) && (
+                        <div data-testid="account-tracking" className="mt-3 flex flex-wrap items-center justify-between gap-2 font-lato text-xs text-[var(--text-mid)]">
+                          <span>
+                            <Truck size={12} className="inline -mt-0.5 mr-1 text-gold-dark" aria-hidden="true" />
+                            {order.tracking.courier || 'Courier'}
+                            {order.tracking.trackingNumber && <> · AWB <span className="font-semibold text-deep">{order.tracking.trackingNumber}</span></>}
+                          </span>
+                          {order.tracking.trackingUrl?.startsWith('https://') && (
+                            // The whole tile is a link, so this is a button to avoid nesting anchors.
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                window.open(order.tracking!.trackingUrl, '_blank', 'noopener,noreferrer');
+                              }}
+                              className="font-cinzel text-[10px] tracking-widest uppercase text-gold-dark hover:text-gold underline"
+                            >
+                              Track parcel
+                            </button>
+                          )}
+                        </div>
+                      )}
                       <div data-testid="account-delivery-code">
                         <DeliveryCode delivery={order.delivery} status={order.status} className="mt-3" />
                       </div>
