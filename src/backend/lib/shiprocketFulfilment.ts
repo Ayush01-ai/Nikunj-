@@ -33,9 +33,11 @@ export type FulfilResult =
 type Shippable = Pick<IOrder, 'status' | 'paymentMethod' | 'paymentStatus'>;
 
 /** Only paid (or COD) orders that are still waiting to be packed should be booked on Shiprocket. */
-export function isShiprocketEligible(order: Shippable): boolean {
+export function isShiprocketEligible(order: Shippable, opts: { manual?: boolean } = {}): boolean {
   const cod = order.paymentMethod === 'cod';
   if (!cod && order.paymentStatus !== 'paid') return false;
+  // The owner moving an order to "shipped" in Studio is an explicit instruction to hand it to the courier.
+  if (opts.manual && order.status === 'shipped') return true;
   return order.status === 'confirmed' || order.status === 'processing' || (cod && order.status === 'pending');
 }
 
@@ -58,9 +60,9 @@ async function sanityFulfilmentMode(orderId: string): Promise<string | undefined
   }
 }
 
-async function flagAttention(orderId: string, note: string) {
-  await Order.updateOne({ orderId }, { $set: { shiprocketError: note, needsAttention: true, attentionNote: note }, $unset: { shiprocketClaimAt: '' } }).catch(() => undefined);
-  await patchSanity(orderId, (p) => p.set({ needsAttention: true, attentionNote: note, 'shiprocket.error': note }));
+async function flagAttention(orderId: string, note: string, detail = note) {
+  await Order.updateOne({ orderId }, { $set: { shiprocketError: detail, needsAttention: true, attentionNote: note }, $unset: { shiprocketClaimAt: '' } }).catch(() => undefined);
+  await patchSanity(orderId, (p) => p.set({ needsAttention: true, attentionNote: note, 'shiprocket.error': detail }));
   try {
     const o = await Order.findOne({ orderId }).select('shippingAddress total').lean<Pick<IOrder, 'shippingAddress' | 'total'>>();
     await alertOwnerOrderIssue({
@@ -80,7 +82,7 @@ async function flagAttention(orderId: string, note: string) {
  * Idempotently books the order on Shiprocket (lands in the "New" queue unless AUTO_SHIP_AWB=true).
  * Never throws: a Shiprocket outage must not fail checkout, it flags the order for the owner instead.
  */
-export async function ensureShiprocketOrder(orderId: string): Promise<FulfilResult> {
+export async function ensureShiprocketOrder(orderId: string, opts: { manual?: boolean } = {}): Promise<FulfilResult> {
   if (!isShiprocketEnabled()) return { ok: true, created: false, reason: 'disabled' };
   try {
     await connectDB();
@@ -90,7 +92,7 @@ export async function ensureShiprocketOrder(orderId: string): Promise<FulfilResu
       return { ok: true, created: false, reason: 'self_delivery' };
     }
     if (order.shiprocketOrderId) return { ok: true, created: false, reason: 'exists' };
-    if (!isShiprocketEligible(order)) return { ok: true, created: false, reason: 'ineligible' };
+    if (!isShiprocketEligible(order, opts)) return { ok: true, created: false, reason: 'ineligible' };
 
     // Atomic claim: only one caller (verify, webhook, Studio) gets to create the Shiprocket order.
     const claim = await Order.updateOne(
@@ -108,20 +110,24 @@ export async function ensureShiprocketOrder(orderId: string): Promise<FulfilResu
       created = await createShiprocketOrder(order);
     } catch (e) {
       const note = e instanceof ShiprocketError && e.loginFailure ? LOGIN_FAILED_NOTE : `Shiprocket booking failed: ${errMsg(e)}. Book it manually in Shiprocket or retry from the dashboard.`;
-      await flagAttention(orderId, note);
+      console.error('[shiprocket] booking failed', orderId, errMsg(e));
+      await flagAttention(orderId, note, errMsg(e));
       return { ok: false, error: note };
     }
 
+    // A previous failed attempt left the order flagged; a successful booking resolves that flag.
+    const clearsFlag = Boolean(order.shiprocketError) && (!order.attentionNote || /shiprocket/i.test(order.attentionNote));
     const set: Record<string, unknown> = {
       shiprocketOrderId: created.shiprocketOrderId,
       shiprocketShipmentId: created.shiprocketShipmentId,
       fulfilmentMode: 'SHIPROCKET',
+      ...(clearsFlag ? { needsAttention: false } : {}),
     };
-    await Order.updateOne({ orderId }, { $set: set, $unset: { shiprocketError: '', shiprocketClaimAt: '' } });
+    await Order.updateOne({ orderId }, { $set: set, $unset: { shiprocketError: '', shiprocketClaimAt: '', ...(clearsFlag ? { attentionNote: '' } : {}) } });
     await patchSanity(orderId, (p) =>
       p
-        .set({ fulfilmentMode: 'SHIPROCKET', 'shiprocket.orderId': created.shiprocketOrderId, 'shiprocket.shipmentId': created.shiprocketShipmentId })
-        .unset(['shiprocket.error'])
+        .set({ fulfilmentMode: 'SHIPROCKET', 'shiprocket.orderId': created.shiprocketOrderId, 'shiprocket.shipmentId': created.shiprocketShipmentId, ...(clearsFlag ? { needsAttention: false } : {}) })
+        .unset(['shiprocket.error', ...(clearsFlag ? ['attentionNote'] : [])])
         .append('statusHistory', [historyEntry(order.status, 'Booked on Shiprocket')]),
     );
 
@@ -141,9 +147,8 @@ export async function autoShip(orderId: string, shipmentId: string): Promise<str
   try {
     const awb = await assignShiprocketAWB(shipmentId);
     const trackingUrl = shiprocketTrackingUrl(awb.awbCode);
-    let labelUrl: string | undefined;
     await generatePickup(shipmentId).catch((e) => console.error('[shiprocket] pickup', orderId, errMsg(e)));
-    labelUrl = await generateShiprocketLabel(shipmentId).catch(() => undefined);
+    const labelUrl: string | undefined = await generateShiprocketLabel(shipmentId).catch(() => undefined);
     await Order.updateOne(
       { orderId },
       {
@@ -162,7 +167,7 @@ export async function autoShip(orderId: string, shipmentId: string): Promise<str
     );
     return awb.awbCode;
   } catch (e) {
-    await flagAttention(orderId, e instanceof ShiprocketError && e.loginFailure ? LOGIN_FAILED_NOTE : `Shiprocket AWB not assigned: ${errMsg(e)}. Assign a courier in the Shiprocket panel.`);
+    await flagAttention(orderId, e instanceof ShiprocketError && e.loginFailure ? LOGIN_FAILED_NOTE : `Shiprocket AWB not assigned: ${errMsg(e)}. Assign a courier in the Shiprocket panel.`, errMsg(e));
     return undefined;
   }
 }

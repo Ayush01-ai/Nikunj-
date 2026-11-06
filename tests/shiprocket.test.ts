@@ -143,7 +143,7 @@ describe('Shiprocket client: login lockout protection', () => {
   it('allows a login again after the 30 minute cooldown', async () => {
     vi.useFakeTimers();
     try {
-      fetchMock.mockResolvedValueOnce(json({}, 403));
+      fetchMock.mockResolvedValueOnce(json({ message: 'Invalid email and password combination' }, 403));
       await expect(shiprocketRequest('/x')).rejects.toBeTruthy();
       vi.advanceTimersByTime(31 * 60 * 1000);
       fetchMock.mockImplementation(async (url: string) => (String(url).endsWith('/auth/login') ? json({ token: 't' }) : json({ ok: 1 })));
@@ -161,7 +161,7 @@ describe('Shiprocket client: login lockout protection', () => {
   });
 
   it('flags needsAttention with the login note and does not throw from ensureShiprocketOrder', async () => {
-    fetchMock.mockResolvedValue(json({}, 403));
+    fetchMock.mockResolvedValue(json({ message: 'Invalid email and password combination' }, 403));
     mocks.findOne.mockResolvedValue(baseOrder());
     const res = await ensureShiprocketOrder('NS-AB12CD34');
     expect(res).toMatchObject({ ok: false });

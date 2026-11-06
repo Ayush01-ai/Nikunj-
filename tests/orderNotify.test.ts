@@ -116,7 +116,7 @@ describe('notifyOrder', () => {
     order({ channel: 'whatsapp', phone: '9876543210', method: 'whatsapp' });
     const res = await notifyOrder('NS-1', { status: 'shipped', phone: '9111111111' } as never);
     expect(res).toEqual({ sent: true, channel: 'whatsapp' });
-    expect(mocks.sendOrderWhatsApp).toHaveBeenCalledWith(expect.objectContaining({ phone: '9876543210' }));
+    expect(mocks.sendOrderWhatsApp).toHaveBeenCalledWith(expect.objectContaining({ phone: '9876543210' }), expect.any(Function));
     expect(mocks.sendEmail).not.toHaveBeenCalled();
   });
 
@@ -140,7 +140,7 @@ describe('notifyOrder', () => {
     expect((await notifyOrder('NS-1', { status: 'shipped' })).sent).toBe(false);
     mocks.findOne.mockResolvedValue({ shippingAddress: { phone: '9000000000' } });
     await notifyOrder('NS-2', { status: 'shipped' });
-    expect(mocks.sendOrderWhatsApp).toHaveBeenCalledWith(expect.objectContaining({ phone: '9000000000' }));
+    expect(mocks.sendOrderWhatsApp).toHaveBeenCalledWith(expect.objectContaining({ phone: '9000000000' }), expect.any(Function));
   });
 
   it('is idempotent: a duplicate event is not sent twice', async () => {

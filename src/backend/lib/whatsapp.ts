@@ -50,12 +50,38 @@ function toE164India(phone?: string) {
   return /^[6-9]\d{9}$/.test(digits) ? `91${digits}` : null;
 }
 
-export async function sendOrderWhatsApp(order: OrderMessageInput & { phone?: string }): Promise<boolean> {
+/** One-line order detail for template variable {{3}} (Meta forbids newlines/tabs and long runs of spaces in params). */
+export function templateStatusText(order: OrderMessageInput): string {
+  const label = ORDER_STATUS_LABEL[order.status ?? ''] ?? order.status ?? 'updated';
+  const parts = [label];
+  if (order.status === 'confirmed' && order.items?.length) {
+    parts.push(
+      order.items
+        .map((i) => `${i.quantity ?? 1}x ${i.productName ?? 'item'}${i.option ? ` (${i.option})` : ''}`)
+        .join(', '),
+    );
+  }
+  if (order.status === 'confirmed' && typeof order.total === 'number') {
+    parts.push(`Total Rs.${order.total.toLocaleString('en-IN')}${order.paymentMethod === 'cod' ? ' (Cash on Delivery)' : ''}`);
+  }
+  if (order.status === 'shipped' && order.tracking?.trackingNumber) {
+    parts.push(`${order.tracking.courier ? `${order.tracking.courier} ` : ''}AWB ${order.tracking.trackingNumber}`);
+  }
+  return parts.join(' | ').replace(/\s+/g, ' ').slice(0, 900);
+}
+
+export async function sendOrderWhatsApp(
+  order: OrderMessageInput & { phone?: string },
+  onMessageId?: (id: string) => void,
+): Promise<boolean> {
   if (!isWhatsAppConfigured()) return false;
   const to = toE164India(order.phone);
   if (!to) return false;
 
-  const template = process.env.WHATSAPP_ORDER_TEMPLATE;
+  const template = process.env.WHATSAPP_ORDER_TEMPLATE?.trim();
+  if (!template) {
+    console.warn('[whatsapp] WHATSAPP_ORDER_TEMPLATE is not set: free-form order messages are only delivered inside a 24h chat window');
+  }
   const body = template
     ? {
         messaging_product: 'whatsapp',
@@ -70,7 +96,7 @@ export async function sendOrderWhatsApp(order: OrderMessageInput & { phone?: str
               parameters: [
                 order.customerName?.split(' ')[0] || 'Devotee',
                 order.orderNumber ?? '',
-                ORDER_STATUS_LABEL[order.status ?? ''] ?? order.status ?? '',
+                templateStatusText(order),
                 order.tracking?.trackingUrl || trackOrderUrl(origin(), order.orderNumber),
               ].map((text) => ({ type: 'text', text })),
             },
@@ -90,6 +116,9 @@ export async function sendOrderWhatsApp(order: OrderMessageInput & { phone?: str
       console.error('[whatsapp] send failed', order.orderNumber, res.status, (await res.text()).slice(0, 300));
       return false;
     }
+    const sent = (await res.json().catch(() => null)) as { messages?: { id?: string }[] } | null;
+    const messageId = sent?.messages?.[0]?.id;
+    if (messageId) onMessageId?.(messageId);
     return true;
   } catch (error) {
     console.error('[whatsapp] send error', order.orderNumber, error instanceof Error ? error.message : error);

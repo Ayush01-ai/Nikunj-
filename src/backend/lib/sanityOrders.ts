@@ -486,6 +486,7 @@ export async function notifyCustomerOrderConfirmed(order: IOrder): Promise<void>
       customerName: addr.fullName,
       total: order.total,
       paymentStatus: order.paymentStatus,
+      paymentMethod: order.paymentMethod,
       items,
       confirmation: {
         orderNumber: order.orderId,

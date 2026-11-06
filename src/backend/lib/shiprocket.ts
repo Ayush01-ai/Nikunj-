@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import type { IOrder } from '@/backend/models/Order';
 
 const BASE_URL = 'https://apiv2.shiprocket.in/v1/external';
@@ -49,13 +50,45 @@ export function resetShiprocketLoginState() {
   loginBlockedUntil = 0;
 }
 
-async function login(): Promise<string> {
-  if (loginBlockedUntil > Date.now()) {
-    throw new ShiprocketError(`${LOGIN_FAILED_NOTE} (login paused for ${Math.ceil((loginBlockedUntil - Date.now()) / 60000)} min to avoid an account lock)`, 403, true);
+// Every Cloudflare isolate has its own memory, so the token is also shared through MongoDB (when the
+// caller already connected) — otherwise each cold isolate logs in again and Shiprocket starts rejecting logins.
+const SHARED_TOKEN_ID = 'shiprocket_token';
+type SharedTokenDoc = { _id: string; value: string; expiresAt: Date };
+
+function sharedCache() {
+  try {
+    const conn = mongoose.connection;
+    return conn?.readyState === 1 && conn.db ? conn.db.collection<SharedTokenDoc>('app_cache') : null;
+  } catch {
+    return null;
   }
-  const password = getShiprocketPassword();
-  const email = getShiprocketEmail();
-  if (!email || !password) throw new ShiprocketError(`${LOGIN_FAILED_NOTE} (credentials missing or invalid)`, undefined, true);
+}
+
+async function readSharedToken(): Promise<{ value: string; expiresAt: number } | null> {
+  try {
+    const doc = await sharedCache()?.findOne({ _id: SHARED_TOKEN_ID });
+    const expiresAt = doc?.expiresAt ? new Date(doc.expiresAt).getTime() : 0;
+    return doc?.value && expiresAt > Date.now() ? { value: doc.value, expiresAt } : null;
+  } catch {
+    return null;
+  }
+}
+
+async function writeSharedToken(token: { value: string; expiresAt: number } | null) {
+  try {
+    const col = sharedCache();
+    if (!col) return;
+    if (token) await col.updateOne({ _id: SHARED_TOKEN_ID }, { $set: { value: token.value, expiresAt: new Date(token.expiresAt) } }, { upsert: true });
+    else await col.deleteOne({ _id: SHARED_TOKEN_ID });
+  } catch {
+    // The shared cache is an optimisation only.
+  }
+}
+
+const isCredentialRejection = (status: number, message?: string) =>
+  status === 401 || ((status === 400 || status === 403) && /invalid|incorrect|password|credential/i.test(message ?? ''));
+
+async function loginOnce(email: string, password: string) {
   const res = await fetch(`${BASE_URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -63,17 +96,43 @@ async function login(): Promise<string> {
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
   const data = (await res.json().catch(() => null)) as { token?: string; message?: string } | null;
-  if (res.status === 400 || res.status === 403) {
-    loginBlockedUntil = Date.now() + LOGIN_COOLDOWN_MS;
-    throw new ShiprocketError(`${LOGIN_FAILED_NOTE} (${res.status})`, res.status, true);
+  return { status: res.status, ok: res.ok, token: data?.token, message: data?.message };
+}
+
+async function login(): Promise<string> {
+  if (loginBlockedUntil > Date.now()) {
+    throw new ShiprocketError(`${LOGIN_FAILED_NOTE} (login paused for ${Math.ceil((loginBlockedUntil - Date.now()) / 60000)} min to avoid an account lock)`, 403, true);
   }
-  if (!res.ok || !data?.token) throw new ShiprocketError(`Shiprocket login failed (${res.status})${data?.message ? `: ${data.message}` : ''}`, res.status, true);
-  cachedToken = { value: data.token, expiresAt: Date.now() + TOKEN_TTL_MS };
-  return data.token;
+  const password = getShiprocketPassword();
+  const email = getShiprocketEmail();
+  if (!email || !password) throw new ShiprocketError(`${LOGIN_FAILED_NOTE} (credentials missing or invalid)`, undefined, true);
+
+  let r = await loginOnce(email, password);
+  // Rate limits, gateway blocks and 5xx are temporary: one short retry, and never the long lockout cooldown.
+  if (!r.token && !isCredentialRejection(r.status, r.message)) {
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    r = await loginOnce(email, password);
+  }
+  if (!r.token) {
+    const detail = `HTTP ${r.status}${r.message ? `: ${r.message}` : ''}`;
+    if (isCredentialRejection(r.status, r.message)) {
+      loginBlockedUntil = Date.now() + LOGIN_COOLDOWN_MS;
+      throw new ShiprocketError(`${LOGIN_FAILED_NOTE} (${detail})`, r.status, true);
+    }
+    throw new ShiprocketError(`Shiprocket login temporarily unavailable (${detail})`, r.status, true);
+  }
+  cachedToken = { value: r.token, expiresAt: Date.now() + TOKEN_TTL_MS };
+  await writeSharedToken(cachedToken);
+  return r.token;
 }
 
 async function getToken(): Promise<string> {
   if (cachedToken && cachedToken.expiresAt > Date.now()) return cachedToken.value;
+  const shared = await readSharedToken();
+  if (shared) {
+    cachedToken = shared;
+    return shared.value;
+  }
   return login();
 }
 
@@ -89,6 +148,7 @@ export async function shiprocketRequest<T = Record<string, unknown>>(path: strin
     });
     if (res.status === 401 && attempt === 0) {
       resetShiprocketTokenCache();
+      await writeSharedToken(null);
       continue;
     }
     const data = (await res.json().catch(() => null)) as (T & { message?: string; errors?: unknown }) | null;

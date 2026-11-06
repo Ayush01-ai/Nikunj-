@@ -56,7 +56,7 @@ export interface IOrder extends Document {
     capturedAt: Date;
   };
   /** Idempotency log of order notifications already sent (no contact details). */
-  notificationLog?: { key: string; channel: string; at: Date }[];
+  notificationLog?: { key: string; channel: string; at: Date; messageId?: string; status?: string; error?: string }[];
   /** Delivery-partner hand-off: secret link token + OTP verification state. */
   delivery?: {
     token?: string;
@@ -155,7 +155,7 @@ const OrderSchema = new Schema<IOrder>(
       reason:     { type: String },
       capturedAt: { type: Date },
     },
-    notificationLog: [{ _id: false, key: String, channel: String, at: Date }],
+    notificationLog: [{ _id: false, key: String, channel: String, at: Date, messageId: String, status: String, error: String }],
     delivery: {
       token:       { type: String },
       partnerName: { type: String },

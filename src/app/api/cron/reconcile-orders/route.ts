@@ -100,15 +100,18 @@ async function reconcile() {
     }
   }
 
-  // 3. Confirmed orders that were never booked on Shiprocket (orders that already failed are flagged and skipped).
+  // 3. Confirmed orders that were never booked on Shiprocket. Orders flagged for some other reason are left to
+  //    the owner, but a Shiprocket failure (login hiccup, outage) is retried here until it books.
   if (process.env.SHIPROCKET_ENABLED === 'true') {
     const unbooked = await Order.find({
       shiprocketOrderId: null,
       status: { $in: ['confirmed', 'processing'] },
-      needsAttention: { $ne: true },
       fulfilmentMode: { $ne: 'SELF_DELIVERY' },
       createdAt: { $lt: new Date(now - 5 * MIN), $gt: since },
-      $or: [{ paymentStatus: 'paid' }, { paymentMethod: 'cod' }],
+      $and: [
+        { $or: [{ paymentStatus: 'paid' }, { paymentMethod: 'cod' }] },
+        { $or: [{ needsAttention: { $ne: true } }, { shiprocketError: { $exists: true, $nin: [null, ''] } }] },
+      ],
     }).sort({ createdAt: 1 }).limit(BATCH);
     for (const order of unbooked) {
       try {

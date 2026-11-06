@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createHmac, timingSafeEqual } from 'crypto';
+import mongoose from 'mongoose';
 import { connectDB } from '@/backend/lib/mongodb';
 import { Order } from '@/backend/models/Order';
 
@@ -34,8 +35,8 @@ export async function GET(req: NextRequest) {
   return new NextResponse('Forbidden', { status: 403 });
 }
 
-interface StatusEvent { id?: string; status?: string }
-interface Payload { entry?: { changes?: { value?: { statuses?: StatusEvent[] } }[] }[] }
+interface StatusEvent { id?: string; status?: string; errors?: { code?: number; title?: string; message?: string }[] }
+interface Payload { entry?: { id?: string; changes?: { value?: { statuses?: StatusEvent[] } }[] }[] }
 
 export async function POST(req: NextRequest) {
   const secret = process.env.WHATSAPP_APP_SECRET;
@@ -53,8 +54,33 @@ export async function POST(req: NextRequest) {
 
   const events = (payload.entry ?? []).flatMap((e) => (e.changes ?? []).flatMap((c) => c.value?.statuses ?? []));
   if (events.length) await connectDB();
+  // entry.id is the WhatsApp Business Account id (needed to manage message templates); keep it discoverable.
+  const wabaId = payload.entry?.find((e) => e.id)?.id;
+  if (wabaId && events.length) {
+    await mongoose.connection.db
+      ?.collection<{ _id: string; value: string; at: Date }>('app_cache')
+      .updateOne({ _id: 'whatsapp_waba_id' }, { $set: { value: wabaId, at: new Date() } }, { upsert: true })
+      .catch(() => undefined);
+  }
   for (const ev of events) {
     if (!ev.id || !ev.status) continue;
+    // Order notifications: record Meta's real outcome on the log entry (a 200 from the send API is not delivery).
+    const err = ev.errors?.[0];
+    const errText = err ? `${err.code ?? ''} ${err.title ?? err.message ?? ''}`.trim().slice(0, 200) : undefined;
+    if (ev.status === 'failed') {
+      const r = await Order.updateOne(
+        { 'notificationLog.messageId': ev.id },
+        { $set: { 'notificationLog.$.status': 'failed', ...(errText ? { 'notificationLog.$.error': errText } : {}) } },
+      );
+      if (r.modifiedCount) console.error('[whatsapp-webhook] order message failed', ev.id, errText);
+    } else if (ev.status in RANK) {
+      const rank = RANK[ev.status as Rank];
+      const lower = (Object.keys(RANK) as Rank[]).filter((s) => RANK[s] < rank);
+      await Order.updateOne(
+        { notificationLog: { $elemMatch: { messageId: ev.id, status: { $in: lower } } } },
+        { $set: { 'notificationLog.$.status': ev.status } },
+      );
+    }
     if (ev.status === 'failed') {
       await Order.updateOne({ 'delivery.otpMessageId': ev.id }, { $set: { 'delivery.otpStatus': 'failed' } });
     } else if (ev.status in RANK) {

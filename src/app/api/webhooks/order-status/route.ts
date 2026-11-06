@@ -5,7 +5,7 @@ import { alertOwnerOrderIssue } from '@/backend/lib/ownerAlert';
 import { ORDER_ID_PATTERN } from '@/backend/lib/orderAccess';
 import { ensureDeliveryCode, OUT_FOR_DELIVERY } from '@/backend/lib/delivery';
 import { notifyCustomerOrderConfirmed } from '@/backend/lib/sanityOrders';
-import { cancelShiprocketForOrder } from '@/backend/lib/shiprocketFulfilment';
+import { cancelShiprocketForOrder, ensureShiprocketOrder } from '@/backend/lib/shiprocketFulfilment';
 import { buildMongoStatusUpdate, type SanityStatusInput } from '@/backend/lib/orderStatusSync';
 import { connectDB } from '@/backend/lib/mongodb';
 import { Order, type IOrder } from '@/backend/models/Order';
@@ -71,6 +71,15 @@ export async function POST(req: NextRequest) {
   }
   // paymentStatus-only changes also reach this route, so only cancel a parcel that is still booked.
   if (order.status === 'cancelled' && mongoOrder?.shiprocketOrderId) await cancelShiprocketForOrder(String(order.orderNumber)).catch(() => undefined);
+  // Moving an order to packing/shipped in Studio hands it to Shiprocket if it was never booked (e.g. an earlier
+  // booking attempt failed). Self-delivery orders are skipped inside ensureShiprocketOrder.
+  let shipOrder = mongoOrder;
+  if ((order.status === 'processing' || order.status === 'shipped') && mongoOrder && !mongoOrder.shiprocketOrderId) {
+    const booked = await ensureShiprocketOrder(String(order.orderNumber), { manual: true }).catch(() => null);
+    if (booked?.ok && booked.created) {
+      shipOrder = { ...mongoOrder, shiprocketOrderId: booked.shiprocketOrderId, shiprocketShipmentId: booked.shiprocketShipmentId } as IOrder;
+    }
+  }
   if (!NOTIFY_STATUSES.has(order.status)) return NextResponse.json({ success: true, skipped: true });
   if (order.status === 'confirmed') {
     // Manual-UPI orders reach "confirmed" only when the owner verifies payment; send the full confirmation once
@@ -80,7 +89,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true });
   }
   // Parcels booked on Shiprocket are handed to the courier, so the doorstep-OTP code is only for own-rider orders.
-  if (OUT_FOR_DELIVERY.has(order.status) && !mongoOrder?.shiprocketOrderId) {
+  if (OUT_FOR_DELIVERY.has(order.status) && !shipOrder?.shiprocketOrderId) {
     // Generate the doorstep code before the "shipped" message; a WhatsApp/Sanity hiccup must not block notifications.
     await ensureDeliveryCode(String(order.orderNumber)).catch((err: unknown) =>
       console.error('[order-status] delivery code', order.orderNumber, err instanceof Error ? err.message : err));

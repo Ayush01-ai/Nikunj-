@@ -135,9 +135,10 @@ export async function notifyOrder(orderId: string, event: OrderEvent, key = even
   if (!claim.modifiedCount) return { sent: false, reason: 'duplicate' };
 
   let ok = false;
+  let messageId: string | undefined;
   try {
     if (snap.channel === 'whatsapp') {
-      ok = await sendOrderWhatsApp({ ...event, orderNumber: event.orderNumber ?? orderId, phone: snap.phone });
+      ok = await sendOrderWhatsApp({ ...event, orderNumber: event.orderNumber ?? orderId, phone: snap.phone }, (id) => { messageId = id; });
     } else if (snap.email) {
       const url = trackOrderUrl(origin(), orderId);
       const email = event.confirmation
@@ -154,6 +155,13 @@ export async function notifyOrder(orderId: string, event: OrderEvent, key = even
   if (!ok) {
     await Order.updateOne({ orderId }, { $pull: { notificationLog: { key } } }).catch(() => undefined);
     return { sent: false, reason: 'send_failed' };
+  }
+  if (messageId) {
+    // Meta accepting a message is not delivery; the WhatsApp webhook updates this entry with sent/delivered/failed.
+    await Order.updateOne(
+      { orderId, 'notificationLog.key': key },
+      { $set: { 'notificationLog.$.messageId': messageId, 'notificationLog.$.status': 'accepted' } },
+    ).catch(() => undefined);
   }
   return { sent: true, channel: snap.channel };
 }
