@@ -605,7 +605,7 @@ export default function CheckoutPage() {
                       </div>
 
                       <div className="mt-5 bg-white border border-[var(--border)] p-6">
-                        <h3 className="font-cinzel text-sm font-semibold text-deep mb-3">Pay Online (UPI, Cards, Net Banking)</h3>
+                        <h3 className="font-cinzel text-sm font-semibold text-deep mb-3">Pay with Cashfree (UPI, Cards, Net Banking, Cash on Delivery)</h3>
                         {pendingPayment ? (
                           <CashfreeCheckout
                             key={pendingPayment.orderId}
@@ -626,23 +626,6 @@ export default function CheckoutPage() {
                           <p className="font-lato text-sm text-[var(--text-mid)]">Opening secure payment…</p>
                         )}
                       </div>
-
-                      {sub >= COD_MINIMUM_ORDER_VALUE && (
-                        <div className="mt-4 bg-white border border-[var(--border)] p-6">
-                          <h3 className="font-cinzel text-sm font-semibold text-deep mb-1">Or pay Cash on Delivery</h3>
-                          <p className="font-lato text-xs text-[var(--text-mid)] mb-3">
-                            Total ₹{orderTotals(sub, couponData?.discountAmount || 0, settings, 'cod').total.toLocaleString('en-IN')} (includes ₹{COD_DELIVERY_CHARGE} delivery charge).
-                          </p>
-                          <button
-                            type="button"
-                            onClick={() => placeOrder('cod')}
-                            disabled={placing}
-                            className="btn-outline-gold w-full disabled:opacity-60"
-                          >
-                            🙏 Place COD Order
-                          </button>
-                        </div>
-                      )}
 
                       <div className="flex gap-3 mt-5">
                         <button onClick={() => setStep('Address')} className="btn-outline-gold flex-1">← Back</button>
