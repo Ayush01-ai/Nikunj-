@@ -1,6 +1,7 @@
 import { fetchCashfreeOrder, fetchCashfreeOrderPayments } from '@/backend/lib/cashfree';
 import { Order, type IOrder } from '@/backend/models/Order';
 import { pushCashfreePaymentFailureToSanity, pushConfirmedOrderToSanity } from '@/backend/lib/sanityOrders';
+import { COD_DELIVERY_CHARGE } from '@/cms/lib/pricing';
 
 export type CashfreeSettlement =
   /** This call confirmed the order (stock + notification ran exactly once, here). */
@@ -19,6 +20,21 @@ export type CashfreeSettlement =
 const AMOUNT_TOLERANCE = 0.01;
 const amountMatches = (received: unknown, expected: number) =>
   typeof received === 'number' && Number.isFinite(received) && Math.abs(received - expected) < AMOUNT_TOLERANCE;
+
+/**
+ * Cashfree's own Cash on Delivery adds a COD fee on top of the order amount, so a successful
+ * cash payment is for order total + at most that fee. Card/UPI etc. must match exactly.
+ */
+export function paymentAmountAcceptable(received: unknown, expected: number, paymentGroup?: string | null) {
+  if (amountMatches(received, expected)) return true;
+  if (String(paymentGroup ?? '').toLowerCase() !== 'cash') return false;
+  return (
+    typeof received === 'number' &&
+    Number.isFinite(received) &&
+    received > expected &&
+    received <= expected + COD_DELIVERY_CHARGE + AMOUNT_TOLERANCE
+  );
+}
 
 /**
  * Re-derives an order's payment state from Cashfree's API using our secret key — the browser
@@ -78,7 +94,7 @@ export async function settleCashfreeOrder(order: IOrder, note: string): Promise<
     (p) =>
       (p.payment_status as string | undefined) === 'SUCCESS' &&
       (p.order_id === undefined || p.order_id === order.cashfreeOrderId) &&
-      amountMatches(p.payment_amount, order.total) &&
+      paymentAmountAcceptable(p.payment_amount, order.total, p.payment_group as string | undefined) &&
       p.payment_currency === 'INR' &&
       p.cf_payment_id !== undefined &&
       p.cf_payment_id !== null,

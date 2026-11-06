@@ -4,6 +4,7 @@ import { isCashfreeConfigured } from '@/backend/lib/cashfreeConfig';
 import { connectDB } from '@/backend/lib/mongodb';
 import { Order } from '@/backend/models/Order';
 import { pushCashfreePaymentFailureToSanity, pushConfirmedOrderToSanity, handleLatePaymentOnCancelledOrder } from '@/backend/lib/sanityOrders';
+import { paymentAmountAcceptable } from '@/backend/lib/cashfreeSettlement';
 
 interface CashfreeWebhookPayload {
   type?: string;
@@ -14,6 +15,7 @@ interface CashfreeWebhookPayload {
       payment_status?: string;
       payment_amount?: number;
       payment_currency?: string;
+      payment_group?: string;
     };
   };
 }
@@ -117,7 +119,8 @@ export async function POST(req: NextRequest) {
     const matches = (v: unknown) => typeof v === 'number' && Number.isFinite(v) && Math.abs(v - candidate.total) < 0.01;
     const eventOrder = event.data?.order;
     const amountMatches =
-      matches(payment.payment_amount) && (eventOrder?.order_amount === undefined || matches(eventOrder.order_amount));
+      paymentAmountAcceptable(payment.payment_amount, candidate.total, payment.payment_group) &&
+      (eventOrder?.order_amount === undefined || matches(eventOrder.order_amount));
     const currencyMatches =
       payment.payment_currency === 'INR' &&
       (eventOrder?.order_currency === undefined || eventOrder.order_currency === 'INR');
