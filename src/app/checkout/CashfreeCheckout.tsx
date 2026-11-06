@@ -1,7 +1,7 @@
 'use client';
 
 import Script from 'next/script';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { GuestOtpGate } from '@/frontend/components/orders/GuestOtpGate';
 
@@ -92,6 +92,16 @@ export function CashfreeCheckout({
     }
   };
 
+  const autoStarted = useRef(false);
+  const canStart = scriptReady && (!isGuest || Boolean(guestProof));
+  useEffect(() => {
+    if (canStart && !autoStarted.current) {
+      autoStarted.current = true;
+      void startPayment();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canStart]);
+
   return (
     <>
       <Script
@@ -102,7 +112,7 @@ export function CashfreeCheckout({
       />
       <div className="space-y-4">
         <p className="text-sm text-[var(--text-mid)]">
-          Your order is saved. Complete your secure Cashfree payment to confirm it.
+          Opening secure payment… If it does not open, use the button below.
         </p>
         {isGuest && !guestProof && (
           <GuestOtpGate
@@ -114,7 +124,7 @@ export function CashfreeCheckout({
         )}
         <div className="flex flex-col gap-3 sm:flex-row">
           <button type="button" onClick={startPayment} disabled={!scriptReady || busy || (isGuest && !guestProof)} className="btn-gold flex-1 disabled:opacity-60">
-            {busy ? 'Connecting to Cashfree…' : scriptReady ? 'Choose payment method with Cashfree' : 'Loading secure checkout…'}
+            {busy ? 'Connecting to Cashfree…' : scriptReady ? 'Pay now' : 'Loading secure checkout…'}
           </button>
           {onCancel && (
             <button type="button" onClick={onCancel} disabled={busy} className="btn-outline-gold flex-1 disabled:opacity-60">

@@ -231,7 +231,6 @@ export default function CheckoutPage() {
         router.push(`/confirmation?orderId=${encodeURIComponent(json.orderId)}`);
         setPlacing(false);
       } else {
-        clearSelectedFromCart();
         setPendingPayment({ orderId: json.orderId, guestProof: json.guestProof });
         setPlacing(false);
       }
@@ -240,6 +239,19 @@ export default function CheckoutPage() {
       setPlacing(false);
     }
   };
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  if (!mounted) {
+    return (
+      <>
+        <Navbar settings={null} />
+        <div className="min-h-screen bg-cream" aria-busy="true" />
+        <Footer settings={null} />
+      </>
+    );
+  }
 
   if ((items.length === 0 || checkoutItems.length === 0) && step === 'Cart') {
     return (
@@ -535,8 +547,14 @@ export default function CheckoutPage() {
                           phone={address.phone}
                           isGuest={!user}
                           initialGuestProof={pendingPayment.guestProof}
-                          onComplete={() => router.push(`/confirmation?orderId=${encodeURIComponent(pendingPayment.orderId)}`)}
-                          onCancel={() => router.push(`/confirmation?orderId=${encodeURIComponent(pendingPayment.orderId)}`)}
+                          onComplete={() => {
+                            clearSelectedFromCart();
+                            router.push(`/confirmation?orderId=${encodeURIComponent(pendingPayment.orderId)}`);
+                          }}
+                          onCancel={() => {
+                            clearSelectedFromCart();
+                            router.push(`/confirmation?orderId=${encodeURIComponent(pendingPayment.orderId)}`);
+                          }}
                         />
                       </div>
                     </>

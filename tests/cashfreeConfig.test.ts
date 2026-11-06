@@ -40,7 +40,10 @@ describe('cashfreeConfig', () => {
     delete process.env.CASHFREE_ENVIRONMENT;
     expect(cashfreeEnvironment()).toBe('SANDBOX');
 
-    process.env.CASHFREE_ENVIRONMENT = 'production'; // wrong case -> still sandbox
+    process.env.CASHFREE_ENVIRONMENT = 'production'; // case-insensitive
+    expect(cashfreeEnvironment()).toBe('PRODUCTION');
+
+    process.env.CASHFREE_ENVIRONMENT = 'sandbox';
     expect(cashfreeEnvironment()).toBe('SANDBOX');
 
     process.env.CASHFREE_ENVIRONMENT = 'PRODUCTION';

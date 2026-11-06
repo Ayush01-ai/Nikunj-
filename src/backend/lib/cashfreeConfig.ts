@@ -27,5 +27,5 @@ export function isCashfreeEnabledOnClient(): boolean {
  */
 export function cashfreeEnvironment(): 'SANDBOX' | 'PRODUCTION' {
   const value = process.env.CASHFREE_ENVIRONMENT ?? process.env.CASHFREE_ENV;
-  return value === 'PRODUCTION' ? 'PRODUCTION' : 'SANDBOX';
+  return value?.trim().toUpperCase() === 'PRODUCTION' ? 'PRODUCTION' : 'SANDBOX';
 }
