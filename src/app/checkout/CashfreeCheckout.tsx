@@ -56,10 +56,19 @@ export function CashfreeCheckout({
 
       const environment = createResult.data.environment === 'production' ? 'production' : 'sandbox';
       const cashfree = window.Cashfree({ mode: environment });
-      await cashfree.checkout({
+      const checkoutResult = await cashfree.checkout({
         paymentSessionId: createResult.data.paymentSessionId,
-        redirectTarget: '_self',
+        redirectTarget: '_modal',
       });
+      if (
+        typeof checkoutResult === 'object' &&
+        checkoutResult !== null &&
+        'error' in checkoutResult &&
+        checkoutResult.error
+      ) {
+        toast.error('Cashfree checkout was closed or could not complete. You can reopen it to try again.');
+        return;
+      }
 
       const verifyResponse = await fetch('/api/payment/cashfree/verify', {
         method: 'POST',
@@ -105,7 +114,7 @@ export function CashfreeCheckout({
         )}
         <div className="flex flex-col gap-3 sm:flex-row">
           <button type="button" onClick={startPayment} disabled={!scriptReady || busy || (isGuest && !guestProof)} className="btn-gold flex-1 disabled:opacity-60">
-            {busy ? 'Connecting to Cashfree…' : scriptReady ? 'Pay securely with Cashfree' : 'Loading secure checkout…'}
+            {busy ? 'Connecting to Cashfree…' : scriptReady ? 'Choose payment method with Cashfree' : 'Loading secure checkout…'}
           </button>
           {onCancel && (
             <button type="button" onClick={onCancel} disabled={busy} className="btn-outline-gold flex-1 disabled:opacity-60">

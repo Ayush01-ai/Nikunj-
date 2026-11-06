@@ -12,6 +12,7 @@ import { ChartUpwardIcon } from '@sanity/icons/ChartUpward';
 import { OrdersDashboard } from './src/cms/tools/OrdersDashboard';
 import { AnalyticsDashboard } from './src/cms/tools/AnalyticsDashboard';
 import { BulkProductImport } from './src/cms/tools/BulkProductImport';
+import { CatalogDashboard } from './src/cms/tools/CatalogDashboard';
 
 const SINGLETON_TYPES = new Set(['siteSettings', 'adminSettings', 'order', 'lead']);
 
@@ -43,6 +44,7 @@ export default defineConfig({
   tools: (prev) => [
     ...prev.slice(0, 1),
     { name: 'orders', title: 'Orders Dashboard', icon: PackageIcon, component: OrdersDashboard },
+    { name: 'catalog', title: 'Catalog', icon: PackageIcon, component: CatalogDashboard },
     { name: 'analytics', title: 'Analytics', icon: ChartUpwardIcon, component: AnalyticsDashboard },
     { name: 'bulk-import', title: 'Bulk Import', icon: UploadIcon, component: BulkProductImport },
     ...prev.slice(1),

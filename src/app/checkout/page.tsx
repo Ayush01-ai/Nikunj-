@@ -7,7 +7,13 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Minus, Plus, Trash2, Tag, ShieldCheck, Truck, Banknote, Smartphone } from 'lucide-react';
 import { useCartStore } from '@/frontend/store/cartStore';
-import { getVariantPricing, orderTotals } from '@/cms/lib/pricing';
+import {
+  COD_DELIVERY_CHARGE,
+  COD_MINIMUM_ORDER_VALUE,
+  getVariantPricing,
+  orderTotals,
+  PREPAID_DISCOUNT,
+} from '@/cms/lib/pricing';
 import { useSiteSettings } from '@/frontend/providers/Providers';
 import { useAuthStore } from '@/frontend/store/authStore';
 import { fetchWithRetry } from '@/frontend/lib/fetchRetry';
@@ -22,6 +28,11 @@ import { CashfreeCheckout } from './CashfreeCheckout';
 
 const STEPS = ['Cart', 'Address', 'Payment'] as const;
 type Step = typeof STEPS[number];
+
+const PAYMENT_METHODS = [
+  { id: 'cod', label: 'Cash on Delivery', icon: Banknote },
+  { id: 'online', label: 'Pay Online / Prepaid (UPI, Cards, Net Banking)', icon: Smartphone },
+] as const;
 
 interface Address {
   fullName: string;
@@ -47,7 +58,7 @@ export default function CheckoutPage() {
     phone: user?.phone || '',
     line1: '', city: '', state: '', pincode: '',
   });
-  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'online'>('cod');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'cod' | 'online'>('cod');
   const [placing, setPlacing] = useState(false);
   const [pendingPayment, setPendingPayment] = useState<{ orderId: string; guestProof?: string } | null>(null);
 
@@ -55,6 +66,7 @@ export default function CheckoutPage() {
   // items left deselected stay in the cart untouched (see cartStore's deselectedIds).
   const checkoutItems = selectedItems();
   const sub = selectedSubtotal();
+  const paymentMethod = sub < COD_MINIMUM_ORDER_VALUE ? 'online' : selectedPaymentMethod;
 
   // Removes only the items that were actually purchased, leaving any deselected items
   // behind in the cart. Falls back to a full clear when every item was selected.
@@ -64,17 +76,31 @@ export default function CheckoutPage() {
   };
   const { settings } = useSiteSettings();
   // Set when the server's pricing differed from what was shown; its figures replace ours until the cart changes.
-  const [serverPricing, setServerPricing] = useState<{ subtotal: number; deliveryCharge: number; discount: number; total: number } | null>(null);
-  const shownTotals = orderTotals(sub, couponData?.discountAmount || 0, settings);
+  const [serverPricing, setServerPricing] = useState<{
+    subtotal: number;
+    deliveryCharge: number;
+    discount: number;
+    couponDiscount: number;
+    prepaidDiscount: number;
+    total: number;
+  } | null>(null);
+  const shownTotals = orderTotals(sub, couponData?.discountAmount || 0, settings, paymentMethod);
   const FREE_DELIVERY_THRESHOLD = shownTotals.freeDeliveryThreshold;
   const summarySub = serverPricing?.subtotal ?? sub;
   const delivery = serverPricing?.deliveryCharge ?? shownTotals.deliveryCharge;
-  const discount = serverPricing?.discount ?? shownTotals.discount;
+  const couponDiscount = serverPricing?.couponDiscount ?? shownTotals.couponDiscount;
+  const prepaidDiscount = serverPricing?.prepaidDiscount ?? shownTotals.prepaidDiscount;
+  const potentialPrepaidDiscount = orderTotals(
+    sub,
+    couponData?.discountAmount || 0,
+    settings,
+    'online',
+  ).prepaidDiscount;
   const total = serverPricing?.total ?? shownTotals.total;
 
   useEffect(() => {
     setServerPricing(null);
-  }, [sub, couponData]);
+  }, [sub, couponData, paymentMethod]);
 
   // The checkout page is a static asset, so placing the order may be the first request to reach a
   // cold Worker. A cheap, retried GET while the shopper fills the form warms it up first.
@@ -139,7 +165,37 @@ export default function CheckoutPage() {
     }
   };
 
+  const couponSection = (
+    <div className="p-4 bg-white border border-[var(--border)]">
+      <p className="font-cinzel text-[10px] tracking-widest uppercase text-[var(--text-mid)] mb-2 flex items-center gap-2">
+        <Tag size={12} /> Have a coupon?
+      </p>
+      <div className="flex gap-2">
+        <input
+          value={couponInput}
+          onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+          className="divine-input flex-1 text-sm"
+          placeholder="Enter coupon code"
+          aria-label="Coupon code"
+          maxLength={20}
+        />
+        <button onClick={validateCoupon} disabled={validatingCoupon} className="btn-outline-gold px-4 text-xs disabled:opacity-50">
+          {validatingCoupon ? '...' : 'Apply'}
+        </button>
+      </div>
+      {couponData && (
+        <p className="text-green-600 text-[11px] mt-2 font-lato">✓ {couponData.code}: {couponData.message}</p>
+      )}
+    </div>
+  );
+
   const placeOrder = async () => {
+    if (selectedPaymentMethod === 'cod' && sub < COD_MINIMUM_ORDER_VALUE) {
+      setSelectedPaymentMethod('online');
+      toast.error(`Cash on Delivery is available for orders of ₹${COD_MINIMUM_ORDER_VALUE} or more. Please choose prepaid payment.`);
+      return;
+    }
+
     setPlacing(true);
     try {
       const orderPayload = {
@@ -358,27 +414,7 @@ export default function CheckoutPage() {
                   </ul>
 
                   {/* Coupon */}
-                  <div className="mt-5 p-4 bg-white border border-[var(--border)]">
-                    <p className="font-cinzel text-[10px] tracking-widest uppercase text-[var(--text-mid)] mb-2 flex items-center gap-2">
-                      <Tag size={12} /> Have a coupon?
-                    </p>
-                    <div className="flex gap-2">
-                      <input
-                        value={couponInput}
-                        onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                        className="divine-input flex-1 text-sm"
-                        placeholder="Enter coupon code"
-                        aria-label="Coupon code"
-                        maxLength={20}
-                      />
-                      <button onClick={validateCoupon} disabled={validatingCoupon} className="btn-outline-gold px-4 text-xs disabled:opacity-50">
-                        {validatingCoupon ? '...' : 'Apply'}
-                      </button>
-                    </div>
-                    {couponData && (
-                      <p className="text-green-600 text-[11px] mt-2 font-lato">✓ {couponData.message}</p>
-                    )}
-                  </div>
+                  <div className="mt-5">{couponSection}</div>
 
                   <button
                     onClick={() => {
@@ -506,45 +542,69 @@ export default function CheckoutPage() {
                     </>
                   ) : (
                     <>
-                  <h2 className="font-cinzel text-base font-semibold text-deep mb-4">Payment Method</h2>
-                  <div className="bg-white border border-[var(--border)] p-6 space-y-3">
-                    {([
-                      { id: 'cod', label: 'Cash on Delivery', icon: Banknote },
-                      { id: 'online', label: 'Pay Online (UPI, Cards, Net Banking)', icon: Smartphone },
-                    ] as const).map((method) => {
-                      const Icon = method.icon;
-                      return (
-                        <label key={method.id} className={`flex items-center gap-3 p-3 border cursor-pointer transition-colors ${
-                          paymentMethod === method.id ? 'border-gold bg-gold/5' : 'border-[var(--border)] hover:border-gold/50'
-                        }`}>
-                          <input
-                            type="radio"
-                            name="payment"
-                            value={method.id}
-                            checked={paymentMethod === method.id}
-                            onChange={() => setPaymentMethod(method.id)}
-                            className="accent-gold"
-                          />
-                          <span className="text-gold-dark"><Icon size={18} aria-hidden="true" /></span>
-                          <span className="font-cinzel text-xs tracking-wider text-deep">{method.label}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
+                      <h2 className="font-cinzel text-base font-semibold text-deep mb-4">Payment Method</h2>
+                      <div className="bg-white border border-[var(--border)] p-6 space-y-3">
+                        {PAYMENT_METHODS.filter((method) => method.id !== 'cod' || sub >= COD_MINIMUM_ORDER_VALUE).map((method) => {
+                          const Icon = method.icon;
+                          return (
+                            <label key={method.id} className={`flex items-center gap-3 p-3 border cursor-pointer transition-colors ${
+                              paymentMethod === method.id ? 'border-gold bg-gold/5' : 'border-[var(--border)] hover:border-gold/50'
+                            }`}>
+                              <input
+                                type="radio"
+                                name="payment"
+                                value={method.id}
+                                checked={paymentMethod === method.id}
+                                onChange={() => setSelectedPaymentMethod(method.id)}
+                                className="accent-gold"
+                              />
+                              <span className="text-gold-dark"><Icon size={18} aria-hidden="true" /></span>
+                              <span className="font-cinzel text-xs tracking-wider text-deep">{method.label}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
 
-                  <div className="flex items-center gap-3 mt-4 p-3 bg-green-50 border border-green-200">
-                    <ShieldCheck size={16} className="text-green-600" />
-                    <span className="font-lato text-xs text-green-700">
-                      Secure checkout powered by Cashfree. Your payment is verified before your order is confirmed.
-                    </span>
-                  </div>
+                      {sub < COD_MINIMUM_ORDER_VALUE ? (
+                        <p className="mt-3 p-3 bg-gold/5 border border-gold/20 font-lato text-xs text-deep" role="status">
+                          Cash on Delivery is available for orders of ₹{COD_MINIMUM_ORDER_VALUE} or more. Choose prepaid for this order.
+                        </p>
+                      ) : (
+                        <p className="mt-3 p-3 bg-gold/5 border border-gold/20 font-lato text-xs text-deep">
+                          Cash on Delivery orders include a ₹{COD_DELIVERY_CHARGE} delivery charge.
+                        </p>
+                      )}
 
-                  <div className="flex gap-3 mt-5">
-                    <button onClick={() => setStep('Address')} className="btn-outline-gold flex-1">← Back</button>
-                    <button onClick={placeOrder} disabled={placing} className="btn-gold flex-1 disabled:opacity-60">
-                      {placing ? 'Placing Order...' : paymentMethod === 'cod' ? '🙏 Place Order' : '🔒 Pay Now'}
-                    </button>
-                  </div>
+                      <div className="flex items-center gap-3 mt-4 p-3 bg-green-50 border border-green-200">
+                        <ShieldCheck size={16} className="text-green-600" />
+                        <span className="font-lato text-xs text-green-700">
+                          {potentialPrepaidDiscount > 0
+                            ? `Pay online/prepaid and get ₹${potentialPrepaidDiscount} off.`
+                            : `Pay online/prepaid to unlock up to ₹${PREPAID_DISCOUNT} off.`}{' '}
+                          Cashfree securely offers the available UPI, card, net banking and other payment methods.
+                        </span>
+                      </div>
+
+                      <div className="mt-4 p-3 bg-gold/5 border border-gold/20 font-lato text-xs text-deep">
+                        {couponData
+                          ? `Coupon ${couponData.code} is applied — ${couponData.message}`
+                          : 'Have a coupon code? Apply it below to save on your order.'}
+                      </div>
+                      <div className="mt-2">{couponSection}</div>
+
+                      <div className="flex items-center gap-3 mt-4 p-3 bg-green-50 border border-green-200">
+                        <ShieldCheck size={16} className="text-green-600" />
+                        <span className="font-lato text-xs text-green-700">
+                          Secure checkout powered by Cashfree. Your payment is verified before your order is confirmed.
+                        </span>
+                      </div>
+
+                      <div className="flex gap-3 mt-5">
+                        <button onClick={() => setStep('Address')} className="btn-outline-gold flex-1">← Back</button>
+                        <button onClick={placeOrder} disabled={placing} className="btn-gold flex-1 disabled:opacity-60">
+                          {placing ? 'Placing Order...' : paymentMethod === 'cod' ? '🙏 Place Order' : '🔒 Continue to Cashfree'}
+                        </button>
+                      </div>
                     </>
                   )}
                 </motion.div>
@@ -560,13 +620,14 @@ export default function CheckoutPage() {
                 <div className="pb-2 space-y-1">
                   <div className="flex justify-between"><span>Subtotal</span><span>₹{summarySub.toLocaleString('en-IN')}</span></div>
                   <div className="flex justify-between"><span>Delivery</span><span className={delivery === 0 ? 'text-green-600' : ''}>{delivery === 0 ? 'FREE' : `₹${delivery}`}</span></div>
-                  {discount > 0 && <div className="flex justify-between text-green-600"><span>Discount</span><span>-₹{discount}</span></div>}
+                  {couponDiscount > 0 && <div className="flex justify-between text-green-600"><span>Coupon discount</span><span>-₹{couponDiscount}</span></div>}
+                  {prepaidDiscount > 0 && <div className="flex justify-between text-green-600"><span>Prepaid discount</span><span>-₹{prepaidDiscount}</span></div>}
                 </div>
                 <div className="pt-3 flex justify-between font-cinzel font-bold text-gold-dark">
                   <span>Total</span><span>₹{total.toLocaleString('en-IN')}</span>
                 </div>
               </div>
-              {FREE_DELIVERY_THRESHOLD > 0 && sub < FREE_DELIVERY_THRESHOLD && (
+              {paymentMethod === 'online' && FREE_DELIVERY_THRESHOLD > 0 && sub < FREE_DELIVERY_THRESHOLD && (
                 <div className="mt-4 p-3 bg-gold/5 border border-gold/20">
                   <div className="flex items-center gap-2 mb-1">
                     <Truck size={13} className="text-gold" />

@@ -33,7 +33,7 @@ export function ProductDetail({ product, settings }: ProductDetailProps) {
   const [quantity, setQuantity] = useState(1);
   const [zoomed, setZoomed] = useState(false);
 
-  const { addItem, openCart } = useCartStore();
+  const { addItem, openCart, selectOnly } = useCartStore();
 
   useEffect(() => {
     track('product_view', { productId: product._id, productName: product.name });
@@ -67,9 +67,10 @@ export function ProductDetail({ product, settings }: ProductDetailProps) {
   };
 
   const addToCart = useCallback(() => {
-    if (outOfStock) return false;
-    addItem(toCartItem(product, { size: selectedSize, color: selectedColor, quantity }));
-    return true;
+    if (outOfStock) return null;
+    const item = toCartItem(product, { size: selectedSize, color: selectedColor, quantity });
+    addItem(item);
+    return item.id;
   }, [product, selectedSize, selectedColor, quantity, addItem, outOfStock]);
 
   const handleAddToCart = () => {
@@ -79,7 +80,9 @@ export function ProductDetail({ product, settings }: ProductDetailProps) {
   };
 
   const handleBuyNow = () => {
-    if (!addToCart()) return;
+    const itemId = addToCart();
+    if (!itemId) return;
+    selectOnly(itemId);
     router.push('/checkout');
   };
 

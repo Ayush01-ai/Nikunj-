@@ -150,6 +150,14 @@ export const product = defineType({
       initialValue: 0,
       validation: (rule) => rule.required().min(0).integer(),
     }),
+    defineField({
+      name: 'weightGrams',
+      title: 'Weight (g)',
+      type: 'number',
+      group: 'basic',
+      description: 'Optional shipping weight in grams.',
+      validation: (rule) => rule.min(0).integer(),
+    }),
 
     // Legacy fields: only shown on older products that still hold a value.
     defineField({
@@ -251,6 +259,13 @@ export const product = defineType({
           fields: [
             defineField({ name: 'label', title: 'Option', type: 'string', validation: (rule) => rule.required().max(50) }),
             defineField({
+              name: 'sku',
+              title: 'Variant SKU',
+              type: 'string',
+              description: 'Optional SKU for this specific option. Leave empty to use the product SKU.',
+              validation: (rule) => rule.max(40),
+            }),
+            defineField({
               name: 'price',
               title: 'Variant Price (INR)',
               type: 'number',
@@ -281,6 +296,13 @@ export const product = defineType({
               title: 'Stock',
               type: 'number',
               description: 'Leave empty to use the product stock.',
+              validation: (rule) => rule.min(0).integer(),
+            }),
+            defineField({
+              name: 'weightGrams',
+              title: 'Variant Weight (g)',
+              type: 'number',
+              description: 'Leave empty to use the product weight.',
               validation: (rule) => rule.min(0).integer(),
             }),
           ],

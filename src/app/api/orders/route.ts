@@ -14,7 +14,12 @@ import { redactOrderForCustomer, trackingView } from '@/backend/lib/orderView';
 import { deliveryView, ensureDeliveryCode, OUT_FOR_DELIVERY } from '@/backend/lib/delivery';
 import { refundBreakdown } from '@/cms/lib/refunds';
 import { heldQuantities, holdKey, StockLockUnavailableError, withStockLock } from '@/backend/lib/stockHold';
-import { deliveryPolicy, getVariantPricing, orderTotals } from '@/cms/lib/pricing';
+import {
+  COD_MINIMUM_ORDER_VALUE,
+  deliveryPolicy,
+  getVariantPricing,
+  orderTotals,
+} from '@/cms/lib/pricing';
 import type { Coupon, ProductSize, SiteSettings } from '@/types';
 import { clientIp, createRateLimiter } from '@/backend/lib/rateLimit';
 import { createGuestPaymentProof } from '@/backend/lib/guestPaymentProof';
@@ -193,6 +198,16 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    if (paymentMethod === 'cod' && calculatedSubtotal < COD_MINIMUM_ORDER_VALUE) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Cash on Delivery is available for orders of ₹${COD_MINIMUM_ORDER_VALUE} or more. Please choose prepaid payment.`,
+        },
+        { status: 400 },
+      );
+    }
+
     // Delivery fee and coupons decide the amount charged, so read them uncached (never a stale CDN copy).
     const pricingClient = client.withConfig({ useCdn: false });
     const settings = await pricingClient.fetch<SiteSettings | null>(SITE_SETTINGS_QUERY);
@@ -229,7 +244,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const totals = orderTotals(calculatedSubtotal, calculatedDiscount, settings);
+    const totals = orderTotals(
+      calculatedSubtotal,
+      calculatedDiscount,
+      settings,
+      paymentMethod === 'cod' || paymentMethod === 'online' ? paymentMethod : undefined,
+    );
     const calculatedDeliveryCharge = totals.deliveryCharge;
     const calculatedTotal = totals.total;
 
@@ -247,6 +267,8 @@ export async function POST(req: NextRequest) {
               subtotal: totals.subtotal,
               deliveryCharge: totals.deliveryCharge,
               discount: totals.discount,
+              couponDiscount: totals.couponDiscount,
+              prepaidDiscount: totals.prepaidDiscount,
               total: totals.total,
               freeDeliveryThreshold: totals.freeDeliveryThreshold,
               deliveryChargeSetting: deliveryPolicy(settings).deliveryCharge,

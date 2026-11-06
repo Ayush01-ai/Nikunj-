@@ -23,6 +23,7 @@ interface CartState {
   openCart: () => void;
   closeCart: () => void;
   toggleSelected: (id: string) => void;
+  selectOnly: (id: string) => void;
   selectAll: () => void;
   deselectAll: () => void;
   isSelected: (id: string) => boolean;
@@ -143,6 +144,13 @@ export const useCartStore = create<CartState>()(
           } else {
             state.deselectedIds.push(id);
           }
+        });
+      },
+
+      selectOnly: (id) => {
+        set((state) => {
+          if (!state.items.some((item) => item.id === id)) return;
+          state.deselectedIds = state.items.filter((item) => item.id !== id).map((item) => item.id);
         });
       },
 

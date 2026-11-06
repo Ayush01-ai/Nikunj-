@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Heart, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -23,9 +24,10 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, index = 0, inView = true }: ProductCardProps) {
+  const router = useRouter();
   const [hovered, setHovered] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const { addItem } = useCartStore();
+  const { addItem, selectOnly } = useCartStore();
   const { toggleWishlist, isWishlisted } = useWishlistStore();
   const wishlistReady = useWishlistHydrated();
   const wished = wishlistReady && isWishlisted(product._id);
@@ -63,6 +65,19 @@ export function ProductCard({ product, index = 0, inView = true }: ProductCardPr
     }
     addItem(toCartItem(product));
     toast.success(`${product.name} added to cart 🙏`);
+  };
+
+  const handleBuyNow = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (needsChoice(product)) {
+      setModalOpen(true);
+      return;
+    }
+    const item = toCartItem(product);
+    addItem(item);
+    selectOnly(item.id);
+    router.push('/checkout');
   };
 
   const handleWishlist = (e: React.MouseEvent) => {
@@ -221,13 +236,14 @@ export function ProductCard({ product, index = 0, inView = true }: ProductCardPr
             >
               Add to Cart
             </button>
-            <Link prefetch={false}
-              href={getProductHref(product)}
-              aria-label={`View details for ${product.name}`}
+            <button
+              type="button"
+              onClick={handleBuyNow}
+              aria-label={`Buy ${product.name} now`}
               className="flex-1 bg-gold text-white font-cinzel text-[8px] sm:text-[9px] tracking-wider sm:tracking-widest uppercase py-2 text-center hover:bg-gold-dark transition-colors flex items-center justify-center cursor-pointer shadow-xs focus-visible:ring-2 focus-visible:ring-gold/50"
             >
-              View Details
-            </Link>
+              Buy Now
+            </button>
           </div>
         </div>
       </motion.div>

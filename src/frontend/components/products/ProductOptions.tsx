@@ -23,8 +23,8 @@ export function VariantSelector({
   if (!product.sizes?.length) return null;
   return (
     <fieldset className="mb-5">
-      <legend className="font-cinzel text-[10px] tracking-widest uppercase text-[var(--text-mid)] mb-2">
-        Select Option: <span className="text-gold-dark">{value}</span>
+      <legend className="font-cinzel text-xs font-semibold tracking-widest uppercase text-deep mb-2">
+        Size: <span className="text-gold-dark">{value}</span>
       </legend>
       <div className="flex flex-wrap gap-2" role="radiogroup">
         {product.sizes.map((s) => {

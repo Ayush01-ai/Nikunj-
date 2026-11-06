@@ -29,7 +29,7 @@ export function ProductQuickModal({ product, onClose }: ProductQuickModalProps) 
   const [quantity, setQuantity] = useState(1);
   const images = useMemo(() => productGallery(product), [product]);
   const [currentImg, setCurrentImgRaw] = useState(() => Math.max(0, colourImageIndex(images, product, product.colors?.[0]?.label)));
-  const { addItem } = useCartStore();
+  const { addItem, selectOnly } = useCartStore();
 
   const pricing = getVariantPricing(product, selectedSize || undefined, selectedColor || undefined);
 
@@ -54,9 +54,10 @@ export function ProductQuickModal({ product, onClose }: ProductQuickModalProps) 
   };
 
   const addToCart = useCallback(() => {
-    if (outOfStock) return false;
-    addItem(toCartItem(product, { size: selectedSize, color: selectedColor, quantity }));
-    return true;
+    if (outOfStock) return null;
+    const item = toCartItem(product, { size: selectedSize, color: selectedColor, quantity });
+    addItem(item);
+    return item.id;
   }, [product, selectedSize, selectedColor, quantity, addItem, outOfStock]);
 
   const handleAddToCart = () => {
@@ -66,7 +67,9 @@ export function ProductQuickModal({ product, onClose }: ProductQuickModalProps) 
   };
 
   const handleBuyNow = () => {
-    if (!addToCart()) return;
+    const itemId = addToCart();
+    if (!itemId) return;
+    selectOnly(itemId);
     onClose();
     router.push('/checkout');
   };

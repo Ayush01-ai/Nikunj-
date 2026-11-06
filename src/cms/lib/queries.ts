@@ -71,6 +71,7 @@ const PRODUCT_CARD_FIELDS = groq`
     null
   ),
   "stock": coalesce(stockQuantity, stock, 0),
+  weightGrams,
   inStock,
   isFeatured,
   isBestseller,
@@ -83,7 +84,7 @@ const PRODUCT_CARD_FIELDS = groq`
     [mainImage, ...coalesce(galleryImages[asset._ref != ^.mainImage.asset._ref], [])][defined(asset)]{${IMAGE_FIELDS}}
   ),
   material,
-  "sizes": sizes[defined(label)]{label, "priceModifier": coalesce(priceModifier, 0), price, mrp, stock},
+  "sizes": sizes[defined(label)]{label, sku, "priceModifier": coalesce(priceModifier, 0), price, mrp, stock, weightGrams},
   "colors": colors[defined(label)]{label, hex, price, mrp, "image": select(defined(image.asset) => image{${IMAGE_FIELDS}}, null)},
   careInstructions,
   returnPolicy,

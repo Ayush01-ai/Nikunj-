@@ -88,6 +88,9 @@ export const formatINR = (amount: number) => `₹${Math.round(amount).toLocaleSt
 /** Used only when Site Settings leaves the delivery fields empty. */
 export const DEFAULT_FREE_DELIVERY_THRESHOLD = 399;
 export const DEFAULT_DELIVERY_CHARGE = 99;
+export const COD_MINIMUM_ORDER_VALUE = 200;
+export const COD_DELIVERY_CHARGE = 60;
+export const PREPAID_DISCOUNT = 60;
 
 export type DeliverySettings = { freeDeliveryThreshold?: number | null; deliveryCharge?: number | null } | null | undefined;
 
@@ -105,12 +108,30 @@ export function deliveryPolicy(settings: DeliverySettings) {
 /**
  * Single source of truth for an order's delivery charge and payable total, used by the checkout
  * summary, the cart and the order API, so what the shopper sees is exactly what is charged.
- * Free delivery is decided on the item subtotal (before any coupon).
+ * COD uses a fixed delivery charge; prepaid orders receive a discount. Free delivery is decided
+ * on the item subtotal (before any coupon).
  */
-export function orderTotals(subtotal: number, discount: number, settings: DeliverySettings) {
+export function orderTotals(
+  subtotal: number,
+  discount: number,
+  settings: DeliverySettings,
+  paymentMethod?: 'cod' | 'online',
+) {
   const { freeDeliveryThreshold, deliveryCharge: charge } = deliveryPolicy(settings);
   const sub = Math.max(0, Math.round(subtotal));
-  const off = Math.min(Math.max(0, Math.round(discount)), sub);
-  const deliveryCharge = sub >= freeDeliveryThreshold ? 0 : charge;
-  return { subtotal: sub, discount: off, deliveryCharge, freeDeliveryThreshold, total: sub + deliveryCharge - off };
+  const couponDiscount = Math.min(Math.max(0, Math.round(discount)), sub);
+  const prepaidDiscount =
+    paymentMethod === 'online' ? Math.min(PREPAID_DISCOUNT, sub - couponDiscount) : 0;
+  const totalDiscount = couponDiscount + prepaidDiscount;
+  const deliveryCharge =
+    paymentMethod === 'cod' ? COD_DELIVERY_CHARGE : sub >= freeDeliveryThreshold ? 0 : charge;
+  return {
+    subtotal: sub,
+    discount: totalDiscount,
+    couponDiscount,
+    prepaidDiscount,
+    deliveryCharge,
+    freeDeliveryThreshold,
+    total: sub + deliveryCharge - totalDiscount,
+  };
 }

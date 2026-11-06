@@ -71,6 +71,8 @@ export interface Fragrance {
 export interface ProductSize {
   label: string;
   priceModifier: number;
+  sku?: string;
+  weightGrams?: number;
   /** Absolute selling price for this option (overrides product price + adjustment). */
   price?: number;
   /** Optional MRP for this option, shown struck-through when higher than `price`. */
@@ -110,6 +112,7 @@ export interface Product {
   sizes?: ProductSize[];
   colors?: ProductColor[];
   weight?: string;
+  weightGrams?: number;
   inStock?: boolean;
   sku?: string;
   isFeatured: boolean;
