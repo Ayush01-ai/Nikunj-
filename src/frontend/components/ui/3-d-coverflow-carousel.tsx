@@ -28,6 +28,7 @@ export function CoverFlowCarousel({
   const [isHovered, setIsHovered] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
   const router = useRouter();
   const { addItem, openCart } = useCartStore();
   const { toggleWishlist, isWishlisted } = useWishlistStore();
@@ -81,13 +82,18 @@ export function CoverFlowCarousel({
   return (
     <section
       aria-label={sectionLabel}
-      className="relative isolate min-h-[700px] overflow-hidden bg-deep py-14 text-white sm:min-h-[760px]"
+      className="relative isolate min-h-[700px] overflow-hidden bg-deep py-14 text-white sm:min-h-[760px] touch-pan-y"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onTouchStart={(event) => { touchStartX.current = event.touches[0].clientX; }}
+      onTouchStart={(event) => {
+        touchStartX.current = event.touches[0].clientX;
+        touchStartY.current = event.touches[0].clientY;
+      }}
       onTouchEnd={(event) => {
         const difference = event.changedTouches[0].clientX - touchStartX.current;
-        if (Math.abs(difference) > 45) {
+        const vertical = Math.abs(event.changedTouches[0].clientY - touchStartY.current);
+        // Ignore mostly-vertical gestures so page scrolling never flips the slide.
+        if (Math.abs(difference) > 60 && Math.abs(difference) > vertical * 1.5) {
           if (difference < 0) nextSlide(); else prevSlide();
         }
       }}

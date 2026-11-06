@@ -94,7 +94,7 @@ describe('orderTotals', () => {
     expect(deliveryPolicy({ freeDeliveryThreshold: 0, deliveryCharge: 0 })).toEqual({ freeDeliveryThreshold: 0, deliveryCharge: 0 });
   });
 
-  it('uses the fixed COD charge and applies the prepaid discount', () => {
+  it('uses the fixed COD charge and gives no prepaid discount', () => {
     const settings = { freeDeliveryThreshold: 399, deliveryCharge: 99 };
 
     expect(orderTotals(250, 0, settings, 'cod')).toMatchObject({
@@ -106,8 +106,8 @@ describe('orderTotals', () => {
     expect(orderTotals(250, 0, settings, 'online')).toMatchObject({
       deliveryCharge: 99,
       couponDiscount: 0,
-      prepaidDiscount: 60,
-      total: 289,
+      prepaidDiscount: 0,
+      total: 349,
     });
     expect(orderTotals(500, 0, settings, 'cod')).toMatchObject({
       deliveryCharge: 60,
@@ -126,19 +126,19 @@ describe('POST /api/orders — delivery charge and total', () => {
     mocks.productPrice.current = 499;
   });
 
-  it('stores the discounted online total sent to Cashfree', async () => {
+  it('stores the undiscounted online total sent to Cashfree', async () => {
     const { POST } = await import('@/app/api/orders/route');
-    const res = await POST(placeOrder({ paymentMethod: 'online', expectedTotal: 538 }));
+    const res = await POST(placeOrder({ paymentMethod: 'online', expectedTotal: 598 }));
     expect(res.status).toBe(200);
-    expect((await res.json()).total).toBe(538);
+    expect((await res.json()).total).toBe(598);
     expect(mocks.create).toHaveBeenCalledWith(
-      expect.objectContaining({ subtotal: 499, deliveryCharge: 99, discount: 60, total: 538 }),
+      expect.objectContaining({ subtotal: 499, deliveryCharge: 99, discount: 0, total: 598 }),
     );
   });
 
-  it('creates online-payment orders with the prepaid discount as pending for Cashfree checkout', async () => {
+  it('creates online-payment orders as pending for Cashfree checkout', async () => {
     const { POST } = await import('@/app/api/orders/route');
-    const res = await POST(placeOrder({ paymentMethod: 'online', expectedTotal: 538 }));
+    const res = await POST(placeOrder({ paymentMethod: 'online', expectedTotal: 598 }));
     const json = await res.json();
 
     expect(res.status).toBe(200);
@@ -148,8 +148,8 @@ describe('POST /api/orders — delivery charge and total', () => {
         paymentMethod: 'online',
         paymentStatus: 'pending',
         status: 'pending',
-        discount: 60,
-        total: 538,
+        discount: 0,
+        total: 598,
       }),
     );
     expect(mocks.sanitySync.pushAwaiting).not.toHaveBeenCalled();
@@ -181,7 +181,7 @@ describe('POST /api/orders — delivery charge and total', () => {
   it('returns a retryable error instead of creating an order when stock locking fails', async () => {
     mocks.withStockLock.mockImplementation(() => Promise.reject(new mocks.StockLockUnavailableError()));
     const { POST } = await import('@/app/api/orders/route');
-    const res = await POST(placeOrder({ paymentMethod: 'online', expectedTotal: 538 }));
+    const res = await POST(placeOrder({ paymentMethod: 'online', expectedTotal: 598 }));
 
     expect(res.status).toBe(503);
     expect((await res.json()).error).toMatch(/Please try again/);

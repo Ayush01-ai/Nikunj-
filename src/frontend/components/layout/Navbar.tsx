@@ -10,7 +10,6 @@ import { useAuthStore } from '@/frontend/store/authStore';
 import { useSiteSettings } from '@/frontend/providers/Providers';
 import { CartSidebar } from '@/frontend/components/cart/CartSidebar';
 import { SearchModal } from '@/frontend/components/ui/SearchModal';
-import { ShopSuggestions } from '@/frontend/components/layout/ShopSuggestions';
 import { NikunjSakhiLogo } from '@/frontend/components/ui/NikunjSakhiLogo';
 import type { SiteSettings } from '@/types';
 
@@ -285,38 +284,20 @@ export function Navbar({ settings }: NavbarProps) {
               onMouseLeave={scheduleCloseShop}
               className="hidden lg:block absolute left-0 right-0 top-full bg-cream border-b border-[var(--border)] shadow-gold-sm"
             >
-              <div className="max-w-7xl mx-auto px-8 py-8 grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-8">
+              <div className="max-w-7xl mx-auto px-8 py-3 flex items-center gap-x-6 overflow-x-auto whitespace-nowrap">
+                <Link prefetch={false} href="/collections" onClick={() => setShopOpen(false)} className="font-cinzel text-[11px] font-semibold tracking-widest uppercase text-gold-dark hover:text-gold transition-colors">
+                  All Products
+                </Link>
                 {menu.map((cat) => (
-                  <div key={cat._id}>
-                    <Link prefetch={false}
-                      href={`/collections/${cat.slug}`}
-                      className="font-cinzel text-xs font-semibold tracking-widest uppercase text-gold-dark hover:text-gold transition-colors"
-                    >
-                      {cat.name}
-                    </Link>
-                    <ul className="mt-3 space-y-2">
-                      {cat.types.map((type) => (
-                        <li key={type._id}>
-                          <Link prefetch={false}
-                            href={`/collections/${cat.slug}/${type.slug}`}
-                            className="font-crimson text-[15px] text-[var(--text-mid)] hover:text-gold transition-colors"
-                          >
-                            {type.name}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-                <ShopSuggestions variant="desktop" onNavigate={() => setShopOpen(false)} />
-                <div className="flex flex-col justify-between border-l border-[var(--border)] pl-8">
-                  <p className="font-crimson italic text-sm text-[var(--text-mid)]">
-                    Handcrafted shringar and pooja essentials for your beloved deity.
-                  </p>
-                  <Link prefetch={false} href="/collections" className="btn-outline-gold self-start mt-4">
-                    Shop Products
+                  <Link prefetch={false}
+                    key={cat._id}
+                    href={`/collections/${cat.slug}`}
+                    onClick={() => setShopOpen(false)}
+                    className="font-crimson text-[15px] text-[var(--text-mid)] hover:text-gold transition-colors"
+                  >
+                    {cat.name}
                   </Link>
-                </div>
+                ))}
               </div>
             </motion.div>
           )}
@@ -355,34 +336,20 @@ export function Navbar({ settings }: NavbarProps) {
                   Shop <ChevronDown size={18} className={`transition-transform ${mobileShopOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
                 </button>
                 {mobileShopOpen && (
-                  <div className="mt-4 space-y-4 text-left border-y border-[var(--border)] py-4">
-                    <Link prefetch={false} href="/collections" onClick={() => setMobileOpen(false)} className="block font-cinzel text-xs tracking-widest uppercase text-gold-dark">
-                      Shop Products
+                  <div className="mt-4 flex flex-wrap gap-2 border-y border-[var(--border)] py-4">
+                    <Link prefetch={false} href="/collections" onClick={() => setMobileOpen(false)} className="font-crimson text-sm text-gold-dark border border-gold px-3 py-1">
+                      All Products
                     </Link>
                     {menu.map((cat) => (
-                      <div key={cat._id}>
-                        <Link prefetch={false}
-                          href={`/collections/${cat.slug}`}
-                          onClick={() => setMobileOpen(false)}
-                          className="block font-cinzel text-xs tracking-widest uppercase text-gold-dark"
-                        >
-                          {cat.name}
-                        </Link>
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          {cat.types.map((type) => (
-                            <Link prefetch={false}
-                              key={type._id}
-                              href={`/collections/${cat.slug}/${type.slug}`}
-                              onClick={() => setMobileOpen(false)}
-                              className="font-crimson text-sm text-[var(--text-mid)] border border-[var(--border)] px-3 py-1 hover:border-gold hover:text-gold"
-                            >
-                              {type.name}
-                            </Link>
-                          ))}
-                        </div>
-                      </div>
+                      <Link prefetch={false}
+                        key={cat._id}
+                        href={`/collections/${cat.slug}`}
+                        onClick={() => setMobileOpen(false)}
+                        className="font-crimson text-sm text-[var(--text-mid)] border border-[var(--border)] px-3 py-1 hover:border-gold hover:text-gold"
+                      >
+                        {cat.name}
+                      </Link>
                     ))}
-                    <ShopSuggestions variant="mobile" count={4} onNavigate={() => setMobileOpen(false)} />
                   </div>
                 )}
               </div>

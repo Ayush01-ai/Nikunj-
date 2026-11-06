@@ -90,7 +90,7 @@ export const DEFAULT_FREE_DELIVERY_THRESHOLD = 399;
 export const DEFAULT_DELIVERY_CHARGE = 99;
 export const COD_MINIMUM_ORDER_VALUE = 200;
 export const COD_DELIVERY_CHARGE = 60;
-export const PREPAID_DISCOUNT = 60;
+export const PREPAID_DISCOUNT = 0;
 
 export type DeliverySettings = { freeDeliveryThreshold?: number | null; deliveryCharge?: number | null } | null | undefined;
 

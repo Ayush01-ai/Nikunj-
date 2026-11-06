@@ -67,7 +67,7 @@ export function CartSidebar() {
 
       {/* Sidebar */}
       <motion.div
-        className="fixed top-0 right-0 h-screen w-full max-w-md bg-white z-[301] flex flex-col shadow-2xl"
+        className="fixed top-0 right-0 h-[100dvh] w-full max-w-md bg-white z-[301] flex flex-col shadow-2xl"
         initial={{ x: '100%' }}
         animate={{ x: safeIsOpen ? 0 : '100%' }}
         transition={{ type: 'tween', duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
@@ -246,7 +246,7 @@ export function CartSidebar() {
 
         {/* Footer */}
         {safeItems.length > 0 && (
-          <div className="flex-shrink-0 px-6 py-5 border-t border-[var(--border)] bg-cream space-y-3">
+          <div className="flex-shrink-0 px-6 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] border-t border-[var(--border)] bg-cream space-y-3">
             {/* Summary rows */}
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs">
@@ -258,7 +258,7 @@ export function CartSidebar() {
               <div className="flex justify-between text-xs">
                 <span className="text-[var(--text-mid)] font-lato">Delivery</span>
                 <span className="font-cinzel text-deep">
-                  {deliveryCharge === 0 ? '🎉 FREE' : `₹${deliveryCharge}`}
+                  {deliveryCharge === 0 ? '🎉 FREE' : `+₹${deliveryCharge}`}
                 </span>
               </div>
             </div>

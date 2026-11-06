@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
+import Script from 'next/script';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Minus, Plus, Trash2, Tag, ShieldCheck, Truck, Banknote, Smartphone } from 'lucide-react';
 import { useCartStore } from '@/frontend/store/cartStore';
@@ -12,7 +13,6 @@ import {
   COD_MINIMUM_ORDER_VALUE,
   getVariantPricing,
   orderTotals,
-  PREPAID_DISCOUNT,
 } from '@/cms/lib/pricing';
 import { useSiteSettings } from '@/frontend/providers/Providers';
 import { useAuthStore } from '@/frontend/store/authStore';
@@ -46,7 +46,7 @@ interface Address {
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, updateQuantity, updateItemOptions, removeItem, removeItems, clearCart, selectedItems, selectedSubtotal } = useCartStore();
+  const { items, updateQuantity, updateItemOptions, removeItem, removeItems, clearCart, selectedItems, selectedSubtotal, isSelected, toggleSelected } = useCartStore();
   const { user } = useAuthStore();
 
   const [step, setStep] = useState<Step>('Cart');
@@ -92,12 +92,6 @@ export default function CheckoutPage() {
   const delivery = serverPricing?.deliveryCharge ?? shownTotals.deliveryCharge;
   const couponDiscount = serverPricing?.couponDiscount ?? shownTotals.couponDiscount;
   const prepaidDiscount = serverPricing?.prepaidDiscount ?? shownTotals.prepaidDiscount;
-  const potentialPrepaidDiscount = orderTotals(
-    sub,
-    couponData?.discountAmount || 0,
-    settings,
-    'online',
-  ).prepaidDiscount;
   const total = serverPricing?.total ?? shownTotals.total;
 
   useEffect(() => {
@@ -274,7 +268,7 @@ export default function CheckoutPage() {
     );
   }
 
-  if ((items.length === 0 || checkoutItems.length === 0) && step === 'Cart') {
+  if (items.length === 0 && step === 'Cart') {
     return (
       <>
         <Navbar settings={null} />
@@ -293,6 +287,7 @@ export default function CheckoutPage() {
 
   return (
     <>
+      <Script src="https://sdk.cashfree.com/js/v3/cashfree.js" strategy="afterInteractive" />
       <Navbar settings={null} />
       <div className="min-h-screen bg-cream">
       <div className="max-w-6xl mx-auto px-4 py-8">
@@ -331,11 +326,19 @@ export default function CheckoutPage() {
                 <motion.div key="cart" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                   <h2 className="font-cinzel text-base font-semibold text-deep mb-4">Your Items</h2>
                   <ul className="space-y-3" aria-label="Items in your cart">
-                    {checkoutItems.map((item: CartItem) => {
+                    {items.map((item: CartItem) => {
                       const href = item.href || `/products/${encodeURIComponent(item.slug)}`;
                       const meta = [item.category, item.productType, item.deity].filter(Boolean).join(' › ');
+                      const selected = isSelected(item.id);
                       return (
-                      <li key={item.id} className="bg-white border border-[var(--border)] p-4 flex gap-4 focus-within:border-gold-dark">
+                      <li key={item.id} className={`bg-white border border-[var(--border)] p-4 flex gap-3 focus-within:border-gold-dark ${selected ? '' : 'opacity-60'}`}>
+                        <input
+                          type="checkbox"
+                          checked={selected}
+                          onChange={() => toggleSelected(item.id)}
+                          aria-label={`Include ${item.name} in this order`}
+                          className="mt-1 h-5 w-5 flex-shrink-0 accent-[#B8860B] cursor-pointer"
+                        />
                         {/* Image */}
                         <Link prefetch={false}
                           href={href}
@@ -451,6 +454,10 @@ export default function CheckoutPage() {
 
                   <button
                     onClick={() => {
+                      if (checkoutItems.length === 0) {
+                        toast.error('Select at least one item to continue');
+                        return;
+                      }
                       const missing = checkoutItems.find(
                         (i) => (i.options?.length && !i.selectedSize) || (i.colors?.length && !i.selectedColor),
                       );
@@ -582,21 +589,18 @@ export default function CheckoutPage() {
 
                       {sub < COD_MINIMUM_ORDER_VALUE ? (
                         <p className="mt-3 p-3 bg-gold/5 border border-gold/20 font-lato text-xs text-deep" role="status">
-                          Cash on Delivery is available for orders of ₹{COD_MINIMUM_ORDER_VALUE} or more. Choose prepaid for this order.
+                          Cash on Delivery is available for orders of ₹{COD_MINIMUM_ORDER_VALUE} or more.
                         </p>
                       ) : (
                         <p className="mt-3 p-3 bg-gold/5 border border-gold/20 font-lato text-xs text-deep">
-                          Cash on Delivery orders include a ₹{COD_DELIVERY_CHARGE} delivery charge.
+                          Cash on Delivery orders include a ₹{COD_DELIVERY_CHARGE} delivery charge, added in the Cashfree payment window.
                         </p>
                       )}
 
                       <div className="flex items-center gap-3 mt-4 p-3 bg-green-50 border border-green-200">
                         <ShieldCheck size={16} className="text-green-600" />
                         <span className="font-lato text-xs text-green-700">
-                          {potentialPrepaidDiscount > 0
-                            ? `Pay online/prepaid and get ₹${potentialPrepaidDiscount} off.`
-                            : `Pay online/prepaid to unlock up to ₹${PREPAID_DISCOUNT} off.`}{' '}
-                          Cashfree securely offers the available UPI, card, net banking and other payment methods.
+                          Cashfree securely offers UPI, card, net banking, Cash on Delivery and other payment methods.
                         </span>
                       </div>
 
@@ -652,7 +656,7 @@ export default function CheckoutPage() {
               <div className="space-y-2 text-sm font-lato text-[var(--text-mid)] divide-y divide-[var(--border)]">
                 <div className="pb-2 space-y-1">
                   <div className="flex justify-between"><span>Subtotal</span><span>₹{summarySub.toLocaleString('en-IN')}</span></div>
-                  <div className="flex justify-between"><span>Delivery</span><span className={delivery === 0 ? 'text-green-600' : ''}>{delivery === 0 ? 'FREE' : `₹${delivery}`}</span></div>
+                  <div className="flex justify-between"><span>Delivery</span><span className={delivery === 0 ? 'text-green-600' : ''}>{delivery === 0 ? 'FREE' : `+₹${delivery}`}</span></div>
                   {couponDiscount > 0 && <div className="flex justify-between text-green-600"><span>Coupon discount</span><span>-₹{couponDiscount}</span></div>}
                   {prepaidDiscount > 0 && <div className="flex justify-between text-green-600"><span>Prepaid discount</span><span>-₹{prepaidDiscount}</span></div>}
                 </div>

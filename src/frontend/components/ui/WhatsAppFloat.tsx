@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { getWhatsAppHref } from '@/frontend/lib/whatsapp';
+import { useCartStore } from '@/frontend/store/cartStore';
 
 interface WhatsAppFloatProps {
   number: string;
@@ -10,7 +11,9 @@ interface WhatsAppFloatProps {
 }
 
 export function WhatsAppFloat({ number, message = 'Namaste! 🙏 I would like to know more.' }: WhatsAppFloatProps) {
+  const cartOpen = useCartStore((s) => s.isOpen);
   const href = getWhatsAppHref(number, message);
+  if (cartOpen) return null;
 
   return (
     <motion.a
