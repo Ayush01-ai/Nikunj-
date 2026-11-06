@@ -7,6 +7,7 @@ export function ConfirmationPayment({ orderId, isGuest }: { orderId: string; isG
     <CashfreeCheckout
       orderId={orderId}
       isGuest={isGuest}
+      autoStart={false}
       onComplete={() => window.location.reload()}
     />
   );

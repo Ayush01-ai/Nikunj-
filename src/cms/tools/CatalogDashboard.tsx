@@ -7,7 +7,7 @@ import { useToast } from '@sanity/ui/toast';
 
 interface CatalogVariant {
   _key?: string;
-  label: string;
+  label?: string;
   sku?: string;
   price?: number;
   priceModifier?: number;
@@ -17,9 +17,10 @@ interface CatalogVariant {
 
 interface CatalogProduct {
   _id: string;
+  _originalId?: string;
   name: string;
   sku?: string;
-  price: number;
+  price?: number;
   salePrice?: number;
   stockQuantity?: number;
   stock?: number;
@@ -29,7 +30,7 @@ interface CatalogProduct {
   weightGrams?: number;
   category?: string;
   imageUrl?: string;
-  sizes?: CatalogVariant[];
+  sizes?: (CatalogVariant | undefined)[];
 }
 
 interface CatalogRow {
@@ -39,13 +40,14 @@ interface CatalogRow {
   name: string;
   label?: string;
   sku?: string;
-  price: number;
+  price: number | undefined;
   stock: number;
   weightGrams?: number;
 }
 
 const CATALOG_QUERY = `*[_type == "product"] | order(name asc) {
   _id,
+  _originalId,
   name,
   sku,
   price,
@@ -61,9 +63,20 @@ const CATALOG_QUERY = `*[_type == "product"] | order(name asc) {
   "sizes": sizes[]{_key, label, sku, price, priceModifier, stock, weightGrams}
 }`;
 
+function normalizeGroqNulls<T>(value: T): T {
+  if (value === null) return undefined as T;
+  if (Array.isArray(value)) return value.map(normalizeGroqNulls) as T;
+  if (typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, nestedValue]) => [key, normalizeGroqNulls(nestedValue)]),
+    ) as T;
+  }
+  return value;
+}
+
 function flattenProducts(products: CatalogProduct[]): CatalogRow[] {
   return products.flatMap((product) => {
-    const variants = product.sizes?.filter((variant) => variant.label) ?? [];
+    const variants = product.sizes?.filter((variant): variant is CatalogVariant => Boolean(variant?.label)) ?? [];
     if (variants.length === 0) {
       return [{
         product,
@@ -76,6 +89,7 @@ function flattenProducts(products: CatalogProduct[]): CatalogRow[] {
       }];
     }
 
+    const basePrice = product.salePrice ?? product.price;
     return variants.map((variant, index) => ({
       product,
       variant,
@@ -83,7 +97,7 @@ function flattenProducts(products: CatalogProduct[]): CatalogRow[] {
       name: product.name,
       label: variant.label,
       sku: variant.sku ?? product.sku,
-      price: variant.price ?? (product.salePrice ?? product.price) + (variant.priceModifier ?? 0),
+      price: variant.price ?? (basePrice === undefined ? undefined : basePrice + (variant.priceModifier ?? 0)),
       stock: variant.stock ?? product.stockQuantity ?? product.stock ?? 0,
       weightGrams: variant.weightGrams ?? product.weightGrams,
     }));
@@ -226,7 +240,7 @@ export function CatalogDashboard() {
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await client.fetch<CatalogProduct[]>(CATALOG_QUERY);
+      const result = normalizeGroqNulls(await client.fetch<CatalogProduct[]>(CATALOG_QUERY));
       setProducts(result);
     } catch (error) {
       toast.push({
@@ -262,7 +276,7 @@ export function CatalogDashboard() {
         ? row.product.stockField
         : field;
     try {
-      let patch = client.patch(row.product._id);
+      let patch = client.patch(row.product._originalId ?? row.product._id);
       let productUpdate: Partial<CatalogProduct> | undefined;
       if (value === undefined || value === '') {
         patch = patch.unset([path]);
@@ -273,7 +287,7 @@ export function CatalogDashboard() {
           else if (field === 'stock') productUpdate = { stockQuantity: undefined };
         }
       } else if (field === 'price' && !row.variant && typeof value === 'number' && row.product.salePrice !== undefined) {
-        if (value < row.product.price) {
+        if (row.product.price !== undefined && value < row.product.price) {
           await patch.set({ salePrice: value }).commit();
           productUpdate = { salePrice: value };
         } else {
@@ -307,6 +321,7 @@ export function CatalogDashboard() {
           return {
             ...product,
             sizes: product.sizes?.map((variant) => {
+              if (!variant) return undefined;
               if (row.variant?._key ? variant._key !== row.variant._key : variant.label !== row.variant?.label) return variant;
               if (field === 'sku') return { ...variant, sku: typeof nextValue === 'string' ? nextValue : undefined };
               if (field === 'price') return { ...variant, price: typeof nextValue === 'number' ? nextValue : undefined };
@@ -377,7 +392,7 @@ export function CatalogDashboard() {
             ) : rows.length === 0 ? (
               <tr><td colSpan={6} style={{ padding: 28, textAlign: 'center' }}><Text muted>{search ? 'No matching products.' : 'No products found.'}</Text></td></tr>
             ) : rows.map((row) => {
-              const isDraft = row.product._id.startsWith('drafts.');
+              const isDraft = row.product._originalId !== undefined;
               const status = isDraft ? 'Draft' : row.product.isActive === false ? 'Inactive' : 'Live';
               const statusTone = isDraft ? 'primary' : row.product.isActive === false ? 'critical' : 'positive';
               return (

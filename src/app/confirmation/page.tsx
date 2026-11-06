@@ -2,7 +2,7 @@ import React, { Suspense } from 'react';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { CheckCircle, Package, Home, MessageCircle, Search } from 'lucide-react';
+import { CheckCircle, Clock, Package, Home, MessageCircle, Search } from 'lucide-react';
 import { client } from '@/cms/lib/client';
 import { SITE_SETTINGS_QUERY } from '@/cms/lib/queries';
 import { orderPlacedMessage } from '@/cms/lib/orderMessages';
@@ -114,20 +114,26 @@ async function ConfirmationContent({ orderId }: { orderId: string }) {
             ? 'Paid online'
             : order.paymentStatus === 'failed'
               ? 'Payment failed'
-              : 'Awaiting payment';
+              : 'Payment pending';
 
   return (
     <div className="min-h-screen bg-cream flex items-center justify-center px-4 pt-10 pb-12">
       <div className="max-w-lg w-full text-center">
         {/* Success icon */}
-        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <CheckCircle size={40} className="text-green-600" aria-hidden="true" />
+        <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${awaitingPayment ? 'bg-amber-100' : 'bg-green-100'}`}>
+          {awaitingPayment ? (
+            <Clock size={40} className="text-amber-600" aria-hidden="true" />
+          ) : (
+            <CheckCircle size={40} className="text-green-600" aria-hidden="true" />
+          )}
         </div>
 
         <h1 className="font-cinzel text-2xl font-semibold text-deep mb-2">
-          {closedOrder ? `Order ${ORDER_STATUS_LABEL[order!.status] ?? order!.status}` : awaitingPayment ? 'Order Received 🙏' : 'Order Confirmed! 🙏'}
+          {closedOrder ? `Order ${ORDER_STATUS_LABEL[order!.status] ?? order!.status}` : awaitingPayment ? 'Payment Pending' : 'Order Confirmed! 🙏'}
         </h1>
-        <p className="font-crimson italic text-[var(--text-mid)] mb-1">Thank you for your divine purchase</p>
+        <p className="font-crimson italic text-[var(--text-mid)] mb-1">
+          {awaitingPayment && !closedOrder ? 'Your order will be confirmed once the payment is completed' : 'Thank you for your divine purchase'}
+        </p>
         <p className="font-lato text-xs text-[var(--text-mid)]">Your order ID</p>
         <p className="font-cinzel text-lg text-gold-dark font-semibold mb-6 select-all">{orderId}</p>
 

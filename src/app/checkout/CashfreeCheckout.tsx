@@ -12,6 +12,7 @@ interface CashfreeCheckoutProps {
   initialGuestProof?: string;
   onComplete: () => void;
   onCancel?: () => void;
+  autoStart?: boolean;
 }
 
 interface CashfreeInstance {
@@ -31,6 +32,7 @@ export function CashfreeCheckout({
   initialGuestProof,
   onComplete,
   onCancel,
+  autoStart = true,
 }: CashfreeCheckoutProps) {
   const [scriptReady, setScriptReady] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -56,19 +58,10 @@ export function CashfreeCheckout({
 
       const environment = createResult.data.environment === 'production' ? 'production' : 'sandbox';
       const cashfree = window.Cashfree({ mode: environment });
-      const checkoutResult = await cashfree.checkout({
+      await cashfree.checkout({
         paymentSessionId: createResult.data.paymentSessionId,
         redirectTarget: '_modal',
       });
-      if (
-        typeof checkoutResult === 'object' &&
-        checkoutResult !== null &&
-        'error' in checkoutResult &&
-        checkoutResult.error
-      ) {
-        toast.error('Cashfree checkout was closed or could not complete. You can reopen it to try again.');
-        return;
-      }
 
       const verifyResponse = await fetch('/api/payment/cashfree/verify', {
         method: 'POST',
@@ -95,7 +88,7 @@ export function CashfreeCheckout({
   const autoStarted = useRef(false);
   const canStart = scriptReady && (!isGuest || Boolean(guestProof));
   useEffect(() => {
-    if (canStart && !autoStarted.current) {
+    if (autoStart && canStart && !autoStarted.current) {
       autoStarted.current = true;
       void startPayment();
     }
@@ -112,7 +105,9 @@ export function CashfreeCheckout({
       />
       <div className="space-y-4">
         <p className="text-sm text-[var(--text-mid)]">
-          Opening secure payment… If it does not open, use the button below.
+          {autoStart
+            ? 'Opening secure payment… If it does not open, use the button below.'
+            : 'Your payment has not been completed. Pay now to confirm your order.'}
         </p>
         {isGuest && !guestProof && (
           <GuestOtpGate

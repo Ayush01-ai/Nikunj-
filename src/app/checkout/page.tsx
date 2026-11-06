@@ -58,9 +58,11 @@ export default function CheckoutPage() {
     phone: user?.phone || '',
     line1: '', city: '', state: '', pincode: '',
   });
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'cod' | 'online'>('cod');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'cod' | 'online'>('online');
   const [placing, setPlacing] = useState(false);
-  const [pendingPayment, setPendingPayment] = useState<{ orderId: string; guestProof?: string } | null>(null);
+  const [pendingPayment, setPendingPayment] = useState<{ orderId: string; guestProof?: string; signature: string } | null>(null);
+  const [onlineFailed, setOnlineFailed] = useState(false);
+  const placingRef = useRef(false);
 
   // Checkout only ever acts on the items the customer selected in the cart/sidebar — any
   // items left deselected stay in the cart untouched (see cartStore's deselectedIds).
@@ -189,12 +191,21 @@ export default function CheckoutPage() {
     </div>
   );
 
-  const placeOrder = async () => {
-    if (selectedPaymentMethod === 'cod' && sub < COD_MINIMUM_ORDER_VALUE) {
-      setSelectedPaymentMethod('online');
+  const orderSignature = JSON.stringify([
+    checkoutItems.map((item: CartItem) => [item.productId, item.quantity, item.selectedSize, item.selectedColor]),
+    address,
+    couponData?.code ?? '',
+  ]);
+
+  const placeOrder = async (method: 'cod' | 'online') => {
+    if (method === 'cod' && sub < COD_MINIMUM_ORDER_VALUE) {
       toast.error(`Cash on Delivery is available for orders of ₹${COD_MINIMUM_ORDER_VALUE} or more. Please choose prepaid payment.`);
       return;
     }
+    if (placingRef.current) return;
+    placingRef.current = true;
+    const paymentMethod = method;
+    const expectedTotal = orderTotals(sub, couponData?.discountAmount || 0, settings, method).total;
 
     setPlacing(true);
     try {
@@ -210,7 +221,7 @@ export default function CheckoutPage() {
         shippingAddress: address,
         couponCode: couponData?.code,
         paymentMethod,
-        expectedTotal: total,
+        expectedTotal,
       };
 
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -231,14 +242,32 @@ export default function CheckoutPage() {
         router.push(`/confirmation?orderId=${encodeURIComponent(json.orderId)}`);
         setPlacing(false);
       } else {
-        setPendingPayment({ orderId: json.orderId, guestProof: json.guestProof });
+        setPendingPayment({ orderId: json.orderId, guestProof: json.guestProof, signature: orderSignature });
         setPlacing(false);
       }
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to place order');
       setPlacing(false);
+      setOnlineFailed(true);
+    } finally {
+      placingRef.current = false;
     }
   };
+
+  // Online payment is the primary path: entering the Payment step creates the order and
+  // opens Cashfree straight away. A changed cart/address/coupon invalidates the pending order.
+  useEffect(() => {
+    if (pendingPayment && pendingPayment.signature !== orderSignature) setPendingPayment(null);
+  }, [orderSignature, pendingPayment]);
+  useEffect(() => {
+    setOnlineFailed(false);
+  }, [orderSignature]);
+  useEffect(() => {
+    if (step === 'Payment' && !pendingPayment && !onlineFailed && !placingRef.current && checkoutItems.length > 0) {
+      void placeOrder('online');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, pendingPayment, onlineFailed, orderSignature]);
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -538,50 +567,8 @@ export default function CheckoutPage() {
               {/* ── STEP 3: Payment ── */}
               {step === 'Payment' && (
                 <motion.div key="payment" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                  {pendingPayment ? (
                     <>
-                      <h2 className="font-cinzel text-base font-semibold text-deep mb-4">Complete Your Payment</h2>
-                      <div className="bg-white border border-[var(--border)] p-6">
-                        <CashfreeCheckout
-                          orderId={pendingPayment.orderId}
-                          phone={address.phone}
-                          isGuest={!user}
-                          initialGuestProof={pendingPayment.guestProof}
-                          onComplete={() => {
-                            clearSelectedFromCart();
-                            router.push(`/confirmation?orderId=${encodeURIComponent(pendingPayment.orderId)}`);
-                          }}
-                          onCancel={() => {
-                            clearSelectedFromCart();
-                            router.push(`/confirmation?orderId=${encodeURIComponent(pendingPayment.orderId)}`);
-                          }}
-                        />
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <h2 className="font-cinzel text-base font-semibold text-deep mb-4">Payment Method</h2>
-                      <div className="bg-white border border-[var(--border)] p-6 space-y-3">
-                        {PAYMENT_METHODS.filter((method) => method.id !== 'cod' || sub >= COD_MINIMUM_ORDER_VALUE).map((method) => {
-                          const Icon = method.icon;
-                          return (
-                            <label key={method.id} className={`flex items-center gap-3 p-3 border cursor-pointer transition-colors ${
-                              paymentMethod === method.id ? 'border-gold bg-gold/5' : 'border-[var(--border)] hover:border-gold/50'
-                            }`}>
-                              <input
-                                type="radio"
-                                name="payment"
-                                value={method.id}
-                                checked={paymentMethod === method.id}
-                                onChange={() => setSelectedPaymentMethod(method.id)}
-                                className="accent-gold"
-                              />
-                              <span className="text-gold-dark"><Icon size={18} aria-hidden="true" /></span>
-                              <span className="font-cinzel text-xs tracking-wider text-deep">{method.label}</span>
-                            </label>
-                          );
-                        })}
-                      </div>
+                      <h2 className="font-cinzel text-base font-semibold text-deep mb-4">Payment</h2>
 
                       {sub < COD_MINIMUM_ORDER_VALUE ? (
                         <p className="mt-3 p-3 bg-gold/5 border border-gold/20 font-lato text-xs text-deep" role="status">
@@ -617,14 +604,50 @@ export default function CheckoutPage() {
                         </span>
                       </div>
 
+                      <div className="mt-5 bg-white border border-[var(--border)] p-6">
+                        <h3 className="font-cinzel text-sm font-semibold text-deep mb-3">Pay Online (UPI, Cards, Net Banking)</h3>
+                        {pendingPayment ? (
+                          <CashfreeCheckout
+                            key={pendingPayment.orderId}
+                            orderId={pendingPayment.orderId}
+                            phone={address.phone}
+                            isGuest={!user}
+                            initialGuestProof={pendingPayment.guestProof}
+                            onComplete={() => {
+                              clearSelectedFromCart();
+                              router.push(`/confirmation?orderId=${encodeURIComponent(pendingPayment.orderId)}`);
+                            }}
+                          />
+                        ) : onlineFailed ? (
+                          <button type="button" onClick={() => setOnlineFailed(false)} className="btn-gold w-full">
+                            Retry online payment
+                          </button>
+                        ) : (
+                          <p className="font-lato text-sm text-[var(--text-mid)]">Opening secure payment…</p>
+                        )}
+                      </div>
+
+                      {sub >= COD_MINIMUM_ORDER_VALUE && (
+                        <div className="mt-4 bg-white border border-[var(--border)] p-6">
+                          <h3 className="font-cinzel text-sm font-semibold text-deep mb-1">Or pay Cash on Delivery</h3>
+                          <p className="font-lato text-xs text-[var(--text-mid)] mb-3">
+                            Total ₹{orderTotals(sub, couponData?.discountAmount || 0, settings, 'cod').total.toLocaleString('en-IN')} (includes ₹{COD_DELIVERY_CHARGE} delivery charge).
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => placeOrder('cod')}
+                            disabled={placing}
+                            className="btn-outline-gold w-full disabled:opacity-60"
+                          >
+                            🙏 Place COD Order
+                          </button>
+                        </div>
+                      )}
+
                       <div className="flex gap-3 mt-5">
                         <button onClick={() => setStep('Address')} className="btn-outline-gold flex-1">← Back</button>
-                        <button onClick={placeOrder} disabled={placing} className="btn-gold flex-1 disabled:opacity-60">
-                          {placing ? 'Placing Order...' : paymentMethod === 'cod' ? '🙏 Place Order' : '🔒 Continue to Cashfree'}
-                        </button>
                       </div>
                     </>
-                  )}
                 </motion.div>
               )}
             </AnimatePresence>
