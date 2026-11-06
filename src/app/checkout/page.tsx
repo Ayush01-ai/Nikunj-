@@ -61,7 +61,7 @@ export default function CheckoutPage() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'cod' | 'online'>('online');
   const [placing, setPlacing] = useState(false);
   const [pendingPayment, setPendingPayment] = useState<{ orderId: string; guestProof?: string; signature: string } | null>(null);
-  const [onlineFailed, setOnlineFailed] = useState(false);
+
   const placingRef = useRef(false);
 
   // Checkout only ever acts on the items the customer selected in the cart/sidebar — any
@@ -244,11 +244,12 @@ export default function CheckoutPage() {
       } else {
         setPendingPayment({ orderId: json.orderId, guestProof: json.guestProof, signature: orderSignature });
         setPlacing(false);
+        // Guests who still need phone verification get the visible payment step instead.
+        if (!user && !json.guestProof) setStep('Payment');
       }
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to place order');
       setPlacing(false);
-      setOnlineFailed(true);
     } finally {
       placingRef.current = false;
     }
@@ -259,15 +260,6 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (pendingPayment && pendingPayment.signature !== orderSignature) setPendingPayment(null);
   }, [orderSignature, pendingPayment]);
-  useEffect(() => {
-    setOnlineFailed(false);
-  }, [orderSignature]);
-  useEffect(() => {
-    if (step === 'Payment' && !pendingPayment && !onlineFailed && !placingRef.current && checkoutItems.length > 0) {
-      void placeOrder('online');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step, pendingPayment, onlineFailed, orderSignature]);
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -554,13 +546,31 @@ export default function CheckoutPage() {
                         }
                         if (!/^\d{6}$/.test(pincode)) return toast.error('Invalid pincode');
                         if (!/^[6-9]\d{9}$/.test(phone)) return toast.error('Enter a valid 10-digit mobile number');
-                        setStep('Payment');
+                        setPendingPayment(null);
+                        void placeOrder('online');
                       }}
-                      className="btn-gold flex-1"
+                      disabled={placing}
+                      className="btn-gold flex-1 disabled:opacity-60"
                     >
-                      Continue to Payment →
+                      {placing || pendingPayment ? 'Opening secure payment…' : 'Continue to Payment →'}
                     </button>
                   </div>
+                  {pendingPayment && (
+                    <div className="hidden">
+                      <CashfreeCheckout
+                        key={pendingPayment.orderId}
+                        orderId={pendingPayment.orderId}
+                        phone={address.phone}
+                        isGuest={!user}
+                        initialGuestProof={pendingPayment.guestProof}
+                        onDismiss={() => setStep('Payment')}
+                        onComplete={() => {
+                          clearSelectedFromCart();
+                          router.push(`/confirmation?orderId=${encodeURIComponent(pendingPayment.orderId)}`);
+                        }}
+                      />
+                    </div>
+                  )}
                 </motion.div>
               )}
 
@@ -613,17 +623,16 @@ export default function CheckoutPage() {
                             phone={address.phone}
                             isGuest={!user}
                             initialGuestProof={pendingPayment.guestProof}
+                            autoStart={false}
                             onComplete={() => {
                               clearSelectedFromCart();
                               router.push(`/confirmation?orderId=${encodeURIComponent(pendingPayment.orderId)}`);
                             }}
                           />
-                        ) : onlineFailed ? (
-                          <button type="button" onClick={() => setOnlineFailed(false)} className="btn-gold w-full">
-                            Retry online payment
-                          </button>
                         ) : (
-                          <p className="font-lato text-sm text-[var(--text-mid)]">Opening secure payment…</p>
+                          <button type="button" onClick={() => void placeOrder('online')} disabled={placing} className="btn-gold w-full disabled:opacity-60">
+                            {placing ? 'Opening secure payment…' : 'Pay now'}
+                          </button>
                         )}
                       </div>
 

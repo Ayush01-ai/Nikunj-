@@ -13,6 +13,7 @@ interface CashfreeCheckoutProps {
   onComplete: () => void;
   onCancel?: () => void;
   autoStart?: boolean;
+  onDismiss?: () => void;
 }
 
 interface CashfreeInstance {
@@ -33,6 +34,7 @@ export function CashfreeCheckout({
   onComplete,
   onCancel,
   autoStart = true,
+  onDismiss,
 }: CashfreeCheckoutProps) {
   const [scriptReady, setScriptReady] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -75,11 +77,13 @@ export function CashfreeCheckout({
         onComplete();
       } else if (verifyResponse.status === 402) {
         toast.error(verifyResult.error || 'Payment was not completed. You can try again.');
+        onDismiss?.();
       } else {
         throw new Error(verifyResult.error || 'Could not verify the payment.');
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Secure checkout failed. Please try again.');
+      onDismiss?.();
     } finally {
       setBusy(false);
     }
