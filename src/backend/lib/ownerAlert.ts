@@ -15,7 +15,7 @@ export interface OwnerAlertInput {
 
 export type OwnerAlertResult = 'sent' | 'duplicate' | 'not_configured' | 'failed';
 
-const DEFAULT_OWNER_EMAIL = 'Nikunj.sakhi14@gmail.com';
+const DEFAULT_OWNER_EMAIL = 'contact@nikunjsakhi.in';
 
 const normalizeReason = (reason: string) => reason.toLowerCase().replace(/\s+/g, ' ').trim();
 

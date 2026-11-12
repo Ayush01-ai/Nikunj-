@@ -80,7 +80,7 @@ export const siteSettings = defineType({
       name: 'email',
       title: 'Contact Email',
       type: 'string',
-      initialValue: 'Nikunj.sakhi14@gmail.com',
+      initialValue: 'contact@nikunjsakhi.in',
     }),
     defineField({
       name: 'phone',

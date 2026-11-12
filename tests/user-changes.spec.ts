@@ -8,10 +8,10 @@ test.describe('User requested enhancements', () => {
     await expect(footer).toBeVisible();
 
     // Verify email link just below Contact Us
-    const emailLink = footer.locator('a[href^="mailto:Nikunj.sakhi14@gmail.com"]');
+    const emailLink = footer.locator('a[href^="mailto:contact@nikunjsakhi.in"]');
     await expect(emailLink).toBeVisible();
-    await expect(emailLink).toHaveAttribute('href', 'mailto:Nikunj.sakhi14@gmail.com');
-    await expect(emailLink).toContainText('Nikunj.sakhi14@gmail.com');
+    await expect(emailLink).toHaveAttribute('href', 'mailto:contact@nikunjsakhi.in');
+    await expect(emailLink).toContainText('contact@nikunjsakhi.in');
 
     // Verify WhatsApp Us link has personalized prefilled text
     const waLink = footer.locator('a[href*="wa.me"]');
@@ -94,7 +94,7 @@ test.describe('User requested enhancements', () => {
 
     // Verify contact page content and visible support info
     await expect(page.getByRole('heading', { name: /We Are Here To Assist You/i })).toBeVisible();
-    await expect(page.getByText('Nikunj.sakhi14@gmail.com').first()).toBeVisible();
+    await expect(page.getByText('contact@nikunjsakhi.in').first()).toBeVisible();
     await expect(page.getByText('+91 91186 98641').first()).toBeVisible();
 
     // Support Form elements

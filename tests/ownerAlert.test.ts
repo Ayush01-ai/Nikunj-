@@ -61,7 +61,7 @@ describe('alertOwnerOrderIssue', () => {
   it('emails the default owner address and returns sent', async () => {
     expect(await alertOwnerOrderIssue(input)).toBe('sent');
     expect(mocks.sendEmail).toHaveBeenCalledOnce();
-    expect(mocks.sendEmail.mock.calls[0][0]).toBe('Nikunj.sakhi14@gmail.com');
+    expect(mocks.sendEmail.mock.calls[0][0]).toBe('contact@nikunjsakhi.in');
     expect(mocks.sendOwnerWhatsApp).not.toHaveBeenCalled();
   });
 

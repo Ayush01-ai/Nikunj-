@@ -14,11 +14,11 @@ export const fetchCache = 'force-cache'; // build-time Sanity reads are frozen i
 export const metadata: Metadata = {
   title: 'Contact Us & Support | Nikunj Sakhi',
   description:
-    'Contact Nikunj Sakhi devotee support for deity ornaments, idol measurements, custom orders, returns, and tracking. Email: Nikunj.sakhi14@gmail.com, WhatsApp: +91 91186 98641.',
+    'Contact Nikunj Sakhi devotee support for deity ornaments, idol measurements, custom orders, returns, and tracking. Email: contact@nikunjsakhi.in, WhatsApp: +91 91186 98641.',
   openGraph: {
     title: 'Contact Us & Devotee Support | Nikunj Sakhi',
     description:
-      'We are here to assist with deity jewellery sizes, orders, tracking, and divine craftsmanship inquiries. Email: Nikunj.sakhi14@gmail.com',
+      'We are here to assist with deity jewellery sizes, orders, tracking, and divine craftsmanship inquiries. Email: contact@nikunjsakhi.in',
   },
 };
 

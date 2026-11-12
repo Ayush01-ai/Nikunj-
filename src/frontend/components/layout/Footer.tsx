@@ -154,11 +154,11 @@ export function Footer({ settings }: FooterProps) {
               </li>
               <li>
                 <a
-                  href="mailto:Nikunj.sakhi14@gmail.com"
+                  href="mailto:contact@nikunjsakhi.in"
                   className="flex items-center gap-2.5 text-xs text-white/50 hover:text-gold-light transition-colors break-all"
                 >
                   <Mail size={14} className="text-gold-light flex-shrink-0" />
-                  <span>Nikunj.sakhi14@gmail.com</span>
+                  <span>contact@nikunjsakhi.in</span>
                 </a>
               </li>
               <li>

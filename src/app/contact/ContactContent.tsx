@@ -51,7 +51,7 @@ export function ContactContent({ settings }: ContactContentProps) {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   const rawWhatsapp = settings?.whatsappNumber || '919118698641';
-  const supportEmail = 'Nikunj.sakhi14@gmail.com';
+  const supportEmail = 'contact@nikunjsakhi.in';
 
   const defaultWaMessage = 'Namaste! 🙏 I need assistance regarding Nikunj Sakhi divine ornaments.';
   const directWaUrl = getWhatsAppHref(rawWhatsapp, defaultWaMessage);
