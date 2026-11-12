@@ -137,6 +137,26 @@ describe('reconcile-orders buckets', () => {
     expect(mocks.release).toHaveBeenCalledWith('NS-AAAA1111');
   });
 
+  it('fails an order Cashfree returns 404 for, releases stock and alerts once', async () => {
+    queueFinds([order({ paymentMethod: 'online', paymentGateway: 'cashfree', cashfreeOrderId: 'cf1' })], [], []);
+    mocks.settle.mockRejectedValue({ isAxiosError: true, message: 'Request failed with status code 404', response: { status: 404 } });
+    mocks.updateOne.mockResolvedValue({ modifiedCount: 1 });
+    const body = await (await POST(req(auth))).json();
+    expect(mocks.updateOne).toHaveBeenCalledWith({ _id: 'id1', paymentStatus: 'pending' }, { $set: { paymentStatus: 'failed' } });
+    expect(mocks.release).toHaveBeenCalledWith('NS-AAAA1111');
+    expect(mocks.alert).toHaveBeenCalledWith(expect.objectContaining({ stage: 'cashfree_order_missing' }));
+    expect(body).toMatchObject({ failed: 1, errors: 0 });
+  });
+
+  it('keeps retrying (counts an error) for non-404 Cashfree failures', async () => {
+    queueFinds([order({ paymentMethod: 'online', paymentGateway: 'cashfree', cashfreeOrderId: 'cf1' })], [], []);
+    mocks.settle.mockRejectedValue({ isAxiosError: true, response: { status: 502 } });
+    const body = await (await POST(req(auth))).json();
+    expect(mocks.updateOne).not.toHaveBeenCalled();
+    expect(mocks.release).not.toHaveBeenCalled();
+    expect(body).toMatchObject({ failed: 0, errors: 1 });
+  });
+
   it('alerts the owner when a Cashfree payment mismatches', async () => {
     queueFinds([order({ paymentMethod: 'online', paymentGateway: 'cashfree', cashfreeOrderId: 'cf1' })], [], []);
     mocks.settle.mockResolvedValue({ state: 'mismatch' });

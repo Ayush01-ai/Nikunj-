@@ -29,6 +29,7 @@ function validSecret(req: NextRequest): boolean {
 }
 
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
+const httpStatus = (e: unknown) => (e as { response?: { status?: number } } | null)?.response?.status;
 
 async function reconcile() {
   await connectDB();
@@ -75,8 +76,24 @@ async function reconcile() {
         await alert(order, 'stuck_order', 'Cashfree payment does not match this order. Check it in the Cashfree dashboard.');
       }
     } catch (e) {
+      let err = e;
+      // Cashfree has no such order, so it can never be paid: fail it instead of retrying every run.
+      // The owner is alerted because a 404 on every order would mean wrong Cashfree keys/environment.
+      if (httpStatus(e) === 404) {
+        try {
+          const failed = await Order.updateOne({ _id: order._id, paymentStatus: 'pending' }, { $set: { paymentStatus: 'failed' } });
+          if (failed.modifiedCount) {
+            await releaseStockHold(order.orderId);
+            summary.failed++;
+          }
+          await alert(order, 'cashfree_order_missing', 'Cashfree has no record of this order, so it was marked failed and its stock released. If the customer was charged, check the Cashfree keys/environment.');
+          continue;
+        } catch (inner) {
+          err = inner;
+        }
+      }
       summary.errors++;
-      console.error('[cron/reconcile] settle', order.orderId, errMsg(e));
+      console.error('[cron/reconcile] settle', order.orderId, errMsg(err));
     }
   }
 
