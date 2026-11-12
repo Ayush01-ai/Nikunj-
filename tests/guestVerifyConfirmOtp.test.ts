@@ -142,8 +142,8 @@ describe('POST /api/payment/guest-verify/confirm-otp', () => {
     expect(typeof json.guestProof).toBe('string');
     expect(otpDeleteMany).toHaveBeenCalled();
 
-    // The minted proof decodes to exactly this order+phone and nothing a client could forge.
-    const decoded = jwt.decode(json.guestProof) as jwt.JwtPayload;
+    // Verify the minted proof's signature before asserting its claims.
+    const decoded = jwt.verify(json.guestProof, process.env.JWT_SECRET!) as jwt.JwtPayload;
     expect(decoded.orderId).toBe('NS-AAAAAAAA');
     expect(decoded.phone).toBe('9876543210');
     expect(decoded.purpose).toBe('guest_payment');

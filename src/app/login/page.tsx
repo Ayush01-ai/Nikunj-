@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -56,6 +55,19 @@ const iconCls = 'px-3 text-[var(--text-mid)] flex items-center';
 const inputCls = 'flex-1 min-w-0 py-3 pr-3 font-lato text-sm text-deep outline-none bg-transparent';
 const linkBtnCls = 'font-lato text-xs text-teal hover:text-gold underline-offset-2 hover:underline transition-colors';
 
+function safeDevResetParams(value: unknown): { token: string; email: string } | null {
+  if (typeof value !== 'string') return null;
+  try {
+    const url = new URL(value, window.location.origin);
+    const token = url.searchParams.get('token');
+    const email = url.searchParams.get('email');
+    if (url.origin !== window.location.origin || url.pathname !== '/login/reset-password' || !token || !email) return null;
+    return { token, email };
+  } catch {
+    return null;
+  }
+}
+
 function GoogleIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
@@ -75,7 +87,7 @@ export default function LoginPage() {
   const [emailMode, setEmailMode] = useState<EmailMode>('signin');
   const [showPassword, setShowPassword] = useState(false);
   const [resetSentTo, setResetSentTo] = useState('');
-  const [devResetUrl, setDevResetUrl] = useState('');
+  const [devResetParams, setDevResetParams] = useState<{ token: string; email: string } | null>(null);
   const [next, setNext] = useState('/account');
   // True only when <ClerkProvider> is mounted, so Clerk hooks are safe to use.
   const clerkEnabled = useClerkEnabled();
@@ -140,17 +152,23 @@ export default function LoginPage() {
     try {
       const json = await postJSON('/api/auth/forgot-password', data);
       setResetSentTo(data.email);
-      setDevResetUrl(json._devResetUrl ?? '');
+      setDevResetParams(safeDevResetParams(json._devResetUrl));
       toast.success('Check your inbox for the reset link');
     } catch (err) {
       toast.error(errMsg(err, 'Could not send reset link'));
     }
   };
 
+  const openDevReset = () => {
+    if (!devResetParams) return;
+    const query = new URLSearchParams(devResetParams);
+    router.push(`/login/reset-password?${query.toString()}`);
+  };
+
   const switchEmailMode = (mode: EmailMode) => {
     setEmailMode(mode);
     setResetSentTo('');
-    setDevResetUrl('');
+    setDevResetParams(null);
     setShowPassword(false);
   };
 
@@ -369,10 +387,10 @@ export default function LoginPage() {
                       <p className="font-lato text-sm text-deep">
                         If an account exists for <strong>{resetSentTo}</strong>, a reset link is on its way. It expires in 30 minutes.
                       </p>
-                      {devResetUrl && (
-                        <a href={devResetUrl} className="block font-lato text-xs text-teal underline break-all">
+                      {devResetParams && (
+                        <button type="button" onClick={openDevReset} className="block font-lato text-xs text-teal underline break-all">
                           [Dev] Open reset link
-                        </a>
+                        </button>
                       )}
                     </div>
                   ) : (

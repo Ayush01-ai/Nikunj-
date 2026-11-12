@@ -1,4 +1,4 @@
-import { createHmac } from 'node:crypto';
+import { createHmac, randomBytes } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // The real cashfree.ts wrapper is tested here; only the cashfree-pg SDK class is replaced so
@@ -17,7 +17,7 @@ vi.mock('cashfree-pg', () => ({
   },
 }));
 
-const TEST_SECRET = 'cf_test_dummy_secret_for_unit_tests';
+const TEST_SECRET = randomBytes(32).toString('hex');
 const sign = (timestamp: string, body: string, secret = TEST_SECRET) =>
   createHmac('sha256', secret).update(timestamp + body).digest('base64');
 
@@ -54,7 +54,7 @@ describe('cashfree wrapper', () => {
       const good = sign(ts, body);
       expect(() => verifyCashfreeWebhookSignature(good, body.replace('NS-1', 'NS-2'), ts)).toThrow();
       expect(() => verifyCashfreeWebhookSignature(good, body, '1700000001')).toThrow();
-      expect(() => verifyCashfreeWebhookSignature(sign(ts, body, 'other-secret'), body, ts)).toThrow();
+      expect(() => verifyCashfreeWebhookSignature(sign(ts, body, randomBytes(32).toString('hex')), body, ts)).toThrow();
     });
 
     it('rejects a re-serialized (not byte-identical) body', async () => {

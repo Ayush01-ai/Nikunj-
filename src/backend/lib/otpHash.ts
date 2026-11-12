@@ -10,9 +10,7 @@ const PREFIX = 'h1:';
 function otpKey(): string {
   const secret = process.env.OTP_HASH_SECRET || process.env.JWT_SECRET;
   if (secret) return secret;
-  // Delivery codes are derived from a token the delivery partner holds, so the key must never be guessable.
-  if (process.env.NODE_ENV === 'production') throw new Error('OTP_HASH_SECRET (or JWT_SECRET) must be set');
-  return 'nikunj-sakhi-otp-dev';
+  throw new Error('OTP_HASH_SECRET (or JWT_SECRET) must be set');
 }
 
 export const isHashedOtp = (value: string) => value.startsWith(PREFIX);

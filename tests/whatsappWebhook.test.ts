@@ -1,4 +1,4 @@
-import { createHmac } from 'crypto';
+import { createHmac, randomBytes } from 'crypto';
 import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -8,7 +8,7 @@ vi.mock('@/backend/models/Order', () => ({ Order: { updateOne: mocks.updateOne }
 
 import { GET, POST } from '@/app/api/webhooks/whatsapp/route';
 
-const SECRET = 'meta-app-secret';
+const SECRET = randomBytes(32).toString('hex');
 const sign = (body: string, secret = SECRET) => `sha256=${createHmac('sha256', secret).update(body).digest('hex')}`;
 const body = (status: string, id = 'wamid.1') =>
   JSON.stringify({ entry: [{ changes: [{ value: { statuses: [{ id, status }] } }] }] });
@@ -34,7 +34,7 @@ describe('Meta WhatsApp webhook', () => {
     const raw = body('delivered');
     expect((await POST(post(raw))).status).toBe(401);
     expect((await POST(post(raw, 'sha256=abc'))).status).toBe(401);
-    expect((await POST(post(raw, sign(raw, 'other-secret')))).status).toBe(401);
+    expect((await POST(post(raw, sign(raw, randomBytes(32).toString('hex'))))).status).toBe(401);
     expect((await POST(post(raw + ' ', sign(raw)))).status).toBe(401); // body tampered after signing
     expect(mocks.updateOne).not.toHaveBeenCalled();
   });

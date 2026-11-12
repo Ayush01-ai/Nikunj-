@@ -1,5 +1,6 @@
 import { defineConfig } from 'vitest/config';
 import path from 'node:path';
+import { randomBytes } from 'node:crypto';
 
 /**
  * Minimal Vitest config, additive to the project (no existing test runner was configured).
@@ -25,7 +26,7 @@ export default defineConfig({
     // Dummy, non-production value only so modules that assert required env vars at import
     // time (e.g. auth.ts's JWT_SECRET check) can be imported under test. Never a real secret.
     env: {
-      JWT_SECRET: 'test-only-dummy-secret-do-not-use-in-production',
+      JWT_SECRET: randomBytes(32).toString('hex'),
       // Dummy, well-formed value only so mongodb.ts's import-time assertion passes when a
       // test imports it directly (e.g. for isDbConnectionError). Never a real connection
       // string, and no test in this suite opens a real database connection.
