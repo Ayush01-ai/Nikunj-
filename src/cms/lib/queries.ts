@@ -234,6 +234,13 @@ export const NAV_MENU_QUERY = groq`
 export const ALL_TYPE_PATHS_QUERY = groq`
   *[_type == "productType" && isActive != false && defined(slug.current) && category->isActive == true]{
     "slug": slug.current,
+`;
+
+/** Sitemap-only: type paths that have at least one active product */
+export const SITEMAP_TYPE_PATHS_QUERY = groq`
+  *[_type == "productType" && isActive != false && defined(slug.current) && category->isActive == true
+    && count(*[_type == "product" && isActive == true && references(^._id)]) > 0]{
+    "slug": slug.current,
     "category": category->slug.current
   }
 `;
@@ -468,6 +475,8 @@ export const SEARCH_INDEX_QUERY = groq`
       defined(originalPrice) && originalPrice > price => originalPrice,
       null
     ),
-    "image": coalesce(images[0].asset->url, mainImage.asset->url, galleryImages[0].asset->url)
+    "image": coalesce(images[0].asset->url, mainImage.asset->url, galleryImages[0].asset->url),
+    "sizes": sizes[defined(label)]{label, "priceModifier": coalesce(priceModifier, 0), price, mrp},
+    "colors": colors[defined(label)]{label, price, mrp}
   }
 `;

@@ -22,6 +22,7 @@ import { WhatsAppFloat } from '@/frontend/components/ui/WhatsAppFloat';
 import { PortableText, type PortableTextBlock } from '@portabletext/react';
 import type { Product, SiteSettings, Testimonial } from '@/types';
 import { pickDiverse, seedFrom } from '@/cms/lib/suggestions';
+import { defaultVariant, getVariantPricing } from '@/cms/lib/pricing';
 
 export const revalidate = false; // on-demand only (see /api/revalidate); no queue for time-based ISR
 export const fetchCache = 'force-cache'; // build-time Sanity reads are frozen into this deployment
@@ -44,15 +45,15 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
   const imageUrl = product.images?.find((img) => img?.asset?.url)?.asset.url ?? '/og-default.jpg';
 
+  const title = product.seoTitle || product.name;
+  const description = product.seoDescription || product.shortDescription || '';
+
   return {
-    title: product.seoTitle || product.name,
-    description: product.seoDescription || product.shortDescription,
+    title,
+    description,
     alternates: { canonical: `/products/${slug}` },
-    openGraph: {
-      title: product.name,
-      description: product.shortDescription || '',
-      images: [{ url: imageUrl }],
-    },
+    openGraph: { title, description, images: [{ url: imageUrl }] },
+    twitter: { card: 'summary_large_image', title, description, images: [imageUrl] },
   };
 }
 
@@ -116,6 +117,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
       ? [{ name: product.productType.name, href: `/collections/${categorySlug}/${typeSlug}` }]
       : []),
   ];
+  // Same default choice ProductDetail opens on, so the structured-data price matches the visible price.
+  const shownPricing = getVariantPricing(product, defaultVariant(product)?.label, product.colors?.[0]?.label);
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Product',
@@ -124,7 +127,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     sku: product.sku,
     offers: {
       '@type': 'Offer',
-      price: product.price,
+      price: shownPricing.price,
       priceCurrency: 'INR',
       availability: product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
       itemCondition: 'https://schema.org/NewCondition',

@@ -9,7 +9,8 @@ import { useRouter } from 'next/navigation';
 import { client } from '@/cms/lib/client';
 import { SEARCH_INDEX_QUERY } from '@/cms/lib/queries';
 import { getProductHref } from '@/frontend/lib/product';
-import { discountPercent, formatINR } from '@/cms/lib/pricing';
+import { formatINR, lowestPricing } from '@/cms/lib/pricing';
+import type { ProductColor, ProductSize } from '@/types';
 import { SacredIcon } from '@/frontend/components/ui/SacredIcon';
 
 interface SearchModalProps {
@@ -29,6 +30,19 @@ export interface SearchItem {
   price: number;
   originalPrice?: number | null;
   image?: string | null;
+  sizes?: ProductSize[] | null;
+  colors?: ProductColor[] | null;
+}
+
+/** Same "lowest variant" price the product cards show, so search never disagrees with the catalogue. */
+export function searchItemPricing(item: SearchItem) {
+  return lowestPricing({
+    price: item.price,
+    originalPrice: item.originalPrice ?? undefined,
+    stock: 0,
+    sizes: item.sizes ?? undefined,
+    colors: item.colors ?? undefined,
+  });
 }
 
 const MAX_SUGGESTIONS = 8;
@@ -241,7 +255,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 className="max-h-[60vh] overflow-y-auto divide-y divide-[var(--border)] mt-2"
               >
                 {results.map((product, i) => {
-                  const off = discountPercent(product.originalPrice, product.price);
+                  const pricing = searchItemPricing(product);
                   return (
                     <Link prefetch={false}
                       key={product._id}
@@ -278,10 +292,10 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                         </p>
                       </div>
                       <div className="text-right flex-shrink-0">
-                        <span className="font-cinzel text-sm font-bold text-gold-dark block">{formatINR(product.price)}</span>
-                        {off > 0 && product.originalPrice && (
+                        <span className="font-cinzel text-sm font-bold text-gold-dark block">{pricing.hasRange ? 'From ' : ''}{formatINR(pricing.price)}</span>
+                        {pricing.discount > 0 && pricing.mrp && (
                           <span className="text-[10px] text-[var(--text-mid)]">
-                            <s>{formatINR(product.originalPrice)}</s> <span className="text-green-700 font-semibold">{off}% off</span>
+                            <s>{formatINR(pricing.mrp)}</s> <span className="text-green-700 font-semibold">{pricing.discount}% off</span>
                           </span>
                         )}
                       </div>

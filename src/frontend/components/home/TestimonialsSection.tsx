@@ -59,7 +59,7 @@ export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) 
             transition={{ delay: 0.2 }}
             className="font-crimson italic text-base text-[var(--text-mid)]"
           >
-            Thousands of satisfied devotees across India
+            250+ satisfied devotees across India
           </motion.p>
         </div>
 

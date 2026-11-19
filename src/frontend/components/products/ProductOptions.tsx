@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Minus, Plus } from 'lucide-react';
 import { formatINR, getVariantPricing, variantStock } from '@/cms/lib/pricing';
+import { hasSizeGuide, SIZE_GUIDE_PATH } from '@/frontend/lib/sizeGuide';
 import type { Product, ProductColor } from '@/types';
 
 type Size = 'sm' | 'md';
@@ -57,6 +59,11 @@ export function VariantSelector({
           );
         })}
       </div>
+      {hasSizeGuide(product.category?.slug?.current) && (
+        <Link prefetch={false} href={SIZE_GUIDE_PATH} className="inline-block mt-2 font-lato text-xs text-gold-dark underline hover:text-gold">
+          Size guide — find the right fit for your Laddu Gopal
+        </Link>
+      )}
     </fieldset>
   );
 }

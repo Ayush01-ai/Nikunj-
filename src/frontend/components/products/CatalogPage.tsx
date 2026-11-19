@@ -22,6 +22,7 @@ import { CollectionGrid } from '@/frontend/components/products/CollectionGrid';
 import { ProductFilters } from '@/frontend/components/products/ProductFilters';
 import { WhatsAppFloat } from '@/frontend/components/ui/WhatsAppFloat';
 import { ProductTypeIcon, iconForTypeName } from '@/frontend/components/ui/ProductTypeIcon';
+import { hasSizeGuide, SIZE_GUIDE_PATH } from '@/frontend/lib/sizeGuide';
 import type { Product, Category, Deity, ProductType, Fragrance, SiteSettings } from '@/types';
 
 interface CatalogPageProps {
@@ -47,25 +48,34 @@ export async function generateCatalogMetadata(categorySlug?: string, typeSlug?: 
   const { category, type } = await getCatalogContext(categorySlug, typeSlug);
   const path = ['/collections', categorySlug, typeSlug].filter(Boolean).join('/');
 
+  // Explicit openGraph/twitter replace the layout defaults, so each page must carry its own.
+  const withSocial = (title: string, description: string, image?: string): Metadata => ({
+    title,
+    description,
+    alternates: { canonical: path },
+    openGraph: { title, description, url: path, ...(image ? { images: [{ url: image }] } : {}) },
+    twitter: { card: 'summary_large_image', title, description, ...(image ? { images: [image] } : {}) },
+  });
+  const categoryImage = category?.bannerImage?.asset?.url ?? category?.image?.asset?.url;
+
   if (type && category) {
-    return {
-      title: `${type.name} — ${category.name}`,
-      description: type.description || `Shop ${type.name} in ${category.name} at Nikunj Sakhi.`,
-      alternates: { canonical: path },
-    };
+    return withSocial(
+      `Buy ${type.name} Online - ${category.name}`,
+      type.description || `Shop ${type.name} in ${category.name} at Nikunj Sakhi.`,
+      categoryImage,
+    );
   }
   if (category) {
-    return {
-      title: category.seoTitle || category.name,
-      description: category.seoDescription || category.description || `Shop ${category.name} at Nikunj Sakhi.`,
-      alternates: { canonical: path },
-    };
+    return withSocial(
+      category.seoTitle || `Buy ${category.name} Online in India`,
+      category.seoDescription || category.description || `Shop ${category.name} at Nikunj Sakhi.`,
+      categoryImage,
+    );
   }
-  return {
-    title: 'Shop Products',
-    description: 'Browse all handcrafted divine god ornaments, deity shringar and pooja essentials.',
-    alternates: { canonical: '/collections' },
-  };
+  return withSocial(
+    'Shop Deity Jewellery, Poshak, Attar & Pooja Essentials',
+    'Browse handcrafted deity jewellery, poshak, attar and pooja essentials for Laddu Gopal and Radha Krishna.',
+  );
 }
 
 export async function CatalogPage({ categorySlug, typeSlug }: CatalogPageProps) {
@@ -104,6 +114,12 @@ export async function CatalogPage({ categorySlug, typeSlug }: CatalogPageProps) 
 
   const basePath = ['/collections', categorySlug, typeSlug].filter(Boolean).join('/');
   const title = type?.name ?? category?.name ?? 'All Collections';
+  const intro = type
+    ? type.description
+    : category
+      ? category.description
+      : 'Handcrafted shringar, poshak, bedding, attar and pooja essentials for Laddu Gopal and Radha Krishna — browse every collection in one place.';
+  const showSizeGuide = hasSizeGuide(categorySlug);
   // Keep active types discoverable even before products have been assigned to them.
   const typeTiles = types;
   const allHref = categorySlug ? `/collections/${categorySlug}` : '/collections';
@@ -184,6 +200,14 @@ export async function CatalogPage({ categorySlug, typeSlug }: CatalogPageProps) 
               {type && category ? category.name : 'Divine Ornaments & Pooja Essentials'}
             </span>
             <h1 className="font-cinzel text-xl sm:text-2xl font-semibold text-deep mb-1">{title}</h1>
+            {intro && (
+              <p className="max-w-3xl mx-auto mt-3 font-crimson text-base text-[var(--text-mid)] leading-relaxed">{intro}</p>
+            )}
+            {showSizeGuide && (
+              <Link prefetch={false} href={SIZE_GUIDE_PATH} className="inline-block mt-3 font-cinzel text-[11px] tracking-wider text-gold-dark underline hover:text-gold">
+                Not sure of the size? See the Laddu Gopal size guide
+              </Link>
+            )}
           </div>
         </div>
 

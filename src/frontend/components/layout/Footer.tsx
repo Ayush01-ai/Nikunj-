@@ -23,7 +23,7 @@ const quickLinks = [
 const supportLinks = [
   { href: '/track-order', label: 'Track Your Order' },
   { href: '/contact', label: 'Contact Us' },
-  { href: '/#about', label: 'About Us' },
+  { href: '/about', label: 'About Us' },
   { href: '/policies/return', label: 'Return Policy' },
   { href: '/policies/shipping', label: 'Shipping Policy' },
   { href: '/policies/privacy', label: 'Privacy Policy' },

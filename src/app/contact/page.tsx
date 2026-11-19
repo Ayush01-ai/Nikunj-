@@ -12,7 +12,7 @@ export const revalidate = false; // on-demand only (see /api/revalidate)
 export const fetchCache = 'force-cache'; // build-time Sanity reads are frozen into this deployment
 
 export const metadata: Metadata = {
-  title: 'Contact Us & Support | Nikunj Sakhi',
+  title: 'Contact Us & Support',
   description:
     'Contact Nikunj Sakhi devotee support for deity ornaments, idol measurements, custom orders, returns, and tracking. Email: contact@nikunjsakhi.in, WhatsApp: +91 91186 98641.',
   openGraph: {

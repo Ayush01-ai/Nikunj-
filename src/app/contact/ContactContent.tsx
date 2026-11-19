@@ -429,7 +429,7 @@ ${message || 'I would like assistance with your divine ornaments.'}`;
                 </li>
                 <li className="flex items-start gap-2.5">
                   <span className="text-gold-dark font-bold">✦</span>
-                  <span><strong>Pure Materials:</strong> Sacred brass, pure silver-look finish, mukuts and haar crafted by artisans with divine reverence.</span>
+                  <span><strong>Honest Materials:</strong> Crystal, pearl, zircon, kundan, velvet and wool — the exact materials are listed on every product page.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <span className="text-gold-dark font-bold">✦</span>
