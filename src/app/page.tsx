@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import type { Metadata } from 'next';
 import { sanityFetch } from '@/cms/lib/sanityFetch';
 import {
   HERO_SLIDES_QUERY,
@@ -25,6 +26,10 @@ import type { HeroSlide, Category, Product, Testimonial, SiteSettings } from '@/
 
 export const revalidate = false; // on-demand only (see /api/revalidate); no queue for time-based ISR
 export const fetchCache = 'force-cache'; // build-time Sanity reads are frozen into this deployment
+
+export const metadata: Metadata = {
+  alternates: { canonical: '/' },
+};
 
 async function getHomeData() {
   const [heroSlides, categories, allProducts, featuredProducts, bestsellers, newArrivals, testimonials, rawSettings] =

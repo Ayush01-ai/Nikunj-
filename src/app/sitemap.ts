@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
 import { client } from '@/cms/lib/client';
-import { ALL_PRODUCT_SLUGS_QUERY, ALL_CATEGORY_SLUGS_QUERY, ALL_TYPE_PATHS_QUERY } from '@/cms/lib/queries';
+import { ALL_PRODUCT_SLUGS_QUERY, ALL_CATEGORY_SLUGS_QUERY, SITEMAP_TYPE_PATHS_QUERY } from '@/cms/lib/queries';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://nikunjsakhi.com';
 
@@ -12,13 +12,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     [productSlugs, categorySlugs, typePaths] = await Promise.all([
       client.fetch<{ slug: string; _updatedAt: string }[]>(ALL_PRODUCT_SLUGS_QUERY),
       client.fetch<{ slug: string; _updatedAt: string }[]>(ALL_CATEGORY_SLUGS_QUERY),
-      client.fetch<{ slug: string; category: string }[]>(ALL_TYPE_PATHS_QUERY),
+      client.fetch<{ slug: string; category: string }[]>(SITEMAP_TYPE_PATHS_QUERY),
     ]);
   } catch { /* return static routes only */ }
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: BASE_URL, lastModified: new Date(), changeFrequency: 'daily', priority: 1 },
     { url: `${BASE_URL}/collections`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
+    { url: `${BASE_URL}/about`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${BASE_URL}/laddu-gopal-size-guide`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${BASE_URL}/contact`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.4 },
     ...['privacy', 'terms', 'return', 'shipping'].map((slug) => ({
       url: `${BASE_URL}/policies/${slug}`,
       lastModified: new Date(),

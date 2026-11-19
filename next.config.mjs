@@ -73,6 +73,27 @@ function contentSecurityPolicy() {
         destination: 'https://:host/:path*',
         permanent: true,
       },
+      // Old product URLs from before duplicate names/slugs were made unique (SEO cleanup).
+      ...Object.entries({
+        'shringar-poshak-wollen1': 'yellow-white-woolen-poshak-for-laddu-gopal',
+        'shringar-poshak-wollen2': 'floral-woolen-poshak-magenta-blue-white',
+        'shringar-poshak-wollen3': 'red-white-woolen-poshak-for-laddu-gopal',
+        'shringar-poshak-wollen4': 'pom-pom-woolen-poshak-yellow-sea-green-white',
+        'shringar-poshak-wollen5': 'woolen-poshak-magenta-purple-blue-white',
+        'shringar-poshak10': 'sea-green-festive-shringar-poshak-for-laddu-gopal',
+        'shringar-poshak4': 'teal-blue-festive-shringar-poshak-for-laddu-gopal',
+        'shringar-poshak1': 'pink-golden-festive-shringar-poshak-for-laddu-gopal',
+        'bead-bag1': 'bal-gopal-makhan-matki-printed-bead-bag',
+        'tulsi-mala-n': 'tulsi-mala-fine-round-beads',
+        'luxurious-velvet-winter-bedding-set-for-laddu-gopal-with-3-pillows-blanket-yellow':
+          'luxurious-velvet-winter-bedding-set-for-laddu-gopal-with-3-pillows-blanket-blue',
+      }).map(([from, to]) => ({ source: `/products/${from}`, destination: `/products/${to}`, permanent: true })),
+      // The empty duplicate "Naam Jaap Mala" category was removed; its products live under Pooja Essentials.
+      {
+        source: '/collections/naam-jaap-mala',
+        destination: '/collections/spiritual-and-pooja-essentials/naam-jaap-mala',
+        permanent: true,
+      },
     ];
   },
   async headers() {

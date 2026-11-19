@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Sparkles } from 'lucide-react';
-import { loadSearchIndex, type SearchItem } from '@/frontend/components/ui/SearchModal';
+import { loadSearchIndex, searchItemPricing, type SearchItem } from '@/frontend/components/ui/SearchModal';
 import { getProductHref } from '@/frontend/lib/product';
 import { formatINR } from '@/cms/lib/pricing';
 import { pickDiverse, seedFrom } from '@/cms/lib/suggestions';
@@ -56,7 +56,7 @@ export function ShopSuggestions({ variant, count = 3, onNavigate }: { variant: '
                   {p.image && <Image src={p.image} alt={p.name} fill sizes="112px" className="object-cover" />}
                 </div>
                 <p className="mt-1 font-crimson text-sm text-deep leading-tight line-clamp-2 group-hover:text-gold">{p.name}</p>
-                <p className="font-lato text-xs text-gold-dark">{formatINR(p.price)}</p>
+                <p className="font-lato text-xs text-gold-dark">{formatINR(searchItemPricing(p).price)}</p>
               </Link>
             </li>
           ))}
@@ -71,7 +71,9 @@ export function ShopSuggestions({ variant, count = 3, onNavigate }: { variant: '
         <Sparkles size={12} aria-hidden="true" /> Suggested for you
       </p>
       <ul className="mt-3 space-y-3">
-        {picks.map((p) => (
+        {picks.map((p) => {
+          const pricing = searchItemPricing(p);
+          return (
           <li key={p._id}>
             <Link prefetch={false} href={getProductHref(p)} onClick={onNavigate} className="flex items-center gap-3 group">
               <div className="relative w-14 h-14 shrink-0 bg-white border border-[var(--border)] overflow-hidden">
@@ -80,13 +82,14 @@ export function ShopSuggestions({ variant, count = 3, onNavigate }: { variant: '
               <div className="min-w-0">
                 <p className="font-crimson text-[15px] text-deep leading-tight line-clamp-2 group-hover:text-gold transition-colors">{p.name}</p>
                 <p className="font-lato text-xs text-gold-dark mt-0.5">
-                  {formatINR(p.price)}
-                  {p.originalPrice ? <span className="ml-1.5 line-through text-[var(--text-mid)]">{formatINR(p.originalPrice)}</span> : null}
+                  {pricing.hasRange ? 'From ' : ''}{formatINR(pricing.price)}
+                  {pricing.mrp ? <span className="ml-1.5 line-through text-[var(--text-mid)]">{formatINR(pricing.mrp)}</span> : null}
                 </p>
               </div>
             </Link>
           </li>
-        ))}
+          );
+        })}
       </ul>
     </div>
   );

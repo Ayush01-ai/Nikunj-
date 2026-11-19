@@ -19,9 +19,9 @@ interface NavbarProps {
 }
 
 const navLinks = [
-  { href: '/#collections', label: 'Collections' },
+  { href: '/collections', label: 'Collections' },
   { href: '/#products', label: 'Featured' },
-  { href: '/#about', label: 'About Us' },
+  { href: '/about', label: 'About Us' },
   { href: '/#reviews', label: 'Reviews' },
   { href: '/contact', label: 'Contact Us' },
 ];

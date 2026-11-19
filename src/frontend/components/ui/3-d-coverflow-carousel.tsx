@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight, Heart, ShoppingBag, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getImageUrl } from '@/cms/lib/image';
+import { formatINR, lowestPricing } from '@/cms/lib/pricing';
 import { useCartStore } from '@/frontend/store/cartStore';
 import { useWishlistStore, useWishlistHydrated } from '@/frontend/store/wishlistStore';
 import { ProductQuickModal } from '@/frontend/components/products/ProductQuickModal';
@@ -108,6 +109,8 @@ export function CoverFlowCarousel({
             const image = product.images?.[0]?.asset ? getImageUrl(product.images[0], { width: 700, height: 1000 }) : '';
             const wished = wishlistReady && isWishlisted(product._id);
             const visible = Math.abs(side) <= 2;
+            const pricing = lowestPricing(product);
+            const priceLabel = `${pricing.hasRange ? 'From ' : ''}${formatINR(pricing.price)}`;
 
             return (
               <article
@@ -128,7 +131,7 @@ export function CoverFlowCarousel({
                 {!isCenter && visible && (
                   <div className="absolute inset-x-0 bottom-0 px-4 pb-5 text-center">
                     <p className="truncate font-cinzel text-xs sm:text-sm font-semibold text-white">{product.name}</p>
-                    <p className="font-cinzel text-xs text-gold-light">₹{product.price.toLocaleString('en-IN')}</p>
+                    <p className="font-cinzel text-xs text-gold-light">{priceLabel}</p>
                   </div>
                 )}
 
@@ -150,7 +153,7 @@ export function CoverFlowCarousel({
                         {product.name}
                       </h3>
                       <p className="shrink-0 whitespace-nowrap font-cinzel text-[10px] font-bold text-gold-light sm:text-xs">
-                      ₹{product.price.toLocaleString('en-IN')}
+                      {priceLabel}
                       </p>
                     </div>
                     <div className="flex gap-2">

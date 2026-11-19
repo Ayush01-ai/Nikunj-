@@ -14,9 +14,9 @@ export function WhyUs({ freeDeliveryThreshold = 399 }: WhyUsProps = {}) {
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
 
   const whyItems = [
-    { icon: Sparkles, title: 'Divine Craftsmanship', desc: 'Every ornament is handcrafted by skilled artisans with generations of sacred expertise.' },
-    { icon: Gem, title: 'Pure & Authentic', desc: 'We use only authentic materials — pure silver, gold plated brass, and sacred metals.' },
-    { icon: Truck, title: 'Free Delivery', desc: 'Free shipping on orders above ₹399. Fast, secure, and carefully packed.' },
+    { icon: Sparkles, title: 'Handcrafted with Care', desc: 'Every ornament, poshak and bedding set is handmade and checked piece by piece before it is packed.' },
+    { icon: Gem, title: 'Honest Materials', desc: 'Crystals, pearls, zircon, kundan, velvet, wool and natural tulsi — the exact materials are listed on every product page.' },
+    { icon: Truck, title: 'Free Delivery', desc: `Free shipping on orders above ₹${freeDeliveryThreshold}. Fast, secure, and carefully packed.` },
     { icon: ShieldCheck, title: 'Secure Payments', desc: 'All payments are 100% secure via Cashfree, UPI, and Cash on Delivery.' },
     { icon: HeartHandshake, title: 'Made with Devotion', desc: 'Each piece is crafted with prayers and blessings for your beloved deity.' },
     { icon: RotateCcw, title: 'Easy Returns', desc: 'Hassle-free 7-day return policy. Your satisfaction is our priority.' },
